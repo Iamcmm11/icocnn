@@ -21,8 +21,8 @@ all: directories $(TARGET)
 
 # 创建目录
 directories:
-	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BIN_DIR)
+	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+	@if not exist "$(BIN_DIR)" mkdir "$(BIN_DIR)"
 
 # 链接
 $(TARGET): $(OBJECTS)
@@ -39,12 +39,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 run: $(TARGET)
 	@echo ""
 	@echo "运行测试..."
-	@cd $(BIN_DIR) && ./test_ico_conv
+	@cd $(BIN_DIR) && test_ico_conv.exe
 
 # 清理
 clean:
 	@echo "清理编译文件..."
-	@rm -rf $(BUILD_DIR) $(BIN_DIR)
+	@if exist "$(BUILD_DIR)" rmdir /S /Q "$(BUILD_DIR)"
+	@if exist "$(BIN_DIR)" rmdir /S /Q "$(BIN_DIR)"
 	@echo "✓ 清理完成"
 
 # 帮助

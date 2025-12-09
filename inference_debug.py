@@ -18,7 +18,7 @@ os.makedirs(HLS_DATA_DIR, exist_ok=True)
 
 def extract_layer0_data(model):
     """
-    提取 Layer0 (第一个 IcoConv 层) 的权重、偏置、邻居索引
+    提取 Layer0 (第一个 IcoConv 层) 的权重、偏置、kernel_expansion_idx、reorder_idx
     保存为 HLS C++ testbench 可以读取的格式
     """
     print("\nExtracting Layer0 parameters...")
@@ -43,15 +43,8 @@ def extract_layer0_data(model):
     weight = layer0.weight.detach().cpu().numpy()
     print(f"  Weight shape: {weight.shape}")
     
-    # 对于 HLS,我们需要将权重重新组织
-    # 从 [Cout, Cin, Rin, 7] 转换为 [Cout, Cin*Rin, 7]
-    # 但首先检查 Rin 的值
     Cout, Cin, Rin, num_neighbors = weight.shape
     print(f"  Cout={Cout}, Cin={Cin}, Rin={Rin}, num_neighbors={num_neighbors}")
-    
-    # 重新组织权重: [Cout, Cin*Rin, 7]
-    weight_reshaped = weight.reshape(Cout, Cin * Rin, num_neighbors)
-    print(f"  Weight reshaped: {weight_reshaped.shape}")
     
     # 2. 提取偏置 [out_channels]
     if layer0.bias is not None:
@@ -60,23 +53,30 @@ def extract_layer0_data(model):
         bias = np.zeros(Cout)
     print(f"  Bias shape: {bias.shape}")
     
-    # 3. 生成邻居索引
-    # 对于 icosahedral grid (r=2),我们需要计算每个顶点的邻居
-    # 从 padding 层的 reorder_idx 中提取
-    print(f"  Generating neighbors for r={layer0.r}...")
-    neighbors = generate_ico_neighbors(layer0.r)
-    print(f"  Neighbors shape: {neighbors.shape}")
+    # 3. 提取 kernel_expansion_idx [Cout, Rout, Cin, Rin, 9, 4]
+    kernel_expansion_idx = layer0.kernel_expansion_idx.cpu().numpy()
+    print(f"  Kernel expansion idx shape: {kernel_expansion_idx.shape}")
+    
+    # 4. 提取 reorder_idx [Rin, 5, H+2, W+2]
+    reorder_idx = layer0.padding.reorder_idx.cpu().numpy()
+    print(f"  Reorder idx shape: {reorder_idx.shape}")
     
     # 获取网格结构信息
     H = 2**layer0.r
     W = 2**(layer0.r + 1)
     num_charts = 5
+    Rout = layer0.Rout
     
-    # 4. 保存为 HLS 可读格式
-    # 保存权重
-    weight_flat = weight_reshaped.flatten()
+    print(f"\n  Grid structure: {num_charts} charts x {H}x{W}")
+    print(f"  Input rotations (Rin): {Rin}")
+    print(f"  Output rotations (Rout): {Rout}")
+    
+    # 5. 保存为 HLS 可读格式
+    
+    # 保存权重 [Cout, Cin, Rin, 7]
+    weight_flat = weight.flatten()
     with open(os.path.join(HLS_DATA_DIR, 'weight.txt'), 'w') as f:
-        f.write(f"# Shape: {weight_reshaped.shape}\n")
+        f.write(f"# Shape: {weight.shape}\n")
         for val in weight_flat:
             f.write(f"{val:.8f}\n")
     print(f"  ✓ Saved weight.txt: {len(weight_flat)} values")
@@ -88,28 +88,39 @@ def extract_layer0_data(model):
             f.write(f"{val:.8f}\n")
     print(f"  ✓ Saved bias.txt: {len(bias)} values")
     
-    # 保存邻居索引 (整数)
-    neighbors_flat = neighbors.flatten()
-    with open(os.path.join(HLS_DATA_DIR, 'neighbors.txt'), 'w') as f:
-        f.write(f"# Shape: {neighbors.shape}\n")
-        for val in neighbors_flat:
+    # 保存 kernel_expansion_idx (整数)
+    kernel_exp_flat = kernel_expansion_idx.flatten()
+    with open(os.path.join(HLS_DATA_DIR, 'kernel_expansion_idx.txt'), 'w') as f:
+        f.write(f"# Shape: {kernel_expansion_idx.shape}\n")
+        for val in kernel_exp_flat:
             f.write(f"{int(val)}\n")
-    print(f"  ✓ Saved neighbors.txt: {len(neighbors_flat)} indices")
+    print(f"  ✓ Saved kernel_expansion_idx.txt: {len(kernel_exp_flat)} indices")
+    
+    # 保存 reorder_idx (整数)
+    reorder_flat = reorder_idx.flatten()
+    with open(os.path.join(HLS_DATA_DIR, 'reorder_idx.txt'), 'w') as f:
+        f.write(f"# Shape: {reorder_idx.shape}\n")
+        for val in reorder_flat:
+            f.write(f"{int(val)}\n")
+    print(f"  ✓ Saved reorder_idx.txt: {len(reorder_flat)} indices")
     
     # 同时保存 .npy 格式
-    np.save(os.path.join(HLS_DATA_DIR, 'weight.npy'), weight_reshaped)
+    np.save(os.path.join(HLS_DATA_DIR, 'weight.npy'), weight)
     np.save(os.path.join(HLS_DATA_DIR, 'bias.npy'), bias)
-    np.save(os.path.join(HLS_DATA_DIR, 'neighbors.npy'), neighbors)
+    np.save(os.path.join(HLS_DATA_DIR, 'kernel_expansion_idx.npy'), kernel_expansion_idx)
+    np.save(os.path.join(HLS_DATA_DIR, 'reorder_idx.npy'), reorder_idx)
     
     print(f"\n✓ Layer0 parameters saved to '{HLS_DATA_DIR}/'")
     print("  You can now compile and run the HLS C++ verification!")
     
     # 添加配置信息
     print(f"\n  Configuration for HLS:")
-    print(f"    Input channels (Cin*Rin): {Cin * Rin}")
+    print(f"    Input channels (Cin): {Cin}")
+    print(f"    Input rotations (Rin): {Rin}")
     print(f"    Output channels (Cout): {Cout}")
-    print(f"    Neighbors per vertex: {num_neighbors}")
-    print(f"    Grid structure: {num_charts} charts x {H}x{W}")
+    print(f"    Output rotations (Rout): {Rout}")
+    print(f"    Kernel neighbors: {num_neighbors}")
+    print(f"    Grid: {num_charts} charts x {H}x{W}")
 
 def generate_ico_neighbors(r):
     """
@@ -215,8 +226,8 @@ def move_layer0_io_data():
     src_input = os.path.join(SAVE_DIR, 'Layer0_IcoConv_input.txt')
     src_output = os.path.join(SAVE_DIR, 'Layer0_IcoConv_output.txt')
     
-    dst_input = os.path.join(HLS_DATA_DIR, 'input.txt')
-    dst_output = os.path.join(HLS_DATA_DIR, 'output.txt')
+    dst_input = os.path.join(HLS_DATA_DIR, 'input_rearranged.txt')
+    dst_output = os.path.join(HLS_DATA_DIR, 'output_layer0.txt')
     
     # 检查文件是否存在
     if os.path.exists(src_input):
@@ -236,24 +247,26 @@ def move_layer0_io_data():
     src_output_npy = os.path.join(SAVE_DIR, 'Layer0_IcoConv_output.npy')
     
     if os.path.exists(src_input_npy):
-        shutil.copy(src_input_npy, os.path.join(HLS_DATA_DIR, 'input.npy'))
+        shutil.copy(src_input_npy, os.path.join(HLS_DATA_DIR, 'input_rearranged.npy'))
     if os.path.exists(src_output_npy):
-        shutil.copy(src_output_npy, os.path.join(HLS_DATA_DIR, 'output.npy'))
+        shutil.copy(src_output_npy, os.path.join(HLS_DATA_DIR, 'output_layer0.npy'))
     
     print(f"\n✓ All Layer0 data ready in '{HLS_DATA_DIR}/'")
     print("\n=" * 60)
     print("HLS Verification Files Summary:")
     print("=" * 60)
-    for fname in ['input.txt', 'weight.txt', 'bias.txt', 'neighbors.txt', 'output.txt']:
+    file_list = ['input_rearranged.txt', 'weight.txt', 'bias.txt', 
+                 'kernel_expansion_idx.txt', 'reorder_idx.txt', 'output_layer0.txt']
+    for fname in file_list:
         fpath = os.path.join(HLS_DATA_DIR, fname)
         if os.path.exists(fpath):
             size = os.path.getsize(fpath) / 1024
             # 计算行数
             with open(fpath, 'r') as f:
                 lines = len(f.readlines())
-            print(f"  ✓ {fname:20s} - {size:8.2f} KB - {lines:6d} lines")
+            print(f"  ✓ {fname:30s} - {size:8.2f} KB - {lines:6d} lines")
         else:
-            print(f"  ✗ {fname:20s} - MISSING!")
+            print(f"  ✗ {fname:30s} - MISSING!")
     print("=" * 60)
 
 def save_debug_tensor(name, tensor, save_full=False, save_dir=SAVE_DIR):
@@ -267,13 +280,29 @@ def save_debug_tensor(name, tensor, save_full=False, save_dir=SAVE_DIR):
     else:
         data = tensor  # 已经是 numpy 数组
     
+    # 特殊处理: 目前仅对 Layer0 的输入做 reshape，输出保持原始布局，方便与 C++ 对齐
+    # 对输入: 原始形状 [B, T, C, R, Charts, H, W] -> HLS: [B, C, R, T, V]
+    original_shape = data.shape
+    if 'Layer0_IcoConv_input' in name and save_full:
+        if len(data.shape) == 7:  # [B, T, C, R, Charts, H, W]
+            B, T, C, R, Charts, H, W = data.shape
+            V = Charts * H * W
+            data_reshaped = data.transpose(0, 2, 3, 1, 4, 5, 6)  # [B, C, R, T, Charts, H, W]
+            data_reshaped = data_reshaped.reshape(B, C, R, T, V)  # [B, C, R, T, V]
+            print(f"  Reshaped {name}: {original_shape} -> {data_reshaped.shape}")
+            data = data_reshaped
+
+    # 对 Layer0_IcoConv_output 不再 reshape，保持原始 [B, T, C, R, Charts, H, W]
+    
     # 1. 保存 .npy (用于 Python 加载对比)
     np.save(os.path.join(save_dir, f"{name}.npy"), data)
     
     # 2. 保存部分数据到 .txt (用于人工查看)
     flat_data = data.flatten()
     with open(os.path.join(save_dir, f"{name}_sample.txt"), 'w') as f:
-        f.write(f"# Shape: {data.shape}\n")
+        f.write(f"# Original shape: {original_shape}\n")
+        if data.shape != original_shape:
+            f.write(f"# Reshaped to: {data.shape}\n")
         f.write(f"# Mean: {np.mean(data):.6f}, Max: {np.max(data):.6f}, Min: {np.min(data):.6f}\n")
         f.write("First 100 values:\n")
         for i, val in enumerate(flat_data[:100]):
@@ -282,10 +311,12 @@ def save_debug_tensor(name, tensor, save_full=False, save_dir=SAVE_DIR):
     # 3. 如果需要保存完整数据 (用于 HLS C++ testbench)
     if save_full:
         with open(os.path.join(save_dir, f"{name}.txt"), 'w') as f:
-            f.write(f"# Shape: {data.shape}\n")
+            f.write(f"# Original shape: {original_shape}\n")
+            if data.shape != original_shape:
+                f.write(f"# Reshaped to: {data.shape} for HLS\n")
             for val in flat_data:
                 f.write(f"{val:.8f}\n")
-        print(f"[-] Saved FULL data: {name} | Shape: {data.shape} | {len(flat_data)} values")
+        print(f"[-] Saved FULL data: {name} | Original: {original_shape} | Reshaped: {data.shape} | {len(flat_data)} values")
     else:
         print(f"[-] Saved sample: {name} | Shape: {data.shape}")
 
