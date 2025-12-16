@@ -3,7 +3,9 @@ import torch
 import numpy as np
 import os
 import sys
+import struct
 import acousticTrackingModels as at_models
+import acousticTrackingLearners as at_learners
 
 # 配置部分
 MODEL_PATH = 'models\1sourceTracking_icoCNN_robot_K4096_r2_model.bin'  # 请修改为您实际的权重文件路径
@@ -12,9 +14,95 @@ CHANNELS = 32          # 模型通道数 C
 SAVE_DIR = 'debug_outputs' # 输出数据的保存目录
 HLS_DATA_DIR = 'hls_testdata/layer0'  # HLS 验证数据目录
 
+# C 前端输入数据配置
+C_AUDIO_BIN = 'audio_data.bin'  # C 前端生成的音频数据
+USE_C_AUDIO = True  # 是否使用 C 前端的 audio_data.bin 作为输入（True=统一输入源）
+
+# 前端处理参数（与 C 前端保持一致）
+SAMPLE_RATE = 24000
+NUM_CHANNELS = 12
+FRAME_LENGTH = 4096
+FFT_SIZE = 4096
+
 # 确保保存目录存在
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(HLS_DATA_DIR, exist_ok=True)
+
+def load_audio_data_from_c_bin(filename):
+    """
+    从 C 前端生成的 audio_data.bin 加载音频数据
+    
+    文件格式:
+        Header (16 bytes):
+            - magic: "AUD\0" (4 bytes)
+            - num_channels: int32 (4 bytes)
+            - num_samples: int32 (4 bytes)
+            - sample_rate: int32 (4 bytes)
+        Data:
+            - float32[num_channels][num_samples] (按通道顺序存储)
+    
+    返回:
+        audio_data: numpy array [num_channels, num_samples]
+        num_channels: int
+        num_samples: int
+        sample_rate: int
+    """
+    print(f"\n[C Frontend Input] Loading audio data from: {filename}")
+    
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"Cannot find C audio bin file: {filename}")
+    
+    with open(filename, 'rb') as f:
+        # 读取 Header
+        magic = f.read(4).decode('ascii').rstrip('\x00')
+        num_channels = struct.unpack('i', f.read(4))[0]
+        num_samples = struct.unpack('i', f.read(4))[0]
+        sample_rate = struct.unpack('i', f.read(4))[0]
+        
+        print(f"  Magic: {magic}, Channels: {num_channels}, Samples: {num_samples}, SampleRate: {sample_rate}")
+        
+        # 读取音频数据 [num_channels, num_samples]
+        audio_data = np.zeros((num_channels, num_samples), dtype=np.float32)
+        for ch in range(num_channels):
+            audio_data[ch] = np.frombuffer(f.read(num_samples * 4), dtype=np.float32)
+    
+    print(f"  Loaded audio shape: {audio_data.shape}")
+    return audio_data, num_channels, num_samples, sample_rate
+
+def prepare_mic_sig_batch_from_audio(audio_data, frame_length=4096, hop_length=2048):
+    """
+    将原始音频波形分帧，准备成 Preprocessor 期望的 mic_sig_batch 格式
+    
+    参数:
+        audio_data: [num_channels, num_samples] numpy array
+        frame_length: 帧长度
+        hop_length: 帧移
+    
+    返回:
+        mic_sig_batch: [num_frames, num_channels, frame_length] numpy array
+    """
+    print(f"\n[Audio Framing] Preparing mic_sig_batch...")
+    
+    num_channels, num_samples = audio_data.shape
+    num_frames = (num_samples - frame_length) // hop_length + 1
+    
+    print(f"  Frame length: {frame_length}, Hop: {hop_length}")
+    print(f"  Total frames: {num_frames}")
+    
+    # 分帧: [num_frames, num_channels, frame_length]
+    mic_sig_batch = np.zeros((num_frames, num_channels, frame_length), dtype=np.float32)
+    
+    for i in range(num_frames):
+        start = i * hop_length
+        end = start + frame_length
+        
+        if end > num_samples:
+            break
+        
+        mic_sig_batch[i] = audio_data[:, start:end]
+    
+    print(f"  mic_sig_batch shape: {mic_sig_batch.shape}")
+    return mic_sig_batch
 
 def extract_layer0_data(model):
     """
@@ -381,7 +469,7 @@ def main():
     print("Initializing Model...")
     # 注意：如果您的模型训练时用了 smooth_vertices=True/False，这里要一致
     net = at_models.IcoTempCNN(r=R_LEVEL, C=CHANNELS, smooth_vertices=True)
-    
+
     # 尝试加载权重 (如果文件存在)
     if os.path.exists(MODEL_PATH):
         print(f"Loading weights from {MODEL_PATH}...")
@@ -402,15 +490,95 @@ def main():
     register_hooks(net)
 
     # 3. 构造输入数据
-    # 形状参考之前的分析: (Batch, Channels, Time, Charts, H, W)
-    # B=1, C=1 (Cin), T=103, Charts=5, H=2^r, W=2^(r+1)
-    # 对于 r=2: H=4, W=8
+    # 根据配置决定使用 C 前端的 audio_data.bin 还是随机输入
     H = 2**R_LEVEL
     W = 2**(R_LEVEL + 1)
-    T = 103 # 典型的帧数
     
-    # 随机输入 (模拟 SRP-PHAT map)
-    dummy_input = torch.randn(1, 1, T, 5, H, W)
+    # 初始化 Preprocessor (使用项目原生的 TrackingFromIcoMapsPreprocessor)
+    # 生成麦克风阵列位置 (环形阵列)
+    radius = 0.05
+    mic_positions = np.zeros((NUM_CHANNELS, 3), dtype=np.float32)
+    for i in range(NUM_CHANNELS):
+        angle = 2 * np.pi * i / NUM_CHANNELS
+        mic_positions[i, 0] = radius * np.cos(angle)
+        mic_positions[i, 1] = radius * np.sin(angle)
+        mic_positions[i, 2] = 0.0
+    
+    # 创建 Preprocessor
+    preprocessor = at_learners.TrackingFromIcoMapsPreprocessor(
+        N=NUM_CHANNELS, 
+        K=FRAME_LENGTH, 
+        r=R_LEVEL, 
+        rn=mic_positions, 
+        fs=SAMPLE_RATE,
+        apply_vad=False  # debug 阶段不用 VAD
+    )
+    print(f"\nInitialized TrackingFromIcoMapsPreprocessor (N={NUM_CHANNELS}, K={FRAME_LENGTH}, r={R_LEVEL})")
+    
+    if USE_C_AUDIO and os.path.exists(C_AUDIO_BIN):
+        print(f"\n{'='*60}")
+        print("Using C Frontend audio_data.bin as unified input source")
+        print(f"{'='*60}")
+        
+        # 3.1 加载 C 前端生成的音频数据
+        audio_data, num_channels, num_samples, sample_rate = load_audio_data_from_c_bin(C_AUDIO_BIN)
+        
+        # 3.2 记录本次使用的原始输入来源
+        meta_path = os.path.join(HLS_DATA_DIR, 'layer0_input_source.txt')
+        with open(meta_path, 'w') as f:
+            f.write('# Layer0 输入对应的原始前端音频文件\n')
+            f.write(f'{C_AUDIO_BIN}\n')
+            f.write(f'# Audio info: channels={num_channels}, samples={num_samples}, sr={sample_rate}\n')
+        print(f"Saved input source meta to: {meta_path}")
+        
+        # 3.3 准备 mic_sig_batch
+        mic_sig_batch = prepare_mic_sig_batch_from_audio(
+            audio_data, 
+            frame_length=FRAME_LENGTH, 
+            hop_length=FRAME_LENGTH // 2
+        )
+        
+        # 3.4 使用原生 Preprocessor 处理，得到 IcoTempCNN 的输入
+        print(f"\n[Preprocessor] Running data_transformation...")
+        network_input = preprocessor.data_transformation(mic_sig_batch=mic_sig_batch)
+        # network_input: [num_frames, 1, 5, H, W] - Preprocessor 把每帧当作独立样本
+        
+        print(f"  Preprocessor output shape: {network_input.shape}")
+        
+        # 重要: IcoTempCNN 期望输入是 [B, C, T, charts, H, W]
+        # 而 Preprocessor 输出是 [num_frames, 1, 5, H, W]
+        # 需要将 num_frames 移到时间维度 T
+        num_frames = network_input.shape[0]
+        network_input = network_input.unsqueeze(0)  # [1, num_frames, 1, 5, H, W]
+        network_input = network_input.transpose(1, 2)  # [1, 1, num_frames, 5, H, W]
+        # 现在是 [B=1, C=1, T=num_frames, charts=5, H, W]
+        
+        print(f"  Reshaped to IcoTempCNN input: {network_input.shape}")
+        print(f"  -> [B=1, C=1, T={num_frames}, charts=5, H={H}, W={W}]")
+        print(f"  -> This is the EXACT input format that IcoTempCNN expects!")
+        
+        dummy_input = network_input  # 使用真实前端输出
+            
+    else:
+        # 使用随机输入 (原来的方式)
+        if USE_C_AUDIO:
+            print(f"\n[WARNING] C audio bin not found at {C_AUDIO_BIN}")
+            print("Falling back to random input...")
+        
+        print(f"\n{'='*60}")
+        print("Using Random Input (NOT from C frontend)")
+        print(f"{'='*60}")
+        
+        T = 103 # 典型的帧数
+        dummy_input = torch.randn(1, 1, T, 5, H, W)
+        
+        # 记录使用的是随机输入
+        meta_path = os.path.join(HLS_DATA_DIR, 'layer0_input_source.txt')
+        with open(meta_path, 'w') as f:
+            f.write('# Layer0 输入来源\n')
+            f.write('RANDOM_INPUT (not from C frontend audio_data.bin)\n')
+        print(f"Saved input source meta to: {meta_path}")
+    
     print(f"\nInput Shape: {dummy_input.shape}")
     save_debug_tensor("input", dummy_input)
 

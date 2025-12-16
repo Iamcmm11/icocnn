@@ -9,7 +9,7 @@
 #define H           4           // 2^R_LEVEL
 #define W           8           // 2^(R_LEVEL+1)
 #define CHARTS      5           // icosahedral 网格的 charts 数量
-#define TIME_STEPS  103         // 时间维度
+#define TIME_STEPS  52          // 时间维度（基于 audio_data.bin 的实际帧数）
 
 #define CIN         1           // 输入通道
 #define COUT        32          // 输出通道
@@ -27,20 +27,26 @@ typedef float data_t;           // 可以改为 ap_fixed<16,8> 做定点化
 
 // ==================== 核心函数声明 ====================
 
-// 1. CleanVertices: 将顶点位置清零
+// 1. SmoothVertices: 用邻居均值平滑顶点
+void smooth_vertices(
+    data_t input[CIN][RIN][CHARTS][H][W],
+    data_t output[CIN][RIN][CHARTS][H][W]
+);
+
+// 2. CleanVertices: 将顶点位置清零（已包含在 SmoothVertices 中）
 void clean_vertices(
     data_t input[CHARTS][H][W],
     data_t output[CHARTS][H][W]
 );
 
-// 2. PadIco: icosahedral padding（通过查表重排）
+// 3. PadIco: icosahedral padding（通过查表重排，包含极点平滑）
 void pad_ico(
-    data_t input[RIN][CHARTS][H][W],
+    data_t input[CIN][RIN][CHARTS][H][W],
     const int reorder_idx[RIN][CHARTS][H_PADDED][W_PADDED],
     data_t output[RIN][CHARTS][H_PADDED][W_PADDED]
 );
 
-// 3. ConvIco: icosahedral 卷积（核心）
+// 4. ConvIco: icosahedral 卷积（核心）
 void conv_ico_layer0(
     // 输入: [1, 103, Cin=1, Rin=1, 5, H, W]
     data_t input[TIME_STEPS][CIN][RIN][CHARTS][H][W],
@@ -55,14 +61,14 @@ void conv_ico_layer0(
     data_t output[TIME_STEPS][COUT][ROUT][CHARTS][H][W]
 );
 
-// 4. 辅助函数：从 weight 和 kernel_expansion_idx 构造完整卷积核
+// 5. 辅助函数：从 weight 和 kernel_expansion_idx 构造完整卷积核
 void get_kernel(
     const data_t weight[COUT][CIN][RIN][7],
     const int kernel_expansion_idx[COUT][ROUT][CIN][RIN][9][4],
     data_t kernel[COUT][ROUT][CIN][RIN][KERNEL_H][KERNEL_W]
 );
 
-// 5. 标准 2D 卷积（在重排后的数据上执行）
+// 6. 标准 2D 卷积（在重排后的数据上执行）
 void conv2d_3x3(
     data_t input[(CIN*RIN)][(CHARTS*H_PADDED)][W_PADDED],
     const data_t kernel[(COUT*ROUT)][(CIN*RIN)][KERNEL_H][KERNEL_W],

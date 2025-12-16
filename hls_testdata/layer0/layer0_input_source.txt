@@ -1,0 +1,3 @@
+# Layer0 输入对应的原始前端音频文件
+audio_data.bin
+# Audio info: channels=12, samples=108544, sr=24000
