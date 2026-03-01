@@ -350,28 +350,35 @@ void conv_ico_layer0(
         }
         
         // SmoothVertices: 用邻居均值替换顶点
+        // 注意：与 Python 的 SmoothVertices 一致，需要在 R 维与 neighbors 维上共同求均值，
+        // 然后将该均值广播回所有 R 通道。
         for (int co = 0; co < COUT; co++) {
-            for (int ro = 0; ro < ROUT; ro++) {
-                for (int c = 0; c < CHARTS; c++) {
-                    int prev_c = (c - 1 + CHARTS) % CHARTS;
-                    
-                    // v1 (0,0) 的 5 个邻居的均值
-                    float sum_v1 = 0.0f;
-                    sum_v1 += output[t][co][ro][c][1][0];
-                    sum_v1 += output[t][co][ro][c][1][1];
-                    sum_v1 += output[t][co][ro][c][0][1];
-                    sum_v1 += output[t][co][ro][prev_c][H-1][H];
-                    sum_v1 += output[t][co][ro][prev_c][H-1][H-1];
-                    output_frame[co][ro][c][0][0] = sum_v1 / 5.0f;
-                    
-                    // v2 (0,H) 的 5 个邻居的均值
-                    float sum_v2 = 0.0f;
-                    sum_v2 += output[t][co][ro][c][1][H];
-                    sum_v2 += output[t][co][ro][c][1][(H+1)%W];
-                    sum_v2 += output[t][co][ro][c][0][(H+1)%W];
-                    sum_v2 += output[t][co][ro][prev_c][H-1][W-1];
-                    sum_v2 += output[t][co][ro][c][0][H-1];
-                    output_frame[co][ro][c][0][H] = sum_v2 / 5.0f;
+            for (int c = 0; c < CHARTS; c++) {
+                int prev_c = (c - 1 + CHARTS) % CHARTS;
+
+                float sum_v1 = 0.0f;
+                float sum_v2 = 0.0f;
+                for (int ro = 0; ro < ROUT; ro++) {
+                    // v1 (0,0) 的 5 个邻居
+                    sum_v1 += output_frame[co][ro][c][1][0];
+                    sum_v1 += output_frame[co][ro][c][1][1];
+                    sum_v1 += output_frame[co][ro][c][0][1];
+                    sum_v1 += output_frame[co][ro][prev_c][H-1][H];
+                    sum_v1 += output_frame[co][ro][prev_c][H-1][H-1];
+
+                    // v2 (0,H) 的 5 个邻居
+                    sum_v2 += output_frame[co][ro][c][1][H];
+                    sum_v2 += output_frame[co][ro][c][1][(H+1)%W];
+                    sum_v2 += output_frame[co][ro][c][0][(H+1)%W];
+                    sum_v2 += output_frame[co][ro][prev_c][H-1][W-1];
+                    sum_v2 += output_frame[co][ro][c][0][H-1];
+                }
+
+                float mean_v1 = sum_v1 / (ROUT * 5.0f);
+                float mean_v2 = sum_v2 / (ROUT * 5.0f);
+                for (int ro = 0; ro < ROUT; ro++) {
+                    output_frame[co][ro][c][0][0] = mean_v1;
+                    output_frame[co][ro][c][0][H] = mean_v2;
                 }
             }
         }
