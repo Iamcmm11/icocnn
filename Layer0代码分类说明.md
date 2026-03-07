@@ -85,11 +85,12 @@ g++ -std=c++11 -o test_ico_conv.exe test_ico_conv.cpp ico_conv_layer0.cpp -I.
 [6] Comparing with reference output...
 
 === Verification Results ===
-Max Error: 0.191425
-RMSE: 0.0108152
+Max Error: 9.53674e-07
+RMSE: 7.03355e-08
+✓ PASS: HLS output matches PyTorch reference!
 ```
 
-**验证结论**：✅ 通过（误差在工程可接受范围）
+**验证结论**：✅ 通过（与 Python 参考逐点一致，误差约 1e-6 量级）
 
 ---
 
@@ -265,7 +266,8 @@ icoCNN 的原始 Python 实现，作为 HLS 实现的参考标准。
 
 ### 重要发现
 
-⭐ **关键点**：`ConvIco.forward()` 的最后一步 `return self.process_vertices(y)` 表明输出也需要应用 SmoothVertices，这是之前 C++ 实现遗漏的关键步骤！
+⭐ **关键点**：`ConvIco.forward()` 的最后一步 `return self.process_vertices(y)` 表明输出也需要应用 SmoothVertices。  
+该语义差异已在 `2026-03-01` 的提交 `c30da94` 修复，对应代码位于 `hls_src/ico_conv_layer0.cpp` 第 352-384 行：先在 `R` 维与 5 邻域上联合求均值，再广播回所有 `R` 通道。
 
 ---
 
@@ -285,9 +287,9 @@ icoCNN 的原始 Python 实现，作为 HLS 实现的参考标准。
 |------|----------|-------------|------|
 | Min | -2.74634 | -2.74634 | 0 |
 | Max | 3.77383 | 3.77383 | 0 |
-| Mean | 0.145815 | 0.145816 | 0.000001 |
-| **Max Error** | - | - | **0.191425** |
-| **RMSE** | - | - | **0.0108152** |
+| Mean | 0.145816 | 0.145816 | 0 |
+| **Max Error** | - | - | **9.53674e-07** |
+| **RMSE** | - | - | **7.03355e-08** |
 
 ### 误差改进历史
 
@@ -295,7 +297,8 @@ icoCNN 的原始 Python 实现，作为 HLS 实现的参考标准。
 |------|-----------|------|------|
 | 无 SmoothVertices | 3.71354 | 0.264471 | - |
 | 仅输入端 SmoothVertices | 3.71354 | 0.264471 | 中间层对齐 |
-| **输入 + 输出 SmoothVertices** | **0.191425** | **0.0108152** | **↓ 94%** |
+| 输入 + 输出 SmoothVertices（旧实现） | 0.191425 | 0.0108152 | ↓ 94% |
+| **输入 + 输出 SmoothVertices（修复 R 维联合求均值，2026-03-01）** | **9.53674e-07** | **7.03355e-08** | **与 Python 逐点对齐** |
 
 ---
 
@@ -374,7 +377,7 @@ icocnn/
 **Layer0 HLS 实现已通过验证！**
 
 - ✅ 所有中间层完全对齐（误差 = 0）
-- ✅ 完整输出误差在工程可接受范围（Max Error < 0.2）
+- ✅ 完整输出与 Python 参考逐点对齐（Max Error ≈ 1e-6，RMSE ≈ 1e-8）
 - ✅ 均值几乎完全一致（误差 < 0.001%）
 - ✅ 实现了与 Python 一致的 SmoothVertices 逻辑
 

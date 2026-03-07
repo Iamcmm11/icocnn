@@ -3,11 +3,42 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
+
+static bool file_exists(const std::string& path) {
+    std::ifstream f(path.c_str());
+    return f.good();
+}
+
+static std::string resolve_data_dir() {
+    const std::vector<std::string> candidates = {
+        "../hls_testdata/layer0/",
+        "../../hls_testdata/layer0/",
+        "../../../hls_testdata/layer0/",
+        "../../../../hls_testdata/layer0/",
+        "../../../../../hls_testdata/layer0/",
+        "../../../../../../hls_testdata/layer0/",
+        "../../../../../../../hls_testdata/layer0/"
+    };
+
+    for (size_t i = 0; i < candidates.size(); i++) {
+        const std::string probe = candidates[i] + "input_rearranged.txt";
+        if (file_exists(probe)) {
+            return candidates[i];
+        }
+    }
+    return "";
+}
 
 int main() {
     std::cout << "=== IcoConv Layer 0 HLS Testbench ===" << std::endl;
     
-    const std::string data_dir = "../hls_testdata/layer0/";
+    const std::string data_dir = resolve_data_dir();
+    if (data_dir.empty()) {
+        std::cerr << "Error: Could not locate hls_testdata/layer0 directory." << std::endl;
+        return -1;
+    }
+    std::cout << "Data dir: " << data_dir << std::endl;
     
     // ==================== 1. 读取输入数据 ====================
     std::cout << "\n[1] Loading input data..." << std::endl;
