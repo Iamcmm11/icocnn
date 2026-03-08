@@ -3,12 +3,12 @@
   **** SW Build 5238294 on Nov  8 2024
   **** IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
   **** SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-  **** Start of session at: Sat Mar  7 16:58:44 2026
+  **** Start of session at: Sun Mar  8 16:44:26 2026
     ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
     ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 
 source G:/PostGraduateFile/Xilinx/Vitis/2024.2/scripts/vitis_hls/hls.tcl -notrace
-INFO: [HLS 200-10] For user 'Lenovo' on host 'laptop-lc5o154v' (Windows NT_amd64 version 10.0) on Sat Mar 07 16:58:45 +0800 2026
+INFO: [HLS 200-10] For user 'Lenovo' on host 'laptop-lc5o154v' (Windows NT_amd64 version 10.0) on Sun Mar 08 16:44:28 +0800 2026
 INFO: [HLS 200-10] In directory 'G:/3DSLED/icocnn/hls_src'
 WARNING: [HLS 200-2053] The vitis_hls executable is deprecated. Consider using vitis-run --mode hls --tcl
 Sourcing Tcl script 'run_hls.tcl'
@@ -39,225 +39,208 @@ INFO: [HLS 200-1611] Setting target device to 'xc7k325t-ffg900-2'
 INFO: [HLS 200-1510] Running: create_clock -period 5.0 -name default 
 INFO: [SYN 201-201] Setting up clock 'default' with a period of 5ns.
 INFO: [HLS 200-1510] Running: csynth_design 
-INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.127 seconds; current allocated memory: 616.754 MB.
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.166 seconds; current allocated memory: 616.879 MB.
 INFO: [HLS 200-10] Analyzing design file 'ico_conv_layer0.cpp' ... 
-INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 2.088 seconds; current allocated memory: 620.332 MB.
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 2.908 seconds; current allocated memory: 619.734 MB.
 INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
-INFO: [HLS 200-1995] There were 1,442 instructions in the design after the 'Compile/Link' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 914 instructions in the design after the 'Unroll/Inline (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 608 instructions in the design after the 'Unroll/Inline (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 534 instructions in the design after the 'Unroll/Inline (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 530 instructions in the design after the 'Unroll/Inline (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 535 instructions in the design after the 'Array/Struct (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 535 instructions in the design after the 'Array/Struct (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 535 instructions in the design after the 'Array/Struct (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 535 instructions in the design after the 'Array/Struct (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 541 instructions in the design after the 'Array/Struct (step 5)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 541 instructions in the design after the 'Performance (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 789 instructions in the design after the 'Performance (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 20,430 instructions in the design after the 'Performance (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 5,894 instructions in the design after the 'Performance (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 5,906 instructions in the design after the 'HW Transforms (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
-INFO: [HLS 200-1995] There were 5,415 instructions in the design after the 'HW Transforms (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 1,270 instructions in the design after the 'Compile/Link' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 805 instructions in the design after the 'Unroll/Inline (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 496 instructions in the design after the 'Unroll/Inline (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 446 instructions in the design after the 'Unroll/Inline (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 446 instructions in the design after the 'Unroll/Inline (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 681 instructions in the design after the 'Array/Struct (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 583 instructions in the design after the 'Array/Struct (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 583 instructions in the design after the 'Array/Struct (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 582 instructions in the design after the 'Array/Struct (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 588 instructions in the design after the 'Array/Struct (step 5)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 588 instructions in the design after the 'Performance (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 880 instructions in the design after the 'Performance (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 2,614 instructions in the design after the 'Performance (step 3)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 1,789 instructions in the design after the 'Performance (step 4)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 1,867 instructions in the design after the 'HW Transforms (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 200-1995] There were 1,884 instructions in the design after the 'HW Transforms (step 2)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/layer0_hls_prj/sol1/syn/report/csynth_design_size.rpt
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_144_5' (ico_conv_layer0.cpp:144:39) in function 'get_kernel' completely with a factor of 3 (ico_conv_layer0.cpp:138:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_146_6' (ico_conv_layer0.cpp:146:20) in function 'get_kernel' completely with a factor of 3 (ico_conv_layer0.cpp:138:0)
 INFO: [HLS 214-178] Inlining function 'smooth_vertices(float (*) [1][5][4][8], float (*) [1][5][4][8])' into 'pad_ico(float (*) [1][5][4][8], int const (*) [5][6][10], float (*) [5][6][10])' (ico_conv_layer0.cpp:86:0)
-INFO: [HLS 214-178] Inlining function 'get_kernel(float const (*) [1][1][7], int const (*) [6][1][1][9][4], float (*) [6][1][1][3][3])' into 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])' (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-178] Inlining function 'conv2d_3x3(float (*) [30][10], float const (*) [1][3][3], float const*, float (*) [30][10])' into 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])' (ico_conv_layer0.cpp:236:0)
+INFO: [HLS 214-178] Inlining function 'get_kernel(float const (*) [1][1][7], int const (*) [6][1][1][9][4], float (*) [6][1][1][3][3])' into 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])' (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel': Cyclic partitioning with factor 2 on dimension 1. (ico_conv_layer0.cpp:249:0)
+INFO: [HLS 214-248] Applying array_partition to 'kernel_2d': Cyclic partitioning with factor 2 on dimension 1. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-248] Applying array_partition to 'bias_2d': Cyclic partitioning with factor 2 on dimension 1. (ico_conv_layer0.cpp:282:16)
+INFO: [HLS 214-248] Applying array_partition to 'weight': Cyclic partitioning with factor 2 on dimension 1. (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-248] Applying array_partition to 'bias': Cyclic partitioning with factor 2 on dimension 1. (ico_conv_layer0.cpp:245:0)
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_35_5> at ico_conv_layer0.cpp:35:38 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_46_8> at ico_conv_layer0.cpp:46:30 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_56_11> at ico_conv_layer0.cpp:56:31 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_96_2> at ico_conv_layer0.cpp:96:26 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_108_6> at ico_conv_layer0.cpp:108:35 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_126_8> at ico_conv_layer0.cpp:126:27 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_145_6> at ico_conv_layer0.cpp:145:43 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_159_11> at ico_conv_layer0.cpp:159:40 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_180_13> at ico_conv_layer0.cpp:180:28 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_391_39> at ico_conv_layer0.cpp:391:44 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_356_32> at ico_conv_layer0.cpp:356:32 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_345_30> at ico_conv_layer0.cpp:345:36 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_334_27> at ico_conv_layer0.cpp:334:44 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_316_22> at ico_conv_layer0.cpp:316:44 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_206_3> at ico_conv_layer0.cpp:206:31 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_290_13> at ico_conv_layer0.cpp:290:32 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_141_2> at ico_conv_layer0.cpp:141:27 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_161_11> at ico_conv_layer0.cpp:161:40 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_182_13> at ico_conv_layer0.cpp:182:28 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_336_30> at ico_conv_layer0.cpp:336:32 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_329_28> at ico_conv_layer0.cpp:329:36 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_307_22> at ico_conv_layer0.cpp:307:44 
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_286_13> at ico_conv_layer0.cpp:286:32 
 INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_273_11> at ico_conv_layer0.cpp:273:44 
-INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_254_6> at ico_conv_layer0.cpp:254:43 
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_297_16' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:297:44)
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_298_17' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:298:48)
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_210_5' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:210:39)
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_211_6' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:211:43)
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_361_33' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:361:36)
-INFO: [HLS 214-291] Loop 'VITIS_LOOP_379_34' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:379:36)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_297_16' (ico_conv_layer0.cpp:297:44) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_298_17' (ico_conv_layer0.cpp:298:48) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_210_5' (ico_conv_layer0.cpp:210:39) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_211_6' (ico_conv_layer0.cpp:211:43) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_361_33' (ico_conv_layer0.cpp:361:36) in function 'conv_ico_layer0' completely with a factor of 6 (ico_conv_layer0.cpp:236:0)
-INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_379_34' (ico_conv_layer0.cpp:379:36) in function 'conv_ico_layer0' completely with a factor of 6 (ico_conv_layer0.cpp:236:0)
+INFO: [HLS 214-376] automatically set the pipeline for Loop< VITIS_LOOP_259_6> at ico_conv_layer0.cpp:259:43 
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_292_16' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:292:44)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_293_17' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:293:48)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_312_24' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:312:52)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_313_25' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:313:56)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_340_31' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:340:36)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_354_32' is marked as complete unroll implied by the pipeline pragma (ico_conv_layer0.cpp:354:36)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_292_16' (ico_conv_layer0.cpp:292:44) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_293_17' (ico_conv_layer0.cpp:293:48) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_312_24' (ico_conv_layer0.cpp:312:52) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_313_25' (ico_conv_layer0.cpp:313:56) in function 'conv_ico_layer0' completely with a factor of 3 (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_340_31' (ico_conv_layer0.cpp:340:36) in function 'conv_ico_layer0' completely with a factor of 6 (ico_conv_layer0.cpp:245:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_354_32' (ico_conv_layer0.cpp:354:36) in function 'conv_ico_layer0' completely with a factor of 6 (ico_conv_layer0.cpp:245:0)
 INFO: [HLS 214-449] Automatically partitioning array '_ZZ7pad_icoPA1_A5_A4_A8_fPA5_A6_A10_KiPA5_A6_A10_fE18input_after_smooth' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:88:0)
 INFO: [HLS 214-449] Automatically partitioning array '_ZZ7pad_icoPA1_A5_A4_A8_fPA5_A6_A10_KiPA5_A6_A10_fE18input_after_smooth' dimension 2 completely based on constant index. (ico_conv_layer0.cpp:88:0)
-INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel' dimension 3 completely based on constant index. (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel' dimension 4 completely based on constant index. (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-449] Automatically partitioning array 'input_frame' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-449] Automatically partitioning array 'input_frame' dimension 2 completely based on constant index. (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-449] Automatically partitioning array 'padded_frame' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:247:16)
-INFO: [HLS 214-449] Automatically partitioning array 'input' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:266:16)
-INFO: [HLS 214-449] Automatically partitioning array 'kernel' dimension 2 completely based on constant index. (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-449] Automatically partitioning array 'kernel' dimension 3 completely based on constant index. (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-449] Automatically partitioning array 'kernel' dimension 4 completely based on constant index. (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=3' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=5' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=6' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma (ico_conv_layer0.cpp:238:0)
+INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_0' dimension 3 completely based on constant index.
+INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_0' dimension 4 completely based on constant index.
+INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_1' dimension 3 completely based on constant index.
+INFO: [HLS 214-449] Automatically partitioning array '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_1' dimension 4 completely based on constant index.
+INFO: [HLS 214-449] Automatically partitioning array 'input_frame' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-449] Automatically partitioning array 'input_frame' dimension 2 completely based on constant index. (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-449] Automatically partitioning array 'padded_frame' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:254:16)
+INFO: [HLS 214-449] Automatically partitioning array 'reshaped_input' dimension 1 completely based on constant index. (ico_conv_layer0.cpp:267:16)
+INFO: [HLS 214-449] Automatically partitioning array 'kernel_2d' dimension 2 completely based on constant index. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-449] Automatically partitioning array 'kernel_2d' dimension 3 completely based on constant index. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-449] Automatically partitioning array 'kernel_2d' dimension 4 completely based on constant index. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=3' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=5' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=6' for array 'conv_ico_layer0(float (*) [1][1][5][4][8], float const (*) [1][1][7], float const*, int const (*) [6][1][1][9][4], int const (*) [5][6][10], float (*) [32][6][5][4][8])::kernel' due to pipeline pragma
 INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'pad_ico(float (*) [1][5][4][8], int const (*) [5][6][10], float (*) [5][6][10])::input_after_smooth' due to pipeline pragma (ico_conv_layer0.cpp:88:0)
 INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'pad_ico(float (*) [1][5][4][8], int const (*) [5][6][10], float (*) [5][6][10])::input_after_smooth' due to pipeline pragma (ico_conv_layer0.cpp:88:0)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=5' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'padded_frame' due to pipeline pragma (ico_conv_layer0.cpp:247:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:266:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=cyclic factor=3 dim=3' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:266:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=cyclic factor=3 dim=2' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:266:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=3' for array 'kernel_2d' due to pipeline pragma (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'kernel_2d' due to pipeline pragma (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'kernel_2d' due to pipeline pragma (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=5' for array 'output_frame' due to pipeline pragma (ico_conv_layer0.cpp:327:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'output_frame' due to pipeline pragma (ico_conv_layer0.cpp:327:16)
-INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'output_frame' due to pipeline pragma (ico_conv_layer0.cpp:327:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=5' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'input_frame' due to pipeline pragma (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'padded_frame' due to pipeline pragma (ico_conv_layer0.cpp:254:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=1' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:267:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=cyclic factor=3 dim=3' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:267:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=cyclic factor=3 dim=2' for array 'reshaped_input' due to pipeline pragma (ico_conv_layer0.cpp:267:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=3' for array 'kernel_2d_0' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'kernel_2d_0' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'kernel_2d_0' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=3' for array 'kernel_2d_1' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=2' for array 'kernel_2d_1' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-270] Inferring pragma 'array_partition type=complete dim=4' for array 'kernel_2d_1' due to pipeline pragma (ico_conv_layer0.cpp:281:16)
 INFO: [HLS 214-248] Applying array_partition to '_ZZ7pad_icoPA1_A5_A4_A8_fPA5_A6_A10_KiPA5_A6_A10_fE18input_after_smooth': Complete partitioning on dimension 1. Complete partitioning on dimension 2. (ico_conv_layer0.cpp:88:0)
-INFO: [HLS 214-248] Applying array_partition to '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel': Complete partitioning on dimension 3. Complete partitioning on dimension 4. Complete partitioning on dimension 5. Complete partitioning on dimension 6. (ico_conv_layer0.cpp:238:0)
-INFO: [HLS 214-248] Applying array_partition to 'input_frame': Complete partitioning on dimension 1. Complete partitioning on dimension 2. Complete partitioning on dimension 5. (ico_conv_layer0.cpp:246:16)
-INFO: [HLS 214-248] Applying array_partition to 'padded_frame': Complete partitioning on dimension 1. (ico_conv_layer0.cpp:247:16)
-INFO: [HLS 214-248] Applying array_partition to 'reshaped_input': Complete partitioning on dimension 1. Cyclic partitioning with factor 3 on dimension 2. Cyclic partitioning with factor 3 on dimension 3. (ico_conv_layer0.cpp:266:16)
-INFO: [HLS 214-248] Applying array_partition to 'kernel_2d': Complete partitioning on dimension 2. Complete partitioning on dimension 3. Complete partitioning on dimension 4. (ico_conv_layer0.cpp:286:16)
-INFO: [HLS 214-248] Applying array_partition to 'output_frame': Complete partitioning on dimension 2. Complete partitioning on dimension 4. Complete partitioning on dimension 5. (ico_conv_layer0.cpp:327:16)
-INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 8.629 seconds; current allocated memory: 622.863 MB.
-INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.004 seconds; current allocated memory: 622.863 MB.
+INFO: [HLS 214-248] Applying array_partition to '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_1': Complete partitioning on dimension 3. Complete partitioning on dimension 4. Complete partitioning on dimension 5. Complete partitioning on dimension 6.
+INFO: [HLS 214-248] Applying array_partition to '_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A10_SB_PA32_A6_S1_E6kernel_0': Complete partitioning on dimension 3. Complete partitioning on dimension 4. Complete partitioning on dimension 5. Complete partitioning on dimension 6.
+INFO: [HLS 214-248] Applying array_partition to 'input_frame': Complete partitioning on dimension 1. Complete partitioning on dimension 2. Complete partitioning on dimension 5. (ico_conv_layer0.cpp:253:16)
+INFO: [HLS 214-248] Applying array_partition to 'padded_frame': Complete partitioning on dimension 1. (ico_conv_layer0.cpp:254:16)
+INFO: [HLS 214-248] Applying array_partition to 'reshaped_input': Complete partitioning on dimension 1. Cyclic partitioning with factor 3 on dimension 2. Cyclic partitioning with factor 3 on dimension 3. (ico_conv_layer0.cpp:267:16)
+INFO: [HLS 214-248] Applying array_partition to 'kernel_2d_0': Complete partitioning on dimension 2. Complete partitioning on dimension 3. Complete partitioning on dimension 4. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 214-248] Applying array_partition to 'kernel_2d_1': Complete partitioning on dimension 2. Complete partitioning on dimension 3. Complete partitioning on dimension 4. (ico_conv_layer0.cpp:281:16)
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 9.888 seconds; current allocated memory: 622.773 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.004 seconds; current allocated memory: 622.773 MB.
 INFO: [HLS 200-10] Starting code transformations ...
-INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.44 seconds; current allocated memory: 633.215 MB.
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.259 seconds; current allocated memory: 629.090 MB.
 INFO: [HLS 200-10] Checking synthesizability ...
-INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.527 seconds; current allocated memory: 641.785 MB.
-INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (ico_conv_layer0.cpp:207:24) to (ico_conv_layer0.cpp:206:31) in function 'conv_ico_layer0'... converting 17 basic blocks.
-INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 2 seconds. CPU system time: 0 seconds. Elapsed time: 1.792 seconds; current allocated memory: 676.652 MB.
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.25 seconds; current allocated memory: 634.570 MB.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.719 seconds; current allocated memory: 658.984 MB.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_34_4'(ico_conv_layer0.cpp:34:34) and 'VITIS_LOOP_35_5'(ico_conv_layer0.cpp:35:38) in function 'pad_ico' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_33_3'(ico_conv_layer0.cpp:33:30) and 'VITIS_LOOP_34_4'(ico_conv_layer0.cpp:34:34) in function 'pad_ico' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_107_5'(ico_conv_layer0.cpp:107:31) and 'VITIS_LOOP_108_6'(ico_conv_layer0.cpp:108:35) in function 'pad_ico' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_106_4'(ico_conv_layer0.cpp:106:27) and 'VITIS_LOOP_107_5'(ico_conv_layer0.cpp:107:31) in function 'pad_ico' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_144_5'(ico_conv_layer0.cpp:144:39) and 'VITIS_LOOP_145_6'(ico_conv_layer0.cpp:145:43) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_141_2'(ico_conv_layer0.cpp:141:27) and 'VITIS_LOOP_144_5'(ico_conv_layer0.cpp:144:39) in function 'conv_ico_layer0' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_140_1'(ico_conv_layer0.cpp:140:23) and 'VITIS_LOOP_141_2'(ico_conv_layer0.cpp:141:27) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_156_8'(ico_conv_layer0.cpp:156:27) and 'VITIS_LOOP_159_11'(ico_conv_layer0.cpp:159:40) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_155_7'(ico_conv_layer0.cpp:155:23) and 'VITIS_LOOP_156_8'(ico_conv_layer0.cpp:156:27) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_179_12'(ico_conv_layer0.cpp:179:24) and 'VITIS_LOOP_180_13'(ico_conv_layer0.cpp:180:28) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_253_5'(ico_conv_layer0.cpp:253:39) and 'VITIS_LOOP_254_6'(ico_conv_layer0.cpp:254:43) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_252_4'(ico_conv_layer0.cpp:252:35) and 'VITIS_LOOP_253_5'(ico_conv_layer0.cpp:253:39) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_158_8'(ico_conv_layer0.cpp:158:27) and 'VITIS_LOOP_161_11'(ico_conv_layer0.cpp:161:40) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_157_7'(ico_conv_layer0.cpp:157:23) and 'VITIS_LOOP_158_8'(ico_conv_layer0.cpp:158:27) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_181_12'(ico_conv_layer0.cpp:181:24) and 'VITIS_LOOP_182_13'(ico_conv_layer0.cpp:182:28) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_258_5'(ico_conv_layer0.cpp:258:39) and 'VITIS_LOOP_259_6'(ico_conv_layer0.cpp:259:43) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_257_4'(ico_conv_layer0.cpp:257:35) and 'VITIS_LOOP_258_5'(ico_conv_layer0.cpp:258:39) in function 'conv_ico_layer0' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_272_10'(ico_conv_layer0.cpp:272:40) and 'VITIS_LOOP_273_11'(ico_conv_layer0.cpp:273:44) in function 'conv_ico_layer0' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_271_9'(ico_conv_layer0.cpp:271:35) and 'VITIS_LOOP_272_10'(ico_conv_layer0.cpp:272:40) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_289_12'(ico_conv_layer0.cpp:289:28) and 'VITIS_LOOP_290_13'(ico_conv_layer0.cpp:290:32) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_315_21'(ico_conv_layer0.cpp:315:40) and 'VITIS_LOOP_316_22'(ico_conv_layer0.cpp:316:44) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_314_20'(ico_conv_layer0.cpp:314:36) and 'VITIS_LOOP_315_21'(ico_conv_layer0.cpp:315:40) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_312_19'(ico_conv_layer0.cpp:312:32) and 'VITIS_LOOP_314_20'(ico_conv_layer0.cpp:314:36) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_311_18'(ico_conv_layer0.cpp:311:28) and 'VITIS_LOOP_312_19'(ico_conv_layer0.cpp:312:32) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_333_26'(ico_conv_layer0.cpp:333:40) and 'VITIS_LOOP_334_27'(ico_conv_layer0.cpp:334:44) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_332_25'(ico_conv_layer0.cpp:332:36) and 'VITIS_LOOP_333_26'(ico_conv_layer0.cpp:333:40) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_331_24'(ico_conv_layer0.cpp:331:32) and 'VITIS_LOOP_332_25'(ico_conv_layer0.cpp:332:36) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_330_23'(ico_conv_layer0.cpp:330:28) and 'VITIS_LOOP_331_24'(ico_conv_layer0.cpp:331:32) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_344_29'(ico_conv_layer0.cpp:344:32) and 'VITIS_LOOP_345_30'(ico_conv_layer0.cpp:345:36) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_343_28'(ico_conv_layer0.cpp:343:28) and 'VITIS_LOOP_344_29'(ico_conv_layer0.cpp:344:32) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_355_31'(ico_conv_layer0.cpp:355:28) and 'VITIS_LOOP_356_32'(ico_conv_layer0.cpp:356:32) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_390_38'(ico_conv_layer0.cpp:390:40) and 'VITIS_LOOP_391_39'(ico_conv_layer0.cpp:391:44) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_389_37'(ico_conv_layer0.cpp:389:36) and 'VITIS_LOOP_390_38'(ico_conv_layer0.cpp:390:40) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_388_36'(ico_conv_layer0.cpp:388:32) and 'VITIS_LOOP_389_37'(ico_conv_layer0.cpp:389:36) in function 'conv_ico_layer0' into perfectly nested loops.
-INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_387_35'(ico_conv_layer0.cpp:387:28) and 'VITIS_LOOP_388_36'(ico_conv_layer0.cpp:388:32) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_285_12'(ico_conv_layer0.cpp:285:21) and 'VITIS_LOOP_286_13'(ico_conv_layer0.cpp:286:32) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_306_21'(ico_conv_layer0.cpp:306:40) and 'VITIS_LOOP_307_22'(ico_conv_layer0.cpp:307:44) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_305_20'(ico_conv_layer0.cpp:305:36) and 'VITIS_LOOP_306_21'(ico_conv_layer0.cpp:306:40) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_303_19'(ico_conv_layer0.cpp:303:32) and 'VITIS_LOOP_305_20'(ico_conv_layer0.cpp:305:36) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_302_18'(ico_conv_layer0.cpp:302:28) and 'VITIS_LOOP_303_19'(ico_conv_layer0.cpp:303:32) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_328_27'(ico_conv_layer0.cpp:328:32) and 'VITIS_LOOP_329_28'(ico_conv_layer0.cpp:329:36) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_327_26'(ico_conv_layer0.cpp:327:28) and 'VITIS_LOOP_328_27'(ico_conv_layer0.cpp:328:32) in function 'conv_ico_layer0' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_335_29'(ico_conv_layer0.cpp:335:28) and 'VITIS_LOOP_336_30'(ico_conv_layer0.cpp:336:32) in function 'conv_ico_layer0' into perfectly nested loops.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_34_4' (ico_conv_layer0.cpp:34:34) in function 'pad_ico'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_33_3' (ico_conv_layer0.cpp:33:30) in function 'pad_ico'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_107_5' (ico_conv_layer0.cpp:107:31) in function 'pad_ico'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_106_4' (ico_conv_layer0.cpp:106:27) in function 'pad_ico'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_144_5' (ico_conv_layer0.cpp:144:39) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_141_2' (ico_conv_layer0.cpp:141:27) in function 'conv_ico_layer0'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_140_1' (ico_conv_layer0.cpp:140:23) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_156_8' (ico_conv_layer0.cpp:156:27) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_155_7' (ico_conv_layer0.cpp:155:23) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_179_12' (ico_conv_layer0.cpp:179:24) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_253_5' (ico_conv_layer0.cpp:253:39) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_252_4' (ico_conv_layer0.cpp:252:35) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_158_8' (ico_conv_layer0.cpp:158:27) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_157_7' (ico_conv_layer0.cpp:157:23) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_181_12' (ico_conv_layer0.cpp:181:24) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_258_5' (ico_conv_layer0.cpp:258:39) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_257_4' (ico_conv_layer0.cpp:257:35) in function 'conv_ico_layer0'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_272_10' (ico_conv_layer0.cpp:272:40) in function 'conv_ico_layer0'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_271_9' (ico_conv_layer0.cpp:271:35) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_289_12' (ico_conv_layer0.cpp:289:28) in function 'conv_ico_layer0'.
-WARNING: [HLS 200-960] Cannot flatten loop 'VITIS_LOOP_205_2' (ico_conv_layer0.cpp:205:27) in function 'conv_ico_layer0' either the parent loop or sub loop is do-while loop.
-Resolution: For help on HLS 200-960 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-960.html
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_315_21' (ico_conv_layer0.cpp:315:40) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_314_20' (ico_conv_layer0.cpp:314:36) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_312_19' (ico_conv_layer0.cpp:312:32) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_311_18' (ico_conv_layer0.cpp:311:28) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_333_26' (ico_conv_layer0.cpp:333:40) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_332_25' (ico_conv_layer0.cpp:332:36) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_331_24' (ico_conv_layer0.cpp:331:32) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_330_23' (ico_conv_layer0.cpp:330:28) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_344_29' (ico_conv_layer0.cpp:344:32) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_343_28' (ico_conv_layer0.cpp:343:28) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_355_31' (ico_conv_layer0.cpp:355:28) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_390_38' (ico_conv_layer0.cpp:390:40) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_389_37' (ico_conv_layer0.cpp:389:36) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_388_36' (ico_conv_layer0.cpp:388:32) in function 'conv_ico_layer0'.
-INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_387_35' (ico_conv_layer0.cpp:387:28) in function 'conv_ico_layer0'.
-INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.618 seconds; current allocated memory: 834.477 MB.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_285_12' (ico_conv_layer0.cpp:285:21) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_306_21' (ico_conv_layer0.cpp:306:40) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_305_20' (ico_conv_layer0.cpp:305:36) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_303_19' (ico_conv_layer0.cpp:303:32) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_302_18' (ico_conv_layer0.cpp:302:28) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_328_27' (ico_conv_layer0.cpp:328:32) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_327_26' (ico_conv_layer0.cpp:327:28) in function 'conv_ico_layer0'.
+INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_335_29' (ico_conv_layer0.cpp:335:28) in function 'conv_ico_layer0'.
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.329 seconds; current allocated memory: 793.812 MB.
 INFO: [HLS 200-10] Starting hardware synthesis ...
 INFO: [HLS 200-10] Synthesizing 'conv_ico_layer0' ...
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITI' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITIS_LOOP_145_6'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 4, loop 'VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITIS_LOOP_145_6'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_140_1_VITIS_LOOP_141_2'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_140_1_VITIS_LOOP_141_2'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.282 seconds; current allocated memory: 839.945 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.365 seconds; current allocated memory: 798.918 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.066 seconds; current allocated memory: 840.996 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.086 seconds; current allocated memory: 800.086 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 10, loop 'VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 10, loop 'VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.131 seconds; current allocated memory: 841.852 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.22 seconds; current allocated memory: 802.523 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.066 seconds; current allocated memory: 842.234 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.107 seconds; current allocated memory: 802.527 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_179_12_VITIS_LOOP_180_13' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_181_12_VITIS_LOOP_182_13' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_179_12_VITIS_LOOP_180_13'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_179_12_VITIS_LOOP_180_13'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_181_12_VITIS_LOOP_182_13'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_181_12_VITIS_LOOP_182_13'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.099 seconds; current allocated memory: 842.410 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.149 seconds; current allocated memory: 802.578 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.049 seconds; current allocated memory: 842.414 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.068 seconds; current allocated memory: 802.578 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 4, loop 'VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 4, loop 'VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.101 seconds; current allocated memory: 842.953 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.148 seconds; current allocated memory: 803.340 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.058 seconds; current allocated memory: 843.000 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.08 seconds; current allocated memory: 803.430 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -265,13 +248,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 5, loop 'VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.103 seconds; current allocated memory: 843.199 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.135 seconds; current allocated memory: 803.766 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.057 seconds; current allocated memory: 843.500 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.081 seconds; current allocated memory: 803.871 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_46_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -279,13 +262,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_46_8'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 2, loop 'VITIS_LOOP_46_8'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.083 seconds; current allocated memory: 843.672 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.102 seconds; current allocated memory: 803.965 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.047 seconds; current allocated memory: 843.941 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.064 seconds; current allocated memory: 803.988 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_56_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -293,13 +276,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_56_11'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 59, loop 'VITIS_LOOP_56_11'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.089 seconds; current allocated memory: 844.648 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.132 seconds; current allocated memory: 804.559 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.064 seconds; current allocated memory: 844.707 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.097 seconds; current allocated memory: 804.809 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_96_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -319,13 +302,13 @@ WARNING: [HLS 200-880] The II Violation in module 'pad_ico_Pipeline_VITIS_LOOP_9
 Resolution: For help on HLS 200-880 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 9, Depth = 12, loop 'VITIS_LOOP_96_2'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.122 seconds; current allocated memory: 845.281 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.201 seconds; current allocated memory: 805.375 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.052 seconds; current allocated memory: 845.355 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.068 seconds; current allocated memory: 805.379 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -333,13 +316,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 11, loop 'VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.105 seconds; current allocated memory: 846.230 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.138 seconds; current allocated memory: 806.176 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.063 seconds; current allocated memory: 846.441 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.077 seconds; current allocated memory: 806.430 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_Pipeline_VITIS_LOOP_126_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -347,25 +330,25 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_126_8'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_126_8'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.093 seconds; current allocated memory: 846.578 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.143 seconds; current allocated memory: 806.746 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.056 seconds; current allocated memory: 846.664 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.074 seconds; current allocated memory: 806.805 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.065 seconds; current allocated memory: 846.980 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.087 seconds; current allocated memory: 806.949 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.051 seconds; current allocated memory: 847.055 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.072 seconds; current allocated memory: 807.020 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_271_9_VITIS_LOOP_272_10_VITIS_LOOP_273_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -373,175 +356,131 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_271_9_VITIS_LOOP_272_10_VITIS_LOOP_273_11'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 10, loop 'VITIS_LOOP_271_9_VITIS_LOOP_272_10_VITIS_LOOP_273_11'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.127 seconds; current allocated memory: 848.051 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.18 seconds; current allocated memory: 808.395 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.074 seconds; current allocated memory: 848.129 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.099 seconds; current allocated memory: 808.426 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_289_12_VITIS_LOOP_290_13' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_285_12_VITIS_LOOP_286_13' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_289_12_VITIS_LOOP_290_13'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 5, loop 'VITIS_LOOP_289_12_VITIS_LOOP_290_13'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_285_12_VITIS_LOOP_286_13'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 5, loop 'VITIS_LOOP_285_12_VITIS_LOOP_286_13'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.121 seconds; current allocated memory: 848.926 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.203 seconds; current allocated memory: 809.902 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.066 seconds; current allocated memory: 848.992 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.102 seconds; current allocated memory: 810.020 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_V' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_206_3'.
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_VITIS_LOOP_306_21_VITIS_LOOP_307_22'.
 INFO: [SCHED 204-61] Discarding stage scheduling solution.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 94, loop 'VITIS_LOOP_206_3'
-WARNING: [HLS 200-871] Estimated clock period (4.048 ns) exceeds the target (target clock period: 5.000 ns, clock uncertainty: 1.350 ns, effective delay budget: 3.650 ns).
-Resolution: For help on HLS 200-871 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-871.html
-WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3' consists of the following:
-	'mul' operation 129 bit ('mul_ln215', ico_conv_layer0.cpp:215->ico_conv_layer0.cpp:308) [113]  (4.048 ns)
-
-Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 92, loop 'VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_VITIS_LOOP_306_21_VITIS_LOOP_307_22'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.422 seconds; current allocated memory: 852.195 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 0.711 seconds; current allocated memory: 815.871 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.173 seconds; current allocated memory: 852.500 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.251 seconds; current allocated memory: 815.949 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_V' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_VITIS_LOOP_315_21_VITIS_LOOP_316_22'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 9, loop 'VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_VITIS_LOOP_315_21_VITIS_LOOP_316_22'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 5, loop 'VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.249 seconds; current allocated memory: 853.836 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.287 seconds; current allocated memory: 816.102 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.091 seconds; current allocated memory: 853.984 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.081 seconds; current allocated memory: 816.105 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_V' 
+INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_VITIS_LOOP_333_26_VITIS_LOOP_334_27'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 8, loop 'VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_VITIS_LOOP_333_26_VITIS_LOOP_334_27'
+INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'.
+WARNING: [HLS 200-885] The II Violation in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' (loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'): Unable to schedule 'load' operation 32 bit ('output_r_load_5', ico_conv_layer0.cpp:346) on array 'output_r' due to limited memory ports (II = 1). Please consider using a memory core with more ports or partitioning the array 'output_r'.
+Resolution: For help on HLS 200-885 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-885.html
+WARNING: [HLS 200-885] The II Violation in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' (loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'): Unable to schedule 'load' operation 32 bit ('output_r_load_6', ico_conv_layer0.cpp:347) on array 'output_r' due to limited memory ports (II = 2). Please consider using a memory core with more ports or partitioning the array 'output_r'.
+Resolution: For help on HLS 200-885 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-885.html
+WARNING: [HLS 200-885] The II Violation in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' (loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'): Unable to schedule 'load' operation 32 bit ('output_r_load_7', ico_conv_layer0.cpp:348) on array 'output_r' due to limited memory ports (II = 3). Please consider using a memory core with more ports or partitioning the array 'output_r'.
+Resolution: For help on HLS 200-885 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-885.html
+WARNING: [HLS 200-885] The II Violation in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' (loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'): Unable to schedule 'load' operation 32 bit ('output_r_load_8', ico_conv_layer0.cpp:349) on array 'output_r' due to limited memory ports (II = 4). Please consider using a memory core with more ports or partitioning the array 'output_r'.
+Resolution: For help on HLS 200-885 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-885.html
+WARNING: [HLS 200-885] The II Violation in module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' (loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'): Unable to schedule 'store' operation 0 bit ('output_r_addr_69_write_ln356', ico_conv_layer0.cpp:356) of variable 'bitcast_ln356', ico_conv_layer0.cpp:356 on array 'output_r' due to limited memory ports (II = 35). Please consider using a memory core with more ports or partitioning the array 'output_r'.
+Resolution: For help on HLS 200-885 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-885.html
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 36, Depth = 290, loop 'VITIS_LOOP_335_29_VITIS_LOOP_336_30'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.842 seconds; current allocated memory: 878.227 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.901 seconds; current allocated memory: 819.383 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.253 seconds; current allocated memory: 878.242 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30'
-INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.314 seconds; current allocated memory: 878.254 MB.
-INFO: [BIND 205-100] Starting micro-architecture generation ...
-INFO: [BIND 205-101] Performing variable lifetime analysis.
-INFO: [BIND 205-101] Exploring resource sharing.
-INFO: [BIND 205-101] Binding ...
-INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.067 seconds; current allocated memory: 878.254 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_355_31_VITIS_LOOP_356_32' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_355_31_VITIS_LOOP_356_32'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 261, loop 'VITIS_LOOP_355_31_VITIS_LOOP_356_32'
-INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.277 seconds; current allocated memory: 878.262 MB.
-INFO: [BIND 205-100] Starting micro-architecture generation ...
-INFO: [BIND 205-101] Performing variable lifetime analysis.
-INFO: [BIND 205-101] Exploring resource sharing.
-INFO: [BIND 205-101] Binding ...
-INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.171 seconds; current allocated memory: 878.262 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0_Pipeline_VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_V' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [SCHED 204-11] Starting scheduling ...
-INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_VITIS_LOOP_390_38_VITIS_LOOP_391_39'.
-INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 8, loop 'VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_VITIS_LOOP_390_38_VITIS_LOOP_391_39'
-INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.841 seconds; current allocated memory: 878.539 MB.
-INFO: [BIND 205-100] Starting micro-architecture generation ...
-INFO: [BIND 205-101] Performing variable lifetime analysis.
-INFO: [BIND 205-101] Exploring resource sharing.
-INFO: [BIND 205-101] Binding ...
-INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.252 seconds; current allocated memory: 878.539 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.302 seconds; current allocated memory: 821.566 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer0' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
-WARNING: [HLS 200-871] Estimated clock period (4.048 ns) exceeds the target (target clock period: 5.000 ns, clock uncertainty: 1.350 ns, effective delay budget: 3.650 ns).
-Resolution: For help on HLS 200-871 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-871.html
-WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer0' consists of the following:
-	'mul' operation 128 bit ('mul25', ico_conv_layer0.cpp:205->ico_conv_layer0.cpp:308) [328]  (4.048 ns)
-
-Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.385 seconds; current allocated memory: 878.539 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.298 seconds; current allocated memory: 821.887 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.165 seconds; current allocated memory: 878.617 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.107 seconds; current allocated memory: 822.637 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITI' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITI' pipeline 'VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITIS_LOOP_145_6' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2_VITIS_LOOP_144_5_VITI'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.266 seconds; current allocated memory: 880.410 MB.
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2' pipeline 'VITIS_LOOP_140_1_VITIS_LOOP_141_2' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_140_1_VITIS_LOOP_141_2'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.218 seconds; current allocated memory: 824.605 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11' pipeline 'VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11' pipeline type 'loop pipeline'
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11' pipeline 'VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Generating core module 'mul_4ns_6ns_9_1_1': 1 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'urem_4ns_3ns_2_8_1': 1 instance(s).
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_155_7_VITIS_LOOP_156_8_VITIS_LOOP_159_11'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.336 seconds; current allocated memory: 882.215 MB.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_157_7_VITIS_LOOP_158_8_VITIS_LOOP_161_11'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.415 seconds; current allocated memory: 828.934 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_179_12_VITIS_LOOP_180_13' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_181_12_VITIS_LOOP_182_13' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_179_12_VITIS_LOOP_180_13' pipeline 'VITIS_LOOP_179_12_VITIS_LOOP_180_13' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_179_12_VITIS_LOOP_180_13'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.325 seconds; current allocated memory: 883.953 MB.
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_181_12_VITIS_LOOP_182_13' pipeline 'VITIS_LOOP_181_12_VITIS_LOOP_182_13' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_181_12_VITIS_LOOP_182_13'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.617 seconds; current allocated memory: 832.152 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6' pipeline 'VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_252_4_VITIS_LOOP_253_5_VITIS_LOOP_254_6'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.187 seconds; current allocated memory: 885.859 MB.
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6' pipeline 'VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_257_4_VITIS_LOOP_258_5_VITIS_LOOP_259_6'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.259 seconds; current allocated memory: 833.004 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5' pipeline 'VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_17_3_32_1_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_33_3_VITIS_LOOP_34_4_VITIS_LOOP_35_5'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.279 seconds; current allocated memory: 887.789 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.36 seconds; current allocated memory: 835.457 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_46_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_VITIS_LOOP_46_8' pipeline 'VITIS_LOOP_46_8' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_46_8'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.232 seconds; current allocated memory: 889.352 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.311 seconds; current allocated memory: 836.871 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_56_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -549,44 +488,43 @@ INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_
 INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 10 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_56_11'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.238 seconds; current allocated memory: 891.840 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.328 seconds; current allocated memory: 838.875 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_96_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_VITIS_LOOP_96_2' pipeline 'VITIS_LOOP_96_2' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_96_2'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.296 seconds; current allocated memory: 893.941 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.438 seconds; current allocated memory: 840.957 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6' pipeline 'VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_106_4_VITIS_LOOP_107_5_VITIS_LOOP_108_6'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.196 seconds; current allocated memory: 895.332 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.386 seconds; current allocated memory: 843.141 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_Pipeline_VITIS_LOOP_126_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_Pipeline_VITIS_LOOP_126_8' pipeline 'VITIS_LOOP_126_8' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_Pipeline_VITIS_LOOP_126_8'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.282 seconds; current allocated memory: 897.832 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.487 seconds; current allocated memory: 845.008 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2361_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2365_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2369_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2373_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2377_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2381_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2385_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2389_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2393_p_opcode' to 0.
-WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_2397_p_opcode' to 0.
-INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 10 instance(s).
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_613_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_617_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_621_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_625_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_629_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_633_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_637_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_641_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'pad_ico/grp_fu_645_p_opcode' to 0.
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 9 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico'.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_pad_ico_pad_ico_float_1_5_4_8_int_const_5_6_10_float_5_6_10_i_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.298 seconds; current allocated memory: 899.789 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.416 seconds; current allocated memory: 847.094 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_271_9_VITIS_LOOP_272_10_VITIS_LOOP_273_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -596,100 +534,88 @@ INFO: [RTGEN 206-100] Generating core module 'mul_4ns_6ns_9_1_1': 1 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'urem_3ns_3ns_2_7_1': 1 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'urem_4ns_3ns_2_8_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_271_9_VITIS_LOOP_272_10_VITIS_LOOP_273_11'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.244 seconds; current allocated memory: 901.297 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.342 seconds; current allocated memory: 848.535 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_289_12_VITIS_LOOP_290_13' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_285_12_VITIS_LOOP_286_13' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_289_12_VITIS_LOOP_290_13' pipeline 'VITIS_LOOP_289_12_VITIS_LOOP_290_13' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_289_12_VITIS_LOOP_290_13'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.319 seconds; current allocated memory: 904.047 MB.
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_285_12_VITIS_LOOP_286_13' pipeline 'VITIS_LOOP_285_12_VITIS_LOOP_286_13' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_285_12_VITIS_LOOP_286_13'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.518 seconds; current allocated memory: 852.414 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_V' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3' pipeline 'VITIS_LOOP_206_3' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-104] Estimated max fanout for 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3' is 13548 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_V' pipeline 'VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_VITIS_LOOP_306_21_VITIS_LOOP_307_22' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-104] Estimated max fanout for 'conv_ico_layer0_Pipeline_VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_V' is 15310 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
 INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 9 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_5_max_dsp_1': 9 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'mul_4ns_6ns_9_1_1': 1 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'mul_64ns_66ns_129_5_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_3ns_5ns_7_1_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_4ns_6ns_9_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_5ns_7ns_11_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_32_1_1': 18 instance(s).
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_206_3'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.627 seconds; current allocated memory: 912.461 MB.
+INFO: [RTGEN 206-100] Generating core module 'urem_3ns_3ns_2_7_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'urem_4ns_3ns_2_8_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_302_18_VITIS_LOOP_303_19_VITIS_LOOP_305_20_V'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.343 seconds; current allocated memory: 862.547 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_V' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_V' pipeline 'VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_VITIS_LOOP_315_21_VITIS_LOOP_316_22' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_311_18_VITIS_LOOP_312_19_VITIS_LOOP_314_20_V'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 0.765 seconds; current allocated memory: 919.203 MB.
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28' pipeline 'VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_327_26_VITIS_LOOP_328_27_VITIS_LOOP_329_28'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.318 seconds; current allocated memory: 871.461 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_V' 
+INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_V' pipeline 'VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_VITIS_LOOP_333_26_VITIS_LOOP_334_27' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_330_23_VITIS_LOOP_331_24_VITIS_LOOP_332_25_V'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.732 seconds; current allocated memory: 928.980 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30' pipeline 'VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_343_28_VITIS_LOOP_344_29_VITIS_LOOP_345_30'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.51 seconds; current allocated memory: 944.969 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_355_31_VITIS_LOOP_356_32' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_355_31_VITIS_LOOP_356_32' pipeline 'VITIS_LOOP_355_31_VITIS_LOOP_356_32' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-104] Estimated max fanout for 'conv_ico_layer0_Pipeline_VITIS_LOOP_355_31_VITIS_LOOP_356_32' is 34177 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
-INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 60 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 2 instance(s).
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30' pipeline 'VITIS_LOOP_335_29_VITIS_LOOP_336_30' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 1 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'urem_4ns_4ns_4_8_1': 1 instance(s).
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_355_31_VITIS_LOOP_356_32'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.03 seconds; current allocated memory: 955.691 MB.
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0_Pipeline_VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_V' 
-INFO: [HLS 200-10] ----------------------------------------------------------------
-INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer0_Pipeline_VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_V' pipeline 'VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_VITIS_LOOP_390_38_VITIS_LOOP_391_39' pipeline type 'loop pipeline'
-INFO: [RTGEN 206-100] Generating core module 'sparsemux_13_3_32_1_1': 1 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'sparsemux_17_3_32_1_1': 24 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_32_1_1': 6 instance(s).
-INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_387_35_VITIS_LOOP_388_36_VITIS_LOOP_389_37_V'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 1.135 seconds; current allocated memory: 969.340 MB.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0_Pipeline_VITIS_LOOP_335_29_VITIS_LOOP_336_30'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.608 seconds; current allocated memory: 875.301 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer0' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/input_r' to 'ap_memory'.
-INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/weight' to 'ap_memory'.
-INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/bias' to 'ap_memory'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/weight_0' to 'ap_memory'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/weight_1' to 'ap_memory'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/bias_0' to 'ap_memory'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/bias_1' to 'ap_memory'.
 INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/kernel_expansion_idx' to 'ap_memory'.
 INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/reorder_idx' to 'ap_memory'.
 INFO: [RTGEN 206-500] Setting interface mode on port 'conv_ico_layer0/output_r' to 'ap_memory'.
 INFO: [RTGEN 206-500] Setting interface mode on function 'conv_ico_layer0' to 'ap_ctrl_hs'.
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_8_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Abkb' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_7_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Acud' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_6_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AdEe' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_5_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AeOg' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_4_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AfYi' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_3_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Ag8j' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_2_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Ahbi' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_1_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Aibs' due to the length limit 80
-INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AjbC' due to the length limit 80
-INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 10 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 2 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'mul_5ns_7ns_11_1_1': 1 instance(s).
-INFO: [RTGEN 206-100] Generating core module 'mul_64ns_66ns_128_5_1': 1 instance(s).
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_17_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Abkb' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_16_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Acud' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_15_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AdEe' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_14_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AeOg' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_13_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AfYi' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_12_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Ag8j' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_11_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Ahbi' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_10_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Aibs' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_9_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AjbC' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_8_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AkbM' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_7_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AlbW' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_6_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Amb6' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_5_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Ancg' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_4_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Aocq' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_3_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_ApcA' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_2_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_AqcK' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_1_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_ArcU' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_A6_A1_RAM_AUTO_1R1W' to 'p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Asc4' due to the length limit 80
+INFO: [RTGEN 206-100] Generating core module 'fadd_32ns_32ns_32_8_full_dsp_1': 9 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fdiv_32ns_32ns_32_16_no_dsp_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer0'.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_p_ZZ15conv_ico_layer0PA1_A1_A5_A4_A8_fPA1_A1_A7_KfPS5_PA6_A1_A1_A9_A4_KiPA5_Abkb' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_input_frame_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_input_frame_1_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_padded_frame_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_reshaped_input_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_conv_output_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_kernel_2d_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer0_output_frame_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 1.767 seconds; current allocated memory: 997.121 MB.
-INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 2.188 seconds; current allocated memory: 1013.035 MB.
-INFO: [HLS 200-111] Finished Updating report files: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.418 seconds; current allocated memory: 1.005 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 2.004 seconds; current allocated memory: 887.891 MB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.712 seconds; current allocated memory: 895.102 MB.
+INFO: [HLS 200-111] Finished Updating report files: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.453 seconds; current allocated memory: 904.945 MB.
 INFO: [VHDL 208-304] Generating VHDL RTL for conv_ico_layer0.
 INFO: [VLOG 209-307] Generating Verilog RTL for conv_ico_layer0.
-INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were satisfied.
-INFO: [HLS 200-789] **** Estimated Fmax: 247.04 MHz
-INFO: [HLS 200-2161] Finished Command csynth_design Elapsed time: 00:00:37; Allocated memory: 413.129 MB.
-INFO: [HLS 200-112] Total CPU user time: 26 seconds. Total CPU system time: 8 seconds. Total elapsed time: 43.142 seconds; peak allocated memory: 1.006 GB.
+INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were NOT satisfied.
+INFO: [HLS 200-789] **** Estimated Fmax: 222.30 MHz
+INFO: [HLS 200-2161] Finished Command csynth_design Elapsed time: 00:00:35; Allocated memory: 289.191 MB.
+INFO: [HLS 200-112] Total CPU user time: 23 seconds. Total CPU system time: 9 seconds. Total elapsed time: 44.671 seconds; peak allocated memory: 905.980 MB.
