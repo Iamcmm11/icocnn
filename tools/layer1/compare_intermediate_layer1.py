@@ -13,7 +13,11 @@ def load_values(path):
             s = line.strip()
             if not s or s.startswith("#"):
                 continue
-            vals.append(float(s))
+            for tok in s.replace(",", " ").split():
+                try:
+                    vals.append(float(tok))
+                except ValueError:
+                    pass
     return np.array(vals, dtype=np.float64)
 
 

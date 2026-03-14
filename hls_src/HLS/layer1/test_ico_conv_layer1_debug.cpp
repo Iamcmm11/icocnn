@@ -1,15 +1,65 @@
 #include "ico_conv_layer1.hpp"
-#include "../utils.hpp"
+#include "../common/utils.hpp"
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
-static void save_flat(const std::string& file, const std::vector<float>& v, const std::string& shape) {
+template <int D0, int D1, int D2, int D3, int D4>
+static void save_tensor_5d(
+    const std::string& file,
+    data_t (&arr)[D0][D1][D2][D3][D4],
+    const std::string& name
+) {
     std::ofstream f(file.c_str());
-    f << "# Shape: " << shape << "\n";
-    for (size_t i = 0; i < v.size(); i++) {
-        f << v[i] << "\n";
+    if (!f.is_open()) {
+        std::cerr << "Error: cannot write " << file << std::endl;
+        return;
+    }
+
+    double min_v = std::numeric_limits<double>::max();
+    double max_v = std::numeric_limits<double>::lowest();
+    double sum = 0.0;
+    size_t cnt = 0;
+    for (int i0 = 0; i0 < D0; i0++) {
+        for (int i1 = 0; i1 < D1; i1++) {
+            for (int i2 = 0; i2 < D2; i2++) {
+                for (int i3 = 0; i3 < D3; i3++) {
+                    for (int i4 = 0; i4 < D4; i4++) {
+                        double v = arr[i0][i1][i2][i3][i4];
+                        if (v < min_v) min_v = v;
+                        if (v > max_v) max_v = v;
+                        sum += v;
+                        cnt++;
+                    }
+                }
+            }
+        }
+    }
+
+    f << std::fixed << std::setprecision(8);
+    f << "# " << name << "\n";
+    f << "# Shape: (" << D0 << ", " << D1 << ", " << D2 << ", " << D3 << ", " << D4 << ")\n";
+    f << "# Min: " << min_v << ", Max: " << max_v << ", Mean: " << (sum / (double)cnt) << "\n";
+    f << "#" << std::string(70, '=') << "\n\n";
+
+    for (int i0 = 0; i0 < D0; i0++) {
+        for (int i1 = 0; i1 < D1; i1++) {
+            for (int i2 = 0; i2 < D2; i2++) {
+                f << "# [" << i0 << ", " << i1 << ", chart" << i2 << "] - Shape: (" << D3 << ", " << D4 << ")\n";
+                for (int i3 = 0; i3 < D3; i3++) {
+                    f << "  ";
+                    for (int i4 = 0; i4 < D4; i4++) {
+                        f << arr[i0][i1][i2][i3][i4];
+                        if (i4 + 1 < D4) f << "  ";
+                    }
+                    f << "\n";
+                }
+                f << "\n";
+            }
+        }
     }
 }
 
@@ -93,41 +143,29 @@ int main() {
                     for (int w = 0; w < W; w++)
                         frame0[ci][ri][c][h][w] = input[0][ci][ri][c][h][w];
 
-    std::vector<float> frame0_flat;
-    frame0_flat.reserve((size_t)CIN * RIN * CHARTS * H * W);
-    for (int ci = 0; ci < CIN; ci++)
-        for (int ri = 0; ri < RIN; ri++)
-            for (int c = 0; c < CHARTS; c++)
-                for (int h = 0; h < H; h++)
-                    for (int w = 0; w < W; w++)
-                        frame0_flat.push_back(frame0[ci][ri][c][h][w]);
-    save_flat(out_dir + "cpp_frame0_input.txt", frame0_flat, "[CIN,RIN,CHARTS,H,W]");
+    save_tensor_5d(
+        out_dir + "cpp_frame0_input.txt",
+        frame0,
+        "Frame0 Input [CIN,RIN,CHARTS,H,W]"
+    );
 
     static data_t padded[CIN][RIN][CHARTS][H_PADDED][W_PADDED];
     pad_ico(frame0, reorder_idx, padded);
 
-    std::vector<float> padded_flat;
-    padded_flat.reserve((size_t)CIN * RIN * CHARTS * H_PADDED * W_PADDED);
-    for (int ci = 0; ci < CIN; ci++)
-        for (int ri = 0; ri < RIN; ri++)
-            for (int c = 0; c < CHARTS; c++)
-                for (int h = 0; h < H_PADDED; h++)
-                    for (int w = 0; w < W_PADDED; w++)
-                        padded_flat.push_back(padded[ci][ri][c][h][w]);
-    save_flat(out_dir + "cpp_frame0_padded.txt", padded_flat, "[CIN,RIN,CHARTS,H_PADDED,W_PADDED]");
+    save_tensor_5d(
+        out_dir + "cpp_frame0_padded.txt",
+        padded,
+        "After PadIco [CIN,RIN,CHARTS,H_PADDED,W_PADDED]"
+    );
 
     static data_t out[TIME_STEPS][COUT][ROUT][CHARTS][H][W];
     conv_ico_layer1(input, weight, bias, kernel_idx, reorder_idx, out);
 
-    std::vector<float> out0_flat;
-    out0_flat.reserve((size_t)COUT * ROUT * CHARTS * H * W);
-    for (int co = 0; co < COUT; co++)
-        for (int ro = 0; ro < ROUT; ro++)
-            for (int c = 0; c < CHARTS; c++)
-                for (int h = 0; h < H; h++)
-                    for (int w = 0; w < W; w++)
-                        out0_flat.push_back(out[0][co][ro][c][h][w]);
-    save_flat(out_dir + "cpp_frame0_final_output.txt", out0_flat, "[COUT,ROUT,CHARTS,H,W]");
+    save_tensor_5d(
+        out_dir + "cpp_frame0_final_output.txt",
+        out[0],
+        "Frame0 Final Output [COUT,ROUT,CHARTS,H,W]"
+    );
 
     std::cout << "Saved layer1 debug intermediates to: " << out_dir << std::endl;
     return 0;

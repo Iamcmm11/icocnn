@@ -43,25 +43,32 @@ void smooth_vertices(
     }
 
     for (int ci = 0; ci < CIN; ci++) {
-        for (int ri = 0; ri < RIN; ri++) {
-            for (int c = 0; c < CHARTS; c++) {
-                int prev_c = (c - 1 + CHARTS) % CHARTS;
+        for (int c = 0; c < CHARTS; c++) {
+            int prev_c = (c - 1 + CHARTS) % CHARTS;
 
-                float sum_v1 = 0.0f;
+            // Match python icoCNN.SmoothVertices:
+            // mean over both R dimension and 5 neighbors, then broadcast to all R.
+            float sum_v1 = 0.0f;
+            float sum_v2 = 0.0f;
+            for (int ri = 0; ri < RIN; ri++) {
                 sum_v1 += input[ci][ri][c][1][0];
                 sum_v1 += input[ci][ri][c][1][1];
                 sum_v1 += input[ci][ri][c][0][1];
                 sum_v1 += input[ci][ri][prev_c][H - 1][H];
                 sum_v1 += input[ci][ri][prev_c][H - 1][H - 1];
-                output[ci][ri][c][0][0] = sum_v1 / 5.0f;
 
-                float sum_v2 = 0.0f;
                 sum_v2 += input[ci][ri][c][1][H];
                 sum_v2 += input[ci][ri][c][1][(H + 1) % W];
                 sum_v2 += input[ci][ri][c][0][(H + 1) % W];
                 sum_v2 += input[ci][ri][prev_c][H - 1][W - 1];
                 sum_v2 += input[ci][ri][c][0][H - 1];
-                output[ci][ri][c][0][H] = sum_v2 / 5.0f;
+            }
+
+            float mean_v1 = sum_v1 / (RIN * 5.0f);
+            float mean_v2 = sum_v2 / (RIN * 5.0f);
+            for (int ri = 0; ri < RIN; ri++) {
+                output[ci][ri][c][0][0] = mean_v1;
+                output[ci][ri][c][0][H] = mean_v2;
             }
         }
     }
@@ -93,11 +100,13 @@ void pad_ico(
                 for (int h = 0; h < H_PADDED; h++) {
                     for (int w = 0; w < W_PADDED; w++) {
                         int reorder_val = reorder_idx[ri][c][h][w];
-                        int src_chart = reorder_val / (H * W);
-                        int remainder = reorder_val % (H * W);
+                        int src_ri = reorder_val / (CHARTS * H * W);
+                        int remainder_ri = reorder_val % (CHARTS * H * W);
+                        int src_chart = remainder_ri / (H * W);
+                        int remainder = remainder_ri % (H * W);
                         int src_h = remainder / W;
                         int src_w = remainder % W;
-                        output[ci][ri][c][h][w] = input_after_smooth[ci][ri][src_chart][src_h][src_w];
+                        output[ci][ri][c][h][w] = input_after_smooth[ci][src_ri][src_chart][src_h][src_w];
                     }
                 }
             }

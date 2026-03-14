@@ -1,5 +1,5 @@
 #include "ico_conv_layer1.hpp"
-#include "../utils.hpp"
+#include "../common/utils.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>

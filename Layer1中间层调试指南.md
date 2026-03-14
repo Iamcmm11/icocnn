@@ -1,32 +1,33 @@
-# Layer1ÖĞ¼ä²ãµ÷ÊÔÖ¸ÄÏ
+# Layer1 ä¸­é—´å±‚è°ƒè¯•æŒ‡å—
 
-±¾Ö¸ÄÏ¶ÔÓ¦ `layer1` ÑéÖ¤Á´Â·£¨Python µ¼³ö + C ÑéÖ¤ + ÖĞ¼ä²ã¶Ô±È£©¡£
+æœ¬æŒ‡å—å¯¹åº” `layer1` çš„éªŒè¯é“¾è·¯ï¼ˆPython å¯¼å‡º + C éªŒè¯ + ä¸­é—´å±‚å¯¹æ¯”ï¼‰ã€‚
 
-## ĞÂÔöÄ¿Â¼
+## ç›®å½•
 
 ```text
-hls_src/layer1/                    # Layer1 C/HLS ´úÂëÓë²âÊÔ
-tools/layer1/                      # Layer1 Python ½Å±¾
-hls_testdata/layer1/               # Layer1 ²âÊÔÊı¾İ
+hls_src/HLS/layer1/                # Layer1 C/HLS ä»£ç ä¸æµ‹è¯•
+hls_src/HLS/common/                # å…¬å…±å¤´æ–‡ä»¶
+tools/layer1/                      # Layer1 Python è„šæœ¬
+hls_testdata/layer1/               # Layer1 æµ‹è¯•æ•°æ®
 ```
 
-## ½Å±¾ËµÃ÷
+## è„šæœ¬è¯´æ˜
 
 1. `tools/layer1/generate_layer1_testdata.py`
-- ´ÓÄ£ĞÍÉú³É `layer1` µÄÊäÈë/Êä³ö¡¢È¨ÖØ¡¢Ë÷Òı±í¡£
+- ä»æ¨¡å‹ç”Ÿæˆ `layer1` çš„è¾“å…¥/è¾“å‡ºã€æƒé‡ã€ç´¢å¼•è¡¨ã€‚
 
 2. `tools/layer1/debug_layer1_intermediate.py`
-- µ¼³ö Python ¶Ë frame0 µÄÖĞ¼ä²ãÎÄ¼ş£¨`py_*.txt`£©¡£
+- å¯¼å‡º Python ç«¯ frame0 çš„ä¸­é—´å±‚æ–‡ä»¶ï¼ˆ`py_*.txt`ï¼ŒMATLAB é£æ ¼çŸ©é˜µåˆ‡ç‰‡ï¼‰ã€‚
 
-3. `hls_src/layer1/test_ico_conv_layer1_debug.cpp`
-- µ¼³ö C ¶Ë frame0 ÖĞ¼ä²ãÎÄ¼ş£¨`cpp_*.txt`£©¡£
+3. `hls_src/HLS/layer1/test_ico_conv_layer1_debug.cpp`
+- å¯¼å‡º C ç«¯ frame0 ä¸­é—´å±‚æ–‡ä»¶ï¼ˆ`cpp_*.txt`ï¼ŒMATLAB é£æ ¼çŸ©é˜µåˆ‡ç‰‡ï¼‰ã€‚
 
 4. `tools/layer1/compare_intermediate_layer1.py`
-- ¶Ô±È `py_*.txt` Óë `cpp_*.txt`¡£
+- å¯¹æ¯” `py_*.txt` ä¸ `cpp_*.txt`ï¼ˆå…¼å®¹çŸ©é˜µè¡Œä¸æ‰å¹³è¡Œæ ¼å¼ï¼‰ã€‚
 
-## ÔËĞĞË³Ğò£¨PowerShell£¬²Ö¿â¸ùÄ¿Â¼£©
+## è¿è¡Œé¡ºåºï¼ˆPowerShellï¼Œä»“åº“æ ¹ç›®å½•ï¼‰
 
-1. Éú³É layer1 testdata
+1. ç”Ÿæˆ layer1 testdata
 
 ```powershell
 python .\tools\layer1\generate_layer1_testdata.py `
@@ -36,43 +37,43 @@ python .\tools\layer1\generate_layer1_testdata.py `
   --time-steps 52
 ```
 
-2. µ¼³ö Python ÖĞ¼ä²ã
+2. å¯¼å‡º Python ä¸­é—´å±‚
 
 ```powershell
 python .\tools\layer1\debug_layer1_intermediate.py
 ```
 
-3. ±àÒë C ¶Ë
+3. ç¼–è¯‘ C ç«¯
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\build_layer1.bat
-cd ..\..
+cd ..\..\..
 ```
 
-4. ÔËĞĞ C È«Á¿ÑéÖ¤
+4. è¿è¡Œ C å…¨é‡éªŒè¯
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\test_ico_conv_layer1.exe
-cd ..\..
+cd ..\..\..
 ```
 
-5. ÔËĞĞ C ÖĞ¼ä²ãµ¼³ö
+5. è¿è¡Œ C ä¸­é—´å±‚å¯¼å‡º
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\test_ico_conv_layer1_debug.exe
-cd ..\..
+cd ..\..\..
 ```
 
-6. ¶Ô±È Python/C ÖĞ¼ä²ã
+6. å¯¹æ¯” Python/C ä¸­é—´å±‚
 
 ```powershell
 python .\tools\layer1\compare_intermediate_layer1.py
 ```
 
-## ±¸×¢
+## å¤‡æ³¨
 
-1. ÏêÏ¸Ó¢ÎÄ°æËµÃ÷¼û£º`tools/layer1/LAYER1_VERIFICATION_GUIDE.md`
-2. µ±Ç° `layer1` C ÊµÏÖÓÅÏÈ±£Ö¤ÑéÖ¤¿É¶ÁĞÔ£¬ºóĞø¿ÉÔÙÖğ²½¼Ó HLS pragma ×ö×ÊÔ´/Ê±ĞòÓÅ»¯¡£
+1. è¯¦ç»†è‹±æ–‡ç‰ˆè§ï¼š`tools/layer1/LAYER1_VERIFICATION_GUIDE.md`
+2. å½“å‰ `layer1` C å®ç°ä¼˜å…ˆä¿è¯éªŒè¯å¯è¯»æ€§ï¼Œåç»­å¯é€æ­¥æ·»åŠ  HLS pragma åšèµ„æº/æ—¶åºä¼˜åŒ–ã€‚

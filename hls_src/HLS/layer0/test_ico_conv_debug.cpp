@@ -8,15 +8,34 @@
  */
 
 #include "ico_conv_layer0.hpp"
-#include "utils.hpp"
+#include "../common/utils.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <vector>
 #include <string>
 
-// 创建输出目录
-const std::string DEBUG_DIR = "../hls_testdata/layer0/debug_intermediate_cpp/";
+static bool file_exists(const std::string& path) {
+    std::ifstream f(path.c_str());
+    return f.good();
+}
+
+static std::string resolve_data_dir() {
+    const std::vector<std::string> candidates = {
+        "../hls_testdata/layer0/",
+        "../../hls_testdata/layer0/",
+        "../../../hls_testdata/layer0/",
+        "../../../../hls_testdata/layer0/",
+        "../../../../../hls_testdata/layer0/"
+    };
+    for (size_t i = 0; i < candidates.size(); i++) {
+        if (file_exists(candidates[i] + "input_rearranged.txt")) {
+            return candidates[i];
+        }
+    }
+    return "";
+}
 
 /**
  * 保存 2D 矩阵到文本文件（MATLAB 风格）
@@ -239,7 +258,13 @@ int main() {
     std::cout << "Layer0 中间层调试 - C++ 端" << std::endl;
     std::cout << "======================================================================" << std::endl;
     
-    const std::string data_dir = "../hls_testdata/layer0/";
+    const std::string data_dir = resolve_data_dir();
+    if (data_dir.empty()) {
+        std::cerr << "Error: cannot locate hls_testdata/layer0" << std::endl;
+        return -1;
+    }
+    const std::string debug_dir = data_dir + "debug_intermediate_cpp/";
+    std::system((std::string("mkdir -p ") + debug_dir).c_str());
     
     // ==================== 1. 读取数据 ====================
     std::cout << "\n[1] Loading data..." << std::endl;
@@ -324,7 +349,7 @@ int main() {
                     frame0_input_save[ri][c][h][w] = frame0_input[0][ri][c][h][w];
     
     save_ico_tensor_4d<RIN, CHARTS, H, W>(
-        DEBUG_DIR + "cpp_frame0_input.txt",
+        debug_dir + "cpp_frame0_input.txt",
         frame0_input_save,
         "Frame 0 Input [1, 5, 4, 8]"
     );
@@ -437,7 +462,7 @@ int main() {
     }
     
     save_ico_tensor_4d<RIN, CHARTS, H_PADDED, W_PADDED>(
-        DEBUG_DIR + "cpp_frame0_padded.txt",
+        debug_dir + "cpp_frame0_padded.txt",
         padded,
         "After PadIco [1, 5, 6, 10]"
     );
@@ -460,7 +485,7 @@ int main() {
     }
     
     save_tensor_3d<CIN*RIN, CHARTS*H_PADDED, W_PADDED>(
-        DEBUG_DIR + "cpp_frame0_reshaped_input.txt",
+        debug_dir + "cpp_frame0_reshaped_input.txt",
         reshaped_input,
         "Reshaped Input [1, 30, 10]"
     );
@@ -485,14 +510,14 @@ int main() {
                         frame0_output[co][ro][c][h][w] = output_full[0][co][ro][c][h][w];
     
     save_output_5d<COUT, ROUT, CHARTS, H, W>(
-        DEBUG_DIR + "cpp_frame0_final_output.txt",
+        debug_dir + "cpp_frame0_final_output.txt",
         frame0_output,
         "Final Output [32, 6, 5, 4, 8]"
     );
     
     // ==================== 8. 总结 ====================
     std::cout << "\n" << std::string(70, '=') << std::endl;
-    std::cout << "所有中间层数据已保存到: " << DEBUG_DIR << std::endl;
+    std::cout << "所有中间层数据已保存到: " << debug_dir << std::endl;
     std::cout << std::string(70, '=') << std::endl;
     
     return 0;

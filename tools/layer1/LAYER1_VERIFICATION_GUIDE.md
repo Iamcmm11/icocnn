@@ -4,39 +4,41 @@
 
 ```text
 icocnn/
-©À©¤©¤ hls_src/
-©¦   ©À©¤©¤ layer1/
-©¦   ©¦   ©À©¤©¤ ico_conv_layer1.hpp
-©¦   ©¦   ©À©¤©¤ ico_conv_layer1.cpp
-©¦   ©¦   ©À©¤©¤ test_ico_conv_layer1.cpp
-©¦   ©¦   ©À©¤©¤ test_ico_conv_layer1_debug.cpp
-©¦   ©¦   ©À©¤©¤ Makefile
-©¦   ©¦   ©¸©¤©¤ build_layer1.bat
-©¦   ©¸©¤©¤ utils.hpp
-©À©¤©¤ tools/
-©¦   ©¸©¤©¤ layer1/
-©¦       ©À©¤©¤ generate_layer1_testdata.py
-©¦       ©À©¤©¤ debug_layer1_intermediate.py
-©¦       ©¸©¤©¤ compare_intermediate_layer1.py
-©¸©¤©¤ hls_testdata/
-    ©¸©¤©¤ layer1/
-        ©À©¤©¤ input_rearranged.txt/.npy
-        ©À©¤©¤ output_layer1.txt/.npy
-        ©À©¤©¤ weight.txt/.npy
-        ©À©¤©¤ bias.txt/.npy
-        ©À©¤©¤ kernel_expansion_idx.txt/.npy
-        ©À©¤©¤ reorder_idx.txt/.npy
-        ©À©¤©¤ debug_intermediate/
-        ©¸©¤©¤ debug_intermediate_cpp/
+â”œâ”€â”€ hls_src/
+â”‚   â””â”€â”€ HLS/
+â”‚       â”œâ”€â”€ common/
+â”‚       â”‚   â””â”€â”€ utils.hpp
+â”‚       â””â”€â”€ layer1/
+â”‚           â”œâ”€â”€ ico_conv_layer1.hpp
+â”‚           â”œâ”€â”€ ico_conv_layer1.cpp
+â”‚           â”œâ”€â”€ test_ico_conv_layer1.cpp
+â”‚           â”œâ”€â”€ test_ico_conv_layer1_debug.cpp
+â”‚           â”œâ”€â”€ Makefile
+â”‚           â””â”€â”€ build_layer1.bat
+â”œâ”€â”€ tools/
+â”‚   â””â”€â”€ layer1/
+â”‚       â”œâ”€â”€ generate_layer1_testdata.py
+â”‚       â”œâ”€â”€ debug_layer1_intermediate.py
+â”‚       â””â”€â”€ compare_intermediate_layer1.py
+â””â”€â”€ hls_testdata/
+    â””â”€â”€ layer1/
+        â”œâ”€â”€ input_rearranged.txt/.npy
+        â”œâ”€â”€ output_layer1.txt/.npy
+        â”œâ”€â”€ weight.txt/.npy
+        â”œâ”€â”€ bias.txt/.npy
+        â”œâ”€â”€ kernel_expansion_idx.txt/.npy
+        â”œâ”€â”€ reorder_idx.txt/.npy
+        â”œâ”€â”€ debug_intermediate/
+        â””â”€â”€ debug_intermediate_cpp/
 ```
 
 ## Run Order
 
-1. Generate layer1 testdata from model
-2. Generate Python intermediate files for frame0
-3. Build C executables
-4. Run C full verification and C intermediate dump
-5. Compare Python/C intermediate files
+1. Generate layer1 testdata from model.
+2. Generate Python intermediate files for frame0.
+3. Build C executables.
+4. Run C full verification and C intermediate dump.
+5. Compare Python/C intermediate files.
 
 ## Commands (PowerShell, repo root)
 
@@ -59,25 +61,25 @@ python .\tools\layer1\debug_layer1_intermediate.py
 ### 3) Build C layer1 tests
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\build_layer1.bat
-cd ..\..
+cd ..\..\..
 ```
 
 ### 4) Run C full verification
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\test_ico_conv_layer1.exe
-cd ..\..
+cd ..\..\..
 ```
 
 ### 5) Run C intermediate dump
 
 ```powershell
-cd .\hls_src\layer1
+cd .\hls_src\HLS\layer1
 .\test_ico_conv_layer1_debug.exe
-cd ..\..
+cd ..\..\..
 ```
 
 ### 6) Compare Python/C intermediate outputs
@@ -90,4 +92,5 @@ python .\tools\layer1\compare_intermediate_layer1.py
 
 1. `generate_layer1_testdata.py` uses `layer0` input as source and computes `layer0 -> layer1` in PyTorch, so layer1 input/output are topology-consistent with model behavior.
 2. Current C implementation is verification-oriented (clear mapping first), then you can apply HLS pragmas progressively.
-3. If your model path changes, pass `--model` explicitly.
+3. Layer1 debug outputs use MATLAB-style matrix slices with shape headers, matching Layer0 readability.
+4. If your model path changes, pass `--model` explicitly.

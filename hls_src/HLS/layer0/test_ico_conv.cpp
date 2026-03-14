@@ -1,5 +1,5 @@
 #include "ico_conv_layer0.hpp"
-#include "utils.hpp"
+#include "../common/utils.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
