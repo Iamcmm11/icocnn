@@ -44,6 +44,21 @@ make clean && make test_ico_conv_layer1 test_ico_conv_layer1_debug
 ./test_ico_conv_layer1_debug
 ```
 
+### Layer1 Vitis HLS
+
+```bash
+cd hls_src/HLS/layer1
+run_hls.bat
+run_hls.bat csim
+run_hls.bat synth
+run_hls.bat all
+```
+
+Generated reports are copied to:
+
+- `hls_src/hls_reports/layer1_latest_summary.md`
+- `hls_src/hls_reports/layer1_hls_prj_sol1_<timestamp>/summary.md`
+
 ## Numeric Alignment Notes (Layer0 vs Layer1)
 
 Current measured full-output errors:

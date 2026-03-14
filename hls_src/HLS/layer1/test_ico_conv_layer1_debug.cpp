@@ -70,9 +70,13 @@ static bool file_exists(const std::string& path) {
 
 static std::string resolve_data_dir() {
     const std::vector<std::string> candidates = {
+        "../hls_testdata/layer1/",
         "../../hls_testdata/layer1/",
         "../../../hls_testdata/layer1/",
-        "../hls_testdata/layer1/"
+        "../../../../hls_testdata/layer1/",
+        "../../../../../hls_testdata/layer1/",
+        "../../../../../../hls_testdata/layer1/",
+        "../../../../../../../hls_testdata/layer1/"
     };
     for (size_t i = 0; i < candidates.size(); i++) {
         if (file_exists(candidates[i] + "input_rearranged.txt")) return candidates[i];

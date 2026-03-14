@@ -20,6 +20,9 @@
 #define KERNEL_H    3
 #define KERNEL_W    3
 
+#define IC_TILE     8
+#define OC_TILE     4
+
 #define OC_PAR_FACTOR 2
 
 typedef float data_t;
