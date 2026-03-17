@@ -44,6 +44,15 @@ make clean && make test_ico_conv_layer1 test_ico_conv_layer1_debug
 ./test_ico_conv_layer1_debug
 ```
 
+### Layer2-5 Shared Block
+
+```bash
+cd hls_src/HLS/layer2-5
+make clean && make test_ico_conv_layer2_5 test_ico_conv_layer2_5_debug
+./test_ico_conv_layer2_5 2
+./test_ico_conv_layer2_5_debug 2
+```
+
 ### Layer1 Vitis HLS
 
 ```bash
@@ -58,6 +67,20 @@ Generated reports are copied to:
 
 - `hls_src/hls_reports/layer1_latest_summary.md`
 - `hls_src/hls_reports/layer1_hls_prj_sol1_<timestamp>/summary.md`
+
+### Layer2-5 Vitis HLS
+
+```bash
+cd hls_src/HLS/layer2-5
+run_hls.bat
+run_hls.bat csim
+run_hls.bat synth
+```
+
+Generated reports are copied to:
+
+- `hls_src/hls_reports/layer2_5_latest_summary.md`
+- `hls_src/hls_reports/layer2_5_hls_prj_sol1_<timestamp>/summary.md`
 
 ## Numeric Alignment Notes (Layer0 vs Layer1)
 
