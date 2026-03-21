@@ -462,9 +462,9 @@ flowchart LR
     N --> O[Output Feature Buffer]
     O --> P[Output Feature Map\nT x Cout x Rout x Charts x H x W]
 
-    linkStyle 0,1,2,3,10,12,13,14 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
-    linkStyle 4,5,6 stroke:#2ca02c,stroke-width:2px,color:#2ca02c;
-    linkStyle 7,8,9,11 stroke:#ff7f0e,stroke-width:2px,color:#ff7f0e;
+    linkStyle 0,1,2,3,10,12,13,14 stroke:#1f77b4,stroke-width:2px;
+    linkStyle 4,5,6 stroke:#2ca02c,stroke-width:2px;
+    linkStyle 7,8,9,11 stroke:#ff7f0e,stroke-width:2px;
 ```
 
 ### 11.2 图例
@@ -700,9 +700,9 @@ flowchart TB
     M2 --> M0
     M0 --> M3 --> O0 --> O1 --> O2 --> O3
 
-    linkStyle 0,1,2,3,4,5,9,12,13,14 stroke:#ff7f0e,stroke-width:2px,color:#ff7f0e;
-    linkStyle 6,7,8 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
-    linkStyle 10,11,15,16,17,18 stroke:#2ca02c,stroke-width:2px,color:#2ca02c;
+    linkStyle 0,1,2,3,4,5,9,12,13,14 stroke:#ff7f0e,stroke-width:2px;
+    linkStyle 6,7,8 stroke:#1f77b4,stroke-width:2px;
+    linkStyle 10,11,15,16,17,18 stroke:#2ca02c,stroke-width:2px;
 ```
 
 该版本更适合在论文中表达以下观点：
@@ -747,8 +747,8 @@ flowchart LR
     X2[[Bottleneck B2\nAccumulation Dependency]] -.-> D
     X3[[Bottleneck B3\nOutput Port Conflicts]] -.-> F
 
-    linkStyle 0,1,2,3,4,5 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
-    linkStyle 6,7,8 stroke:#d62728,stroke-width:2px,color:#d62728;
+    linkStyle 0,1,2,3,4,5 stroke:#1f77b4,stroke-width:2px;
+    linkStyle 6,7,8 stroke:#d62728,stroke-width:2px;
 ```
 
 这张图在论文里的价值是：
