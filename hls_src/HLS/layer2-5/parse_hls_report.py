@@ -23,10 +23,21 @@ def text_or_na(root, xpath):
     return txt if txt else "N/A"
 
 
+def text_first_or_na(root, xpaths):
+    for xpath in xpaths:
+        value = text_or_na(root, xpath)
+        if value != "N/A":
+            return value
+    return "N/A"
+
+
 def parse_csynth_xml(xml_path: Path):
     root = ET.parse(xml_path).getroot()
     return {
-        "target_clock_ns": text_or_na(root, "./PerformanceEstimates/SummaryOfTimingAnalysis/TargetClockPeriod"),
+        "target_clock_ns": text_first_or_na(root, [
+            "./PerformanceEstimates/SummaryOfTimingAnalysis/TargetClockPeriod",
+            "./UserAssignments/TargetClockPeriod",
+        ]),
         "estimated_clock_ns": text_or_na(root, "./PerformanceEstimates/SummaryOfTimingAnalysis/EstimatedClockPeriod"),
         "latency_best": text_or_na(root, "./PerformanceEstimates/SummaryOfOverallLatency/Best-caseLatency"),
         "latency_avg": text_or_na(root, "./PerformanceEstimates/SummaryOfOverallLatency/Average-caseLatency"),
