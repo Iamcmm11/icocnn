@@ -1,8 +1,10 @@
-﻿# Layer0-Layer1 仿真验证总结
+# Layer0-Layer1-Layer2-5 仿真验证总结
+
+> 2026-03-21 更新：本文档中的 `layer0`、`layer1`、`layer2-5` 验证结果已按当前重新生成的 testdata 重跑并更新。
 
 ## 文档说明
 
-本文档汇总当前 `layer0` 和 `layer1` 的仿真验证情况，重点说明两部分内容：
+本文档汇总当前 `layer0`、`layer1` 和 `layer2-5` 的仿真验证情况，重点说明两部分内容：
 
 1. 每一层目前验证了哪些内容。
 2. 每一层当前得到的验证结果。
@@ -10,7 +12,8 @@
 其中：
 
 - `layer0` 的结构说明和历史验证过程，参考 [Layer0代码分类说明.md](G:/3DSLED/icocnn/Layer0代码分类说明.md)
-- `layer1` 的中间层对比结果，采用本次已经跑通的 `compare_intermediate_layer1.py` 输出结果
+- `layer1` 的中间层对比结果，采用本次重新导出的 Python/C 调试文件与 `compare_intermediate_layer1.py` 的输出结果
+- `layer2-5` 采用共享 `ConvIco(r=1)` 验证块，验证脚本位于 [tools/layer2-5](G:/3DSLED/icocnn/tools/layer2-5)
 
 ---
 
@@ -43,13 +46,13 @@
 
 ### 验证结果
 
-依据 `Layer0代码分类说明.md` 中记录的结果，`layer0` 端到端验证结果为：
+基于当前重新生成的 `layer0` testdata，`layer0` 端到端验证结果为：
 
-- Max Error：`9.53674e-07`
-- RMSE：`7.03355e-08`
+- Max Error：`7.15256e-07`
+- RMSE：`6.49467e-08`
 - 结论：`PASS`
 
-中间层对齐方面，文档中已确认以下项目通过：
+中间层对齐方面，本次重跑后已确认以下项目通过：
 
 - 输入层：`PASS`
 - Padding 后：`PASS`
@@ -82,15 +85,15 @@
 
 #### 1. 完整流程验证结果
 
-此前 `layer1` 端到端输出验证结果为：
+本次基于重新生成的 `layer1` testdata，`layer1` 端到端输出验证结果为：
 
-- Max Error：`1.23978e-05`
-- RMSE：`1.00145e-06`
+- Max Error：`8.58307e-06`
+- RMSE：`6.49275e-07`
 - 结论：`PASS`
 
 #### 2. 中间层对比结果
 
-你本次已经跑通的 `compare_intermediate_layer1.py` 输出如下：
+本次重新导出的 Python/C 中间层文件，经 `compare_intermediate_layer1.py` 对比如下：
 
 - `Frame0 Input`
   - Max Error：`0.00000000e+00`
@@ -99,15 +102,15 @@
   - 结论：`PASS`
 
 - `After PadIco`
-  - Max Error：`7.20000000e-07`
-  - RMSE：`5.16330200e-08`
-  - Mean Abs：`1.07052083e-08`
+  - Max Error：`4.80000000e-07`
+  - RMSE：`3.67841395e-08`
+  - Mean Abs：`6.97395833e-09`
   - 结论：`PASS`
 
 - `Frame0 Final Output`
-  - Max Error：`8.59000000e-06`
-  - RMSE：`9.81279719e-07`
-  - Mean Abs：`6.81871419e-07`
+  - Max Error：`5.25000000e-06`
+  - RMSE：`6.42740787e-07`
+  - Mean Abs：`4.51994466e-07`
   - 结论：`PASS`
 
 ### 当前结论
@@ -122,19 +125,108 @@
 
 ---
 
+## Layer2-5 验证情况
+
+### 验证了什么
+
+`layer2-5` 当前采用共享 `ConvIco(r=1)` 验证块，已经完成两类验证：
+
+1. 完整流程验证
+- 对 `layer2`、`layer3`、`layer4`、`layer5` 分别生成专属 testdata
+- 使用统一的 `conv_ico_layer2_5`
+- 将 C 端输出与各层 Python 参考输出 `output.txt` 做逐点比较
+
+2. 中间层对齐验证
+- `Frame0 Input`
+- `After PadIco`
+- `Frame0 Final Output`
+- 通过 `compare_intermediate_layer2_5.py` 对每一层的 Python/C 中间层结果逐项比较
+
+### 结构说明
+
+`layer2-5` 当前验证实现具备以下特点：
+
+1. 统一固定为 `Cin=Cout=32`、`Rin=Rout=6`、`H=2`、`W=4` 的共享卷积块。
+2. 采用紧凑 7 邻域权重，通过 `kernel_expansion_idx` 在 MAC 过程中展开使用。
+3. 保留 `PadIco + Conv + 输出顶点后处理` 的完整行为，以对齐 PyTorch `ConvIco(r=1)`。
+
+### 验证结果
+
+#### 1. 完整流程验证结果
+
+本次基于重新生成的 `layer2-5` testdata，四层端到端输出验证结果如下：
+
+- `layer2`
+  - Max Error：`4.05312e-06`
+  - RMSE：`3.93617e-07`
+  - 结论：`PASS`
+
+- `layer3`
+  - Max Error：`3.33786e-06`
+  - RMSE：`3.77224e-07`
+  - 结论：`PASS`
+
+- `layer4`
+  - Max Error：`4.05312e-06`
+  - RMSE：`4.01841e-07`
+  - 结论：`PASS`
+
+- `layer5`
+  - Max Error：`3.33786e-06`
+  - RMSE：`3.25302e-07`
+  - 结论：`PASS`
+
+#### 2. 中间层对比结果
+
+本次重新导出的 Python/C 中间层文件，经 `compare_intermediate_layer2_5.py` 对比如下：
+
+- `layer2`
+  - `Frame0 Input`: Max Error `5.00000000e-06`, RMSE `9.96721808e-07`, Mean Abs `3.57694010e-07`, `PASS`
+  - `After PadIco`: Max Error `5.00000000e-06`, RMSE `9.83987668e-07`, Mean Abs `4.04418637e-07`, `PASS`
+  - `Frame0 Final Output`: Max Error `6.77000000e-06`, RMSE `1.92575291e-06`, Mean Abs `1.23465039e-06`, `PASS`
+
+- `layer3`
+  - `Frame0 Input`: Max Error `5.00000000e-06`, RMSE `9.37262428e-07`, Mean Abs `3.37140625e-07`, `PASS`
+  - `After PadIco`: Max Error `5.00000000e-06`, RMSE `9.56868280e-07`, Mean Abs `3.55857465e-07`, `PASS`
+  - `Frame0 Final Output`: Max Error `7.18000000e-06`, RMSE `1.86177701e-06`, Mean Abs `1.17315719e-06`, `PASS`
+
+- `layer4`
+  - `Frame0 Input`: Max Error `5.00000000e-06`, RMSE `1.07281488e-06`, Mean Abs `4.09910156e-07`, `PASS`
+  - `After PadIco`: Max Error `4.99000000e-06`, RMSE `1.04023860e-06`, Mean Abs `4.33477865e-07`, `PASS`
+  - `Frame0 Final Output`: Max Error `5.91000000e-06`, RMSE `2.21709636e-06`, Mean Abs `1.58174544e-06`, `PASS`
+
+- `layer5`
+  - `Frame0 Input`: Max Error `5.00000000e-06`, RMSE `1.07958236e-06`, Mean Abs `4.29705729e-07`, `PASS`
+  - `After PadIco`: Max Error `5.00000000e-06`, RMSE `1.09157126e-06`, Mean Abs `4.46580382e-07`, `PASS`
+  - `Frame0 Final Output`: Max Error `6.77000000e-06`, RMSE `1.95419042e-06`, Mean Abs `1.26882773e-06`, `PASS`
+
+### 当前结论
+
+`layer2-5` 已经完成：
+
+1. 共享卷积核的四层端到端输出验证
+2. 关键中间层对齐验证
+3. Python 与 C 端的一致性确认
+
+因此，`layer2-5` 当前已经具备继续推进 HLS 综合与资源评估的条件。
+
+---
+
 ## 当前总体结论
 
 截至目前：
 
 - `layer0`：验证通过
 - `layer1`：验证通过
+- `layer2-5`：验证通过
 
 其中：
 
 - `layer0` 已完成完整流程验证，并已作为基础参考层稳定使用。
 - `layer1` 已完成完整输出验证与中间层对齐验证，结果均为 `PASS`。
+- `layer2-5` 已完成共享验证块的四层端到端验证与中间层对齐验证，结果均为 `PASS`。
 
-这说明当前从 `layer0` 到 `layer1` 的 C 端实现与 Python 参考模型已经形成连续、可追踪、可扩展的验证链路。
+这说明当前从 `layer0` 到 `layer5` 的 C 端实现与 Python 参考模型已经形成连续、可追踪、可扩展的验证链路，并且已基于当前最新生成的数据重新确认通过。
 
 ---
 
@@ -153,7 +245,7 @@
 
 ## 备注：面向 Layer2-5 的后续优化思路
 
-以下内容属于后续优化参考，不作为当前 `layer0`、`layer1` 基础验证通过的前置条件。
+以下内容属于后续优化参考，不作为当前 `layer0`、`layer1`、`layer2-5` 基础验证通过的前置条件。
 
 建议在 `layer2-5` 的基础功能验证全部完成之后，再开始实际实现。
 
@@ -215,5 +307,6 @@
 2. `layer1` 去掉完整 `kernel` 展开缓存后的紧凑权重实现
 3. `layer1` 去掉 `input_after_smooth` 显式缓存后的进一步部分融合版本
 4. `layer1` 第一版 `IC/OC tiling` 的可综合验证结果
+5. `layer2-5` 共享验证块的完整 Python/C 验证链路
 
 这意味着，后续做 `layer2-5` 通用 block 时，不需要从零开始，而是可以直接复用当前已经验证过的这几条关键设计思路。

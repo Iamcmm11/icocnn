@@ -1,4 +1,4 @@
 # Layer1 testdata generated from model and Layer0 input
-model=icocnn/1sourceTracking_icoCNN_robot_K4096_r2_predictions_rmsae.npy
-layer0_input=hls_testdata/layer0/input_rearranged.npy
+model=models\1sourceTracking_icoCNN_robot_K4096_r2_model.bin
+layer0_input=hls_testdata\layer0\input_rearranged.npy
 time_steps=52

@@ -1,0 +1,7 @@
+# Layer2-5 shared block verification data
+layer=4
+model=models\1sourceTracking_icoCNN_robot_K4096_r2_model.bin
+layer0_input=hls_testdata\layer0\input_rearranged.npy
+time_steps=52
+input_shape=(52, 32, 6, 5, 2, 4)
+output_shape=(52, 32, 6, 5, 2, 4)
