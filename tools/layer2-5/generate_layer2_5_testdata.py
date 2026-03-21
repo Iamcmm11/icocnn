@@ -25,6 +25,42 @@ def save_flat_txt(path, arr):
             f.write(f"{float(v):.8f}\n")
 
 
+def load_compatible_state_dict(model, state_dict):
+    incompatible = model.load_state_dict(state_dict, strict=False)
+    non_buffer_missing = [k for k in incompatible.missing_keys if not k.endswith(".mask")]
+    if non_buffer_missing or incompatible.unexpected_keys:
+        raise RuntimeError(
+            "Checkpoint is incompatible with current model.\n"
+            f"Unexpected keys: {list(incompatible.unexpected_keys)}\n"
+            f"Missing non-buffer keys: {non_buffer_missing}"
+        )
+    if incompatible.missing_keys:
+        print(f"Ignoring {len(incompatible.missing_keys)} missing mask buffers from legacy checkpoint.")
+
+
+def resolve_repo_path(path_arg: str, *, must_exist: bool = False, label: str = "path") -> str:
+    # Accept both Linux-style and Windows-style relative arguments.
+    normalized = path_arg.replace("\\", "/").strip()
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+
+    repo_name = os.path.basename(ROOT)
+    if os.path.isabs(normalized):
+        resolved = os.path.normpath(normalized)
+    elif normalized == repo_name:
+        resolved = ROOT
+    elif normalized.startswith(repo_name + "/"):
+        resolved = os.path.normpath(os.path.join(os.path.dirname(ROOT), normalized))
+    else:
+        resolved = os.path.normpath(os.path.join(ROOT, normalized))
+
+    if must_exist and not os.path.exists(resolved):
+        raise FileNotFoundError(
+            f"{label} not found: {resolved} (from argument: {path_arg})"
+        )
+    return resolved
+
+
 def load_layer0_conv_input(path):
     data = np.load(path)
     if data.ndim == 6:
@@ -80,17 +116,16 @@ def main():
     args = parser.parse_args()
 
     target_layers = parse_layers(args.layers)
-    out_root = os.path.join(ROOT, args.out_dir)
+    out_root = resolve_repo_path(args.out_dir)
     os.makedirs(out_root, exist_ok=True)
 
     torch.manual_seed(42)
     np.random.seed(42)
 
     net = at_models.IcoTempCNN(r=2, C=32, smooth_vertices=True)
-    model_path = os.path.join(ROOT, args.model)
-    if os.path.exists(model_path):
-        state_dict = torch.load(model_path, map_location="cpu")
-        net.load_state_dict(state_dict)
+    model_path = resolve_repo_path(args.model, must_exist=True, label="model")
+    state_dict = torch.load(model_path, map_location="cpu")
+    load_compatible_state_dict(net, state_dict)
     net.eval()
 
     captured_inputs: Dict[int, np.ndarray] = {}
@@ -108,7 +143,9 @@ def main():
     for layer_id in target_layers:
         handles.append(net.ico_cnn[layer_id].register_forward_hook(make_hook(layer_id)))
 
-    layer0_input = load_layer0_conv_input(os.path.join(ROOT, args.layer0_input))
+    layer0_input = load_layer0_conv_input(
+        resolve_repo_path(args.layer0_input, must_exist=True, label="layer0 input")
+    )
     if layer0_input.shape[0] < args.time_steps:
         raise ValueError(f"layer0 input has only {layer0_input.shape[0]} frames")
     layer0_input = layer0_input[: args.time_steps]

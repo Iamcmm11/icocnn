@@ -7,15 +7,18 @@ import struct
 import acousticTrackingModels as at_models
 import acousticTrackingLearners as at_learners
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
 # 配置部分
-MODEL_PATH = 'models\1sourceTracking_icoCNN_robot_K4096_r2_model.bin'  # 请修改为您实际的权重文件路径
+# Bind all runtime paths to the repo root so Linux server runs are deterministic.
+MODEL_PATH = os.path.join(ROOT, 'models', '1sourceTracking_icoCNN_robot_K4096_r2_model.bin')
 R_LEVEL = 2            # 模型的分辨率 r
 CHANNELS = 32          # 模型通道数 C
-SAVE_DIR = 'debug_outputs' # 输出数据的保存目录
-HLS_DATA_DIR = 'hls_testdata/layer0'  # HLS 验证数据目录
+SAVE_DIR = os.path.join(ROOT, 'debug_outputs') # 输出数据的保存目录
+HLS_DATA_DIR = os.path.join(ROOT, 'hls_testdata', 'layer0')  # HLS 验证数据目录
 
 # C 前端输入数据配置
-C_AUDIO_BIN = 'audio_data.bin'  # C 前端生成的音频数据
+C_AUDIO_BIN = os.path.join(ROOT, 'audio_data.bin')  # C 前端生成的音频数据
 USE_C_AUDIO = True  # 是否使用 C 前端的 audio_data.bin 作为输入（True=统一输入源）
 
 # 前端处理参数（与 C 前端保持一致）
@@ -27,6 +30,19 @@ FFT_SIZE = 4096
 # 确保保存目录存在
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(HLS_DATA_DIR, exist_ok=True)
+
+
+def load_compatible_state_dict(model, state_dict):
+    incompatible = model.load_state_dict(state_dict, strict=False)
+    non_buffer_missing = [k for k in incompatible.missing_keys if not k.endswith('.mask')]
+    if non_buffer_missing or incompatible.unexpected_keys:
+        raise RuntimeError(
+            "Checkpoint is incompatible with current model.\n"
+            f"Unexpected keys: {list(incompatible.unexpected_keys)}\n"
+            f"Missing non-buffer keys: {non_buffer_missing}"
+        )
+    if incompatible.missing_keys:
+        print(f"Ignoring {len(incompatible.missing_keys)} missing mask buffers from legacy checkpoint.")
 
 def load_audio_data_from_c_bin(filename):
     """
@@ -470,19 +486,14 @@ def main():
     # 注意：如果您的模型训练时用了 smooth_vertices=True/False，这里要一致
     net = at_models.IcoTempCNN(r=R_LEVEL, C=CHANNELS, smooth_vertices=True)
 
-    # 尝试加载权重 (如果文件存在)
-    if os.path.exists(MODEL_PATH):
-        print(f"Loading weights from {MODEL_PATH}...")
-        try:
-            # map_location='cpu' 确保在没有 GPU 的机器上也能跑
-            state_dict = torch.load(MODEL_PATH, map_location='cpu')
-            net.load_state_dict(state_dict)
-            print("Weights loaded successfully.")
-        except Exception as e:
-            print(f"Error loading weights: {e}")
-            print("Running with random initialization instead.")
-    else:
-        print(f"Weights file not found at {MODEL_PATH}. Running with random weights.")
+    # 对 HLS golden data 生成而言，必须明确加载训练权重，不能静默退回随机初始化。
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Weights file not found: {MODEL_PATH}")
+
+    print(f"Loading weights from {MODEL_PATH}...")
+    state_dict = torch.load(MODEL_PATH, map_location='cpu')
+    load_compatible_state_dict(net, state_dict)
+    print("Weights loaded successfully.")
 
     net.eval() # 设置为推理模式
 

@@ -19,6 +19,19 @@ def save_flat_txt(path, arr):
             f.write(f"{float(v):.8f}\n")
 
 
+def load_compatible_state_dict(model, state_dict):
+    incompatible = model.load_state_dict(state_dict, strict=False)
+    non_buffer_missing = [k for k in incompatible.missing_keys if not k.endswith(".mask")]
+    if non_buffer_missing or incompatible.unexpected_keys:
+        raise RuntimeError(
+            "Checkpoint is incompatible with current model.\n"
+            f"Unexpected keys: {list(incompatible.unexpected_keys)}\n"
+            f"Missing non-buffer keys: {non_buffer_missing}"
+        )
+    if incompatible.missing_keys:
+        print(f"Ignoring {len(incompatible.missing_keys)} missing mask buffers from legacy checkpoint.")
+
+
 def load_layer0_input(path):
     data = np.load(path)
     # target format: [T, CIN=1, RIN=1, CHARTS, H, W]
@@ -56,7 +69,7 @@ def main():
     net = at_models.IcoTempCNN(r=2, C=32, smooth_vertices=True)
     if os.path.exists(os.path.join(ROOT, args.model)):
         sd = torch.load(os.path.join(ROOT, args.model), map_location="cpu")
-        net.load_state_dict(sd)
+        load_compatible_state_dict(net, sd)
     net.eval()
 
     l0 = net.ico_cnn[0]
