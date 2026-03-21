@@ -422,6 +422,19 @@ BRAM 增加的可能性较大
 
 ### 11.1 学术型架构图
 
+下面这张图给出 `layer2-5` 共享卷积块的总体结构。
+
+读图建议：
+
+1. 先只看蓝色链路。
+蓝色表示主数据通路，也就是特征图从输入到输出的流动过程。
+
+2. 再看绿色链路。
+绿色表示参数与索引通路，也就是权重、索引表如何进入计算核。
+
+3. 最后看橙色链路。
+橙色表示控制通路，也就是调度器如何协调各功能模块工作。
+
 ```mermaid
 flowchart LR
     A[Input Feature Map\nT x Cin x Rin x Charts x H x W] --> B[Input Global Buffer]
@@ -439,6 +452,7 @@ flowchart LR
     K --> G
     K --> L
     K --> M
+    K --> N
 
     E --> L[Shared ConvIco Compute Core\nIC/OC Tiled MAC Array]
     G --> L
@@ -447,48 +461,169 @@ flowchart LR
     M --> N[Output Pole Post-Processing Unit]
     N --> O[Output Feature Buffer]
     O --> P[Output Feature Map\nT x Cout x Rout x Charts x H x W]
+
+    linkStyle 0,1,2,3,10,12,13,14 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
+    linkStyle 4,5,6 stroke:#2ca02c,stroke-width:2px,color:#2ca02c;
+    linkStyle 7,8,9,11 stroke:#ff7f0e,stroke-width:2px,color:#ff7f0e;
 ```
 
-### 11.2 图中各模块的学术含义
+### 11.2 图例
+
+为避免后续阅读混乱，可以按下面方式理解颜色：
+
+| 颜色 | 含义 | 代表什么 |
+|---|---|---|
+| 蓝色 | 主数据通路 | 输入特征图、padding 后特征图、tile 数据、输出特征图 |
+| 绿色 | 参数通路 | 紧凑权重、`kernel_expansion_idx`、`reorder_idx` |
+| 橙色 | 控制通路 | 层选择、tile 调度、地址控制、模块启动关系 |
+
+### 11.3 图中各模块的作用与意义
 
 1. `Input Global Buffer`
-用于承接每个时间步的输入特征图，是共享块进入片上处理前的全局输入缓存。
+作用：
+用于承接每个时间步的输入特征图。
+
+意义：
+它是整个共享块的数据入口，决定输入数据如何被后续模块重复利用。
+
+与其他模块的关系：
+它把原始输入送给 `PadIco and Pole Processing Unit`，因此是前处理链路的起点。
 
 2. `PadIco and Pole Processing Unit`
-负责 `PadIco`、极点平滑和 chart 间重排，是该网络区别于普通 2D CNN 的关键前处理结构。
+作用：
+负责 `PadIco`、极点平滑和 chart 间重排。
+
+意义：
+这是该网络区别于普通 2D CNN 的关键几何处理模块。
+
+与其他模块的关系：
+它一方面从 `Input Global Buffer` 读取原始特征，另一方面使用 `Reorder Index Buffer` 中的索引信息完成几何映射，输出给 `Reordered / Padded Feature Buffer`。
 
 3. `Reordered / Padded Feature Buffer`
-用于保存经过几何重排后的中间结果，为后续 tile 化卷积提供规则访问模式。
+作用：
+保存经过重排和 padding 后的中间特征图。
+
+意义：
+它把原始不规则的几何访问，转换为后续更规则、更适合硬件 tile 化读取的存储形态。
+
+与其他模块的关系：
+它是前处理与卷积计算之间的中间桥梁，为 `Input Tile Buffer` 提供规则数据源。
 
 4. `Input Tile Buffer`
-将全局 padded 特征进一步切分为适合计算核访问的局部 tile，是降低输入端口冲突的重要结构。
+作用：
+将全局 padded 特征切成局部 tile。
+
+意义：
+它是降低输入端口冲突、提高局部数据复用的关键模块。
+
+与其他模块的关系：
+它从 `Reordered / Padded Feature Buffer` 读取数据，并将局部 tile 送入 `Shared ConvIco Compute Core`。
 
 5. `Weight Buffer`
-保存紧凑 7 邻域权重，而不是直接存完整 `3 x 3` 卷积核，从而体现该网络的参数紧凑特征。
+作用：
+保存紧凑 7 邻域权重。
+
+意义：
+它体现了该网络卷积核参数的紧凑表达，而不是使用普通 `3 x 3` 完整核的直接存储。
+
+与其他模块的关系：
+它将权重送入 `Kernel Expansion / Index Decode`，供后续展开和映射。
 
 6. `Kernel Expansion / Index Decode`
-根据 `kernel_expansion_idx` 将紧凑权重映射到实际 MAC 使用的邻域位置，是当前网络特有的权重展开逻辑。
+作用：
+根据 `kernel_expansion_idx` 将紧凑权重映射到实际邻域位置。
+
+意义：
+这是当前网络卷积权重组织方式的核心特征之一，也是普通 CNN 中通常不存在的专用模块。
+
+与其他模块的关系：
+它接收 `Weight Buffer` 和 `Kernel Expansion Index Buffer` 的输入，并将展开后的权重访问信息送给 `Shared ConvIco Compute Core`。
 
 7. `Schedule / Tile Controller`
-负责控制 layer 号、tile 顺序、IC/OC 分块和模块启动关系，是参数化共享架构的控制核心。
+作用：
+控制 layer 号、tile 顺序、IC/OC 分块和模块启动。
+
+意义：
+它决定同一个共享硬件核如何在 `layer2` 到 `layer5` 之间复用。
+
+与其他模块的关系：
+它不直接参与数值计算，但负责协调 `PadIco`、`Input Tile Buffer`、`Kernel Expansion / Index Decode`、`Shared ConvIco Compute Core`、`Partial Sum Accumulator` 和 `Output Pole Post-Processing Unit` 的时序关系。
 
 8. `Shared ConvIco Compute Core`
-这是论文中最核心的共享参数化卷积核。
+作用：
+执行主卷积 MAC 计算。
+
+意义：
+这是论文中最核心的共享参数化卷积核，也是后续所有性能优化最主要的承载单元。
+
 其内部目标应体现：
 - `IC/OC tiling`
 - 局部并行 MAC
 - 可复用的 `layer2-5` 主干计算结构
 
+与其他模块的关系：
+它从 `Input Tile Buffer` 获取输入 tile，从 `Kernel Expansion / Index Decode` 获取权重映射结果，并将中间部分和输出到 `Partial Sum Accumulator / Output Tile Buffer`。
+
 9. `Partial Sum Accumulator / Output Tile Buffer`
-用于局部部分和累加与中间输出缓存，是后续降低主 MAC 累加相关的重要抓手。
+作用：
+保存局部部分和，并作为输出 tile 的临时缓存。
+
+意义：
+它是降低主 MAC 串行累加依赖的重要结构抓手，也是实现分阶段归约的自然位置。
+
+与其他模块的关系：
+它承接 `Shared ConvIco Compute Core` 的中间结果，并将整理后的输出 tile 送给 `Output Pole Post-Processing Unit`。
 
 10. `Output Pole Post-Processing Unit`
-负责输出端极点清零/平滑与后处理回写，是当前输出端口冲突的主要来源，也是必须独立建模的结构。
+作用：
+负责输出端极点清零、极点平滑和最终后处理回写。
+
+意义：
+这是当前输出端口冲突最严重的模块，也是必须独立优化和单独建模的部分。
+
+与其他模块的关系：
+它读取 `Partial Sum Accumulator / Output Tile Buffer` 的结果，对极点相关位置进行修正，再把最终结果送入 `Output Feature Buffer`。
 
 11. `Output Feature Buffer`
-用于承接最终输出，再写回到外部存储或层间接口。
+作用：
+承接最终输出特征图。
 
-### 11.3 该架构图在论文中的作用
+意义：
+它是共享块的输出落点，为层间接口或外部存储提供统一写回位置。
+
+与其他模块的关系：
+它从 `Output Pole Post-Processing Unit` 获取最终输出，并写回 `Output Feature Map`。
+
+### 11.4 模块之间是如何配合的
+
+按执行顺序看，整个共享块可分成五个协同阶段：
+
+1. 输入准备阶段
+`Input Global Buffer -> PadIco and Pole Processing Unit -> Reordered / Padded Feature Buffer`
+
+这一阶段的作用是把原始特征图转换成适合卷积计算核使用的几何重排形式。
+
+2. Tile 组织阶段
+`Reordered / Padded Feature Buffer -> Input Tile Buffer`
+
+这一阶段的作用是从全局 padded 特征中提取局部 tile，降低后续计算阶段对全局存储的直接访问压力。
+
+3. 参数准备阶段
+`Weight Buffer + Kernel Expansion Index Buffer -> Kernel Expansion / Index Decode`
+
+这一阶段的作用是把紧凑 7 邻域权重转换成当前 MAC 实际需要的邻域映射形式。
+
+4. 主计算阶段
+`Input Tile Buffer + Kernel Expansion / Index Decode -> Shared ConvIco Compute Core -> Partial Sum Accumulator / Output Tile Buffer`
+
+这一阶段完成共享卷积块的主体运算，也是当前吞吐率受限最明显的地方。
+
+5. 输出修正阶段
+`Partial Sum Accumulator / Output Tile Buffer -> Output Pole Post-Processing Unit -> Output Feature Buffer`
+
+这一阶段负责把卷积输出修正成与 PyTorch `ConvIco` 一致的最终几何输出。
+
+### 11.5 该架构图在论文中的作用
 
 该图建议在论文中承担以下功能：
 
@@ -499,13 +634,13 @@ flowchart LR
    - 输入端口冲突优化对应 `PadIco + Input Tile Buffer`
    - 输出端口冲突优化对应 `Output Pole Post-Processing Unit`
 
-### 11.4 该架构图对应的论文表述建议
+### 11.6 该架构图对应的论文表述建议
 
 可以配套使用如下表述：
 
 `针对 layer2-5 在通道规模、旋转维和空间分辨率上的一致性，本文将其统一抽象为共享参数化 ConvIco 主干块。该块由输入重排与极点处理单元、权重展开与索引译码单元、共享 tiled MAC 计算阵列、局部部分和累加单元以及输出极点后处理单元构成，从而形成一套面向该网络结构特征的数据流与存储协同硬件架构。`
 
-### 11.5 论文插图增强版架构图
+### 11.7 论文插图增强版架构图
 
 如果后续需要放进论文正文，建议优先使用下面这种更接近“分层框图”的版本。
 
@@ -564,6 +699,10 @@ flowchart TB
     M1 --> M0
     M2 --> M0
     M0 --> M3 --> O0 --> O1 --> O2 --> O3
+
+    linkStyle 0,1,2,3,4,5,9,12,13,14 stroke:#ff7f0e,stroke-width:2px,color:#ff7f0e;
+    linkStyle 6,7,8 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
+    linkStyle 10,11,15,16,17,18 stroke:#2ca02c,stroke-width:2px,color:#2ca02c;
 ```
 
 该版本更适合在论文中表达以下观点：
@@ -575,7 +714,23 @@ flowchart TB
    - 相同的 tile 调度方式
    - 不同层仅通过配置与权重切换实现复用
 
-### 11.6 当前瓶颈位置标注图
+### 11.8 增强版架构图的读图方法
+
+建议按下面顺序阅读增强版架构图：
+
+1. 先从上到下看层次。
+最上层是控制层，中间是输入与参数准备层，再往下是共享计算层，最后是输出处理层。
+
+2. 再看蓝色链路。
+蓝色代表主数据流，表示特征图是如何在各存储和计算模块间传输的。
+
+3. 再看绿色链路。
+绿色代表参数流，表示权重与索引如何进入共享计算核。
+
+4. 最后看橙色链路。
+橙色代表控制流，表示统一调度器如何驱动不同模块协同运行。
+
+### 11.9 当前瓶颈位置标注图
 
 为了让后续优化章节更清晰，建议同时保留一张“当前问题在哪”的标注图。
 
@@ -591,6 +746,9 @@ flowchart LR
     X1[[Bottleneck B1\nInput Port Conflicts]] -.-> B
     X2[[Bottleneck B2\nAccumulation Dependency]] -.-> D
     X3[[Bottleneck B3\nOutput Port Conflicts]] -.-> F
+
+    linkStyle 0,1,2,3,4,5 stroke:#1f77b4,stroke-width:2px,color:#1f77b4;
+    linkStyle 6,7,8 stroke:#d62728,stroke-width:2px,color:#d62728;
 ```
 
 这张图在论文里的价值是：
