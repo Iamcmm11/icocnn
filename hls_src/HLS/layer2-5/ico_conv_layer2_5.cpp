@@ -159,6 +159,26 @@ static inline data_t expanded_weight_at(
     return weight[idx_cout][idx_cin][idx_rin][idx_w];
 }
 
+static inline void load_expanded_kernel(
+    const data_t weight[COUT][CIN][RIN][7],
+    const int kernel_expansion_idx[COUT][ROUT][CIN][RIN][9][4],
+    int co,
+    int ro,
+    int ci,
+    int ri,
+    data_t kernel[KERNEL_H][KERNEL_W]
+) {
+#pragma HLS INLINE
+#pragma HLS ARRAY_PARTITION variable=kernel complete dim=0
+    for (int kh = 0; kh < KERNEL_H; kh++) {
+#pragma HLS UNROLL
+        for (int kw = 0; kw < KERNEL_W; kw++) {
+#pragma HLS UNROLL
+            kernel[kh][kw] = expanded_weight_at(weight, kernel_expansion_idx, co, ro, ci, ri, kh, kw);
+        }
+    }
+}
+
 void conv_ico_layer2_5(
     data_t input[TIME_STEPS][CIN][RIN][CHARTS][H][W],
     const data_t weight[COUT][CIN][RIN][7],
@@ -169,68 +189,99 @@ void conv_ico_layer2_5(
 ) {
 #pragma HLS INLINE off
 #pragma HLS ARRAY_PARTITION variable=weight cyclic factor=OC_PAR_FACTOR dim=1
+#pragma HLS ARRAY_PARTITION variable=weight complete dim=4
 #pragma HLS ARRAY_PARTITION variable=bias cyclic factor=OC_PAR_FACTOR dim=1
 
     for (int t = 0; t < TIME_STEPS; t++) {
         static data_t padded_frame[CIN][RIN][CHARTS][H_PADDED][W_PADDED];
+#pragma HLS ARRAY_PARTITION variable=padded_frame complete dim=4
+#pragma HLS ARRAY_PARTITION variable=padded_frame complete dim=5
         pad_ico(input[t], reorder_idx, padded_frame);
 
         for (int co = 0; co < COUT; co++) {
+            data_t output_tile[ROUT][CHARTS][H][W];
+
             for (int ro = 0; ro < ROUT; ro++) {
-                for (int c = 0; c < CHARTS; c++) {
-                    for (int h = 0; h < H; h++) {
-                        for (int w = 0; w < W; w++) {
-                            data_t sum = bias[co];
-                            for (int ci = 0; ci < CIN; ci++) {
-                                for (int ri = 0; ri < RIN; ri++) {
-                                    for (int kh = 0; kh < KERNEL_H; kh++) {
-                                        for (int kw = 0; kw < KERNEL_W; kw++) {
-                                            int ph = h + kh;
-                                            int pw = w + kw;
-                                            sum += padded_frame[ci][ri][c][ph][pw] *
-                                                   expanded_weight_at(weight, kernel_expansion_idx, co, ro, ci, ri, kh, kw);
-                                        }
-                                    }
-                                }
-                            }
-                            output[t][co][ro][c][h][w] = sum;
+                for (int sp = 0; sp < CHARTS * H * W; sp++) {
+#pragma HLS PIPELINE II=1
+                    const int c = sp / (H * W);
+                    const int rem = sp % (H * W);
+                    const int h = rem / W;
+                    const int w = rem % W;
+                    output_tile[ro][c][h][w] = bias[co];
+                }
+            }
+
+            for (int ro = 0; ro < ROUT; ro++) {
+                for (int ci = 0; ci < CIN; ci++) {
+                    for (int ri = 0; ri < RIN; ri++) {
+                        data_t kernel[KERNEL_H][KERNEL_W];
+#pragma HLS ARRAY_PARTITION variable=kernel complete dim=0
+                        load_expanded_kernel(weight, kernel_expansion_idx, co, ro, ci, ri, kernel);
+
+                        for (int sp = 0; sp < CHARTS * H * W; sp++) {
+#pragma HLS PIPELINE II=1
+                            const int c = sp / (H * W);
+                            const int rem = sp % (H * W);
+                            const int h = rem / W;
+                            const int w = rem % W;
+
+                            const data_t conv =
+                                padded_frame[ci][ri][c][h + 0][w + 0] * kernel[0][0] +
+                                padded_frame[ci][ri][c][h + 0][w + 1] * kernel[0][1] +
+                                padded_frame[ci][ri][c][h + 0][w + 2] * kernel[0][2] +
+                                padded_frame[ci][ri][c][h + 1][w + 0] * kernel[1][0] +
+                                padded_frame[ci][ri][c][h + 1][w + 1] * kernel[1][1] +
+                                padded_frame[ci][ri][c][h + 1][w + 2] * kernel[1][2] +
+                                padded_frame[ci][ri][c][h + 2][w + 0] * kernel[2][0] +
+                                padded_frame[ci][ri][c][h + 2][w + 1] * kernel[2][1] +
+                                padded_frame[ci][ri][c][h + 2][w + 2] * kernel[2][2];
+
+                            output_tile[ro][c][h][w] += conv;
                         }
                     }
                 }
             }
-        }
 
-        for (int co = 0; co < COUT; co++) {
             for (int ro = 0; ro < ROUT; ro++) {
                 for (int c = 0; c < CHARTS; c++) {
-                    output[t][co][ro][c][0][0] = 0.0f;
-                    output[t][co][ro][c][0][H] = 0.0f;
+                    output_tile[ro][c][0][0] = 0.0f;
+                    output_tile[ro][c][0][H] = 0.0f;
                 }
             }
-        }
 
-        for (int co = 0; co < COUT; co++) {
             for (int c = 0; c < CHARTS; c++) {
                 int prev_c = (c - 1 + CHARTS) % CHARTS;
                 float sum_v1 = 0.0f;
                 float sum_v2 = 0.0f;
                 for (int ro = 0; ro < ROUT; ro++) {
-                    sum_v1 += output[t][co][ro][c][1][0];
-                    sum_v1 += output[t][co][ro][c][1][1];
-                    sum_v1 += output[t][co][ro][c][0][1];
-                    sum_v1 += output[t][co][ro][prev_c][H - 1][H];
-                    sum_v1 += output[t][co][ro][prev_c][H - 1][H - 1];
-                    sum_v2 += output[t][co][ro][c][1][H];
-                    sum_v2 += output[t][co][ro][c][1][(H + 1) % W];
-                    sum_v2 += output[t][co][ro][c][0][(H + 1) % W];
-                    sum_v2 += output[t][co][ro][prev_c][H - 1][W - 1];
-                    sum_v2 += output[t][co][ro][c][0][H - 1];
+                    sum_v1 += output_tile[ro][c][1][0];
+                    sum_v1 += output_tile[ro][c][1][1];
+                    sum_v1 += output_tile[ro][c][0][1];
+                    sum_v1 += output_tile[ro][prev_c][H - 1][H];
+                    sum_v1 += output_tile[ro][prev_c][H - 1][H - 1];
+                    sum_v2 += output_tile[ro][c][1][H];
+                    sum_v2 += output_tile[ro][c][1][(H + 1) % W];
+                    sum_v2 += output_tile[ro][c][0][(H + 1) % W];
+                    sum_v2 += output_tile[ro][prev_c][H - 1][W - 1];
+                    sum_v2 += output_tile[ro][c][0][H - 1];
                 }
                 float mean_v1 = sum_v1 / (ROUT * 5.0f);
                 float mean_v2 = sum_v2 / (ROUT * 5.0f);
                 for (int ro = 0; ro < ROUT; ro++) {
-                    output[t][co][ro][c][0][0] = mean_v1;
-                    output[t][co][ro][c][0][H] = mean_v2;
+                    output_tile[ro][c][0][0] = mean_v1;
+                    output_tile[ro][c][0][H] = mean_v2;
+                }
+            }
+
+            for (int ro = 0; ro < ROUT; ro++) {
+                for (int sp = 0; sp < CHARTS * H * W; sp++) {
+#pragma HLS PIPELINE II=1
+                    const int c = sp / (H * W);
+                    const int rem = sp % (H * W);
+                    const int h = rem / W;
+                    const int w = rem % W;
+                    output[t][co][ro][c][h][w] = output_tile[ro][c][h][w];
                 }
             }
         }

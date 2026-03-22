@@ -1,5 +1,57 @@
 # Layer2-5 硬件优化与策略跟踪
 
+## 0. 2026-03-22 阶段 1 稳定版更新
+
+本次更新对应 `layer2-5` 共享 `ConvIco(r=1)` 模块的一次稳定结构重构。代码修改已经落地到
+[ico_conv_layer2_5.cpp](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/ico_conv_layer2_5.cpp)，
+并完成了功能验证与 HLS 重新综合，可作为后续总览文档回写依据。
+
+### 0.1 本次结构改动
+
+1. 将主卷积从“单输出点串行 `sum += ...` 累加”改为“按 `co/ro` 组织的局部 `output_tile` 累加”。
+2. 将 `kernel_expansion_idx` 驱动的 `3 x 3` 展开权重提升到 `ci/ri` 级局部 `kernel` 缓存，避免每个空间点重复展开索引。
+3. 将输出极点清零与平滑从顶层 `output` 迁移到局部 `output_tile`，最后统一写回外层输出数组。
+4. 对 `padded_frame` 的 `H/W` 维和 `weight` 的 7-neighbor 维加入结构化 `ARRAY_PARTITION`，为窗口读取和展开权重提供并行端口。
+
+### 0.2 2026-03-22 功能验证结果
+
+- 已重新编译 [test_ico_conv_layer2_5.cpp](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/test_ico_conv_layer2_5.cpp) 与 [test_ico_conv_layer2_5_debug.cpp](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/test_ico_conv_layer2_5_debug.cpp)。
+- `layer2 / layer3 / layer4 / layer5` 四层 C 端全量回归均 `PASS`。
+- 四层最大误差分别为 `7.15256e-006 / 9.05991e-006 / 5.96046e-006 / 5.72205e-006`。
+- `layer2` 的 Python/C 中间层对比继续 `PASS`，输入、`PadIco`、最终输出全部保持一致。
+
+### 0.3 HLS 综合结果对比
+
+| 指标 | 重构前 | 2026-03-22 重构后 | 变化 |
+|---|---:|---:|---:|
+| Estimated Clock | `4.498 ns` | `4.472 ns` | 略优 |
+| Total Latency | `6213631061 cycles` | `498988881 cycles` | `-91.97%` |
+| 估算执行时间 | `31.068 sec` | `2.495 sec` | `-91.97%` |
+| 单帧 iteration latency | `119492905 cycles` | `9595940 cycles` | `-91.97%` |
+| BRAM_18K | `66` | `50` | `-24.24%` |
+| DSP | `13` | `139` | `+126` |
+| FF | `12108` | `37847` | `+25739` |
+| LUT | `11337` | `32331` | `+20994` |
+
+### 0.4 阶段结论
+
+1. 这次收益已经证明：`layer2-5` 的主路径不能只靠 pragma 微调，真正有效的是主数据流与局部输出缓冲的结构重构。
+2. 原先主 MAC 的“单点串行累加链”已被明显缓解，主计算阶段单帧 latency 从 `119439377 cycles` 降到 `9548928 cycles`，约 `12.51x` 加速。
+3. 输出极点后处理不再直接对顶层 `output` 形成读写竞争，问题 C 已从“顶层输出端口冲突”转移为“局部缓冲内部的后处理调度”。
+4. 当前版本已经可以视作 `layer2-5` 的“阶段 1 稳定结构版”，满足回写统一分析文档的条件。
+
+### 0.5 当前剩余瓶颈
+
+1. `pad_ico_Pipeline_VITIS_LOOP_76_2` 仍为 `Final II = 27`，输入端口冲突尚未解决。
+2. 主空间累加循环 `VITIS_LOOP_222_8` 在 scheduling 日志中仍出现 `output_tile` 的 carried dependence，说明虽然原始 `sum` 累加链已消失，但局部 tile 累加仍有进一步优化空间。
+3. 从当前 `csynth` 结果看，主计算阶段依然占据绝大多数帧内 latency，因此下一轮仍应继续围绕局部累加组织和输入访存组织推进，而不是回退到泛化 pragma 扫描。
+
+### 0.6 下一轮动作
+
+1. 针对 `output_tile` 局部累加关系继续压缩主空间循环的启动间隔，优先考虑更细粒度的 partial sum 分裂或空间分块。
+2. 针对 `PadIco` 引入输入局部缓冲或 `ri` 维分块，专门消解 `input_r_load_* due to limited memory ports`。
+3. 在保持当前稳定版可随时回归的前提下，再决定是否引入更激进的 `unroll` / `dataflow` 组合。
+
 ## 1. 文档定位
 
 本文档用于专门跟踪 `layer2-5` 共享参数化卷积块的硬件优化过程。
@@ -64,27 +116,27 @@
 当前关键指标：
 
 - Target Clock: `5.00 ns`
-- Estimated Clock: `4.498 ns`
-- Total Latency: `6213631061 cycles`
-- 约合执行时间: `31.068 sec`
-- BRAM_18K: `66`
-- DSP: `13`
-- FF: `12108`
-- LUT: `11337`
+- Estimated Clock: `4.472 ns`
+- Total Latency: `498988881 cycles`
+- 约合执行时间: `2.495 sec`
+- BRAM_18K: `50`
+- DSP: `139`
+- FF: `37847`
+- LUT: `32331`
 
 当前结论：
 
-1. 时钟满足要求，不是主要矛盾。
-2. 主要矛盾是总 latency 太高。
-3. 主要原因不是单一运算慢，而是循环依赖和存储端口冲突导致的 `II` 偏大。
+1. 时钟仍满足要求，问题依然不在频率。
+2. `layer2-5` 已经完成一轮稳定结构重构，总 latency 较 baseline 显著下降。
+3. 当前剩余矛盾已从“单点串行 `sum += ...` + 全局输出端口冲突”，收敛为“`PadIco` 输入端口冲突 + 局部 `output_tile` 累加调度”。
 
 ---
 
 ## 4. 当前问题拆分
 
-基于现有 HLS 报告，`layer2-5` 的问题可以拆成三类。
+基于当前稳定版综合结果，`layer2-5` 的剩余问题可以拆成三类。
 
-### 4.1 问题 A：主 MAC 累加相关
+### 4.1 问题 A：局部 `output_tile` 累加相关
 
 对应代码位置：
 
@@ -92,20 +144,21 @@
 
 核心区段：
 
-- 主卷积累加 `sum += ...`，约在 `178-190` 行附近
+- 局部输出 tile 累加 `output_tile[ro][c][h][w] += conv`，约在 `215-240` 行附近
 
 HLS 现象：
 
-1. 主卷积 pipeline 存在 carried dependence
-2. `Final II = 9`
+1. 主计算阶段仍是帧内 latency 的主要来源
+2. `VITIS_LOOP_222_8` 仍对应当前局部热点
+3. 局部 tile 累加仍存在 carried dependence 约束
 
 问题本质：
 
-当前输出元素的部分和 `sum` 采用串行累加，导致加法链带来 loop-carried dependence。
+虽然原始“单输出点串行 `sum += ...`”已经被移除，但当前仍是在局部 `output_tile` 上反复执行读-改-写累加，因此局部 tile 累加链仍限制启动间隔。
 
 硬件含义：
 
-即使时钟频率可以满足，卷积主循环也无法以低 II 发射，吞吐受限。
+即使总体结构已经显著优化，主计算核的局部累加组织仍是下一轮继续压缩 latency 的关键点。
 
 ### 4.2 问题 B：PadIco 输入端口冲突
 
@@ -131,29 +184,29 @@ HLS 现象：
 
 Padding/重排阶段本身就被存储访问拖慢，尚未形成高吞吐前处理结构。
 
-### 4.3 问题 C：输出端口冲突
+### 4.3 问题 C：局部输出 tile 后处理与写回路径
 
 对应代码位置：
 
-- 输出极点平滑和回写逻辑
+- 局部 tile 极点修正与最终写回逻辑
 
 核心区段：
 
-- 约在 `212-233` 行附近
+- 约在 `246-284` 行附近
 
 HLS 现象：
 
-1. 多条 `output_r_load_*` 和 `output_r_addr_*_write`
-2. 都提示 `limited memory ports`
-3. `Final II = 33`
+1. 输出后处理已经从全局 `output` 解耦到局部 `output_tile`
+2. 但 tile 内极点修正与最终写回仍构成独立阶段开销
+3. 输出路径已不再是旧版本那种主导性全局端口冲突
 
 问题本质：
 
-同一阶段中，输出数组既被读取以计算极点平滑，又被回写修正，形成明显读写竞争。
+当前问题不再是“全局输出数组读写打架”，而是局部 tile 后处理、最终写回与主计算阶段之间还没有完全形成更激进的数据流重叠。
 
 硬件含义：
 
-这是当前单点最重的结构瓶颈，也是下一步最值得优先改造的环节之一。
+这是稳定版之后的次级优化方向，适合在主计算与输入访存进一步压缩后继续完善。
 
 ---
 
@@ -161,17 +214,17 @@ HLS 现象：
 
 建议优先级如下：
 
-1. 主 MAC 累加相关
+1. 局部 `output_tile` 累加相关
 原因：
-这是共享卷积块的核心计算环节，优化后最容易形成“通用主干架构方法”的论文表述。
+这是当前稳定版中仍然主导计算路径的结构热点，也是继续降低总 latency 的最直接抓手。
 
-2. 输出端口冲突
+2. PadIco 输入端口冲突
 原因：
-当前 `Final II = 33`，是最重的单点冲突之一，且结构上比较清晰。
+它仍然保持 `Final II = 27`，说明输入侧几何预处理并未跟上主干计算的结构优化速度。
 
-3. PadIco 输入端口冲突
+3. 局部输出 tile 后处理与写回路径
 原因：
-虽然也很重，但它更偏向数据重排与访存组织，适合在主卷积和输出回写结构稳定后再优化。
+它已经不再是旧版本中的主瓶颈，但作为最终成果的一部分，仍值得在后续完善为更清晰的独立数据流阶段。
 
 ---
 
@@ -179,46 +232,46 @@ HLS 现象：
 
 本节只列“可尝试方案”，不代表全部都做，也不代表一开始就全部引入。
 
-### 6.1 面向问题 A：主 MAC 累加相关
+### 6.1 面向问题 A：局部 `output_tile` 累加相关
 
-候选方案 A1：局部部分和分解
+候选方案 A1：局部部分和银行化
 
 思路：
 
-1. 不再用单一 `sum` 串行累加所有 `ci/ri/kh/kw`
-2. 将部分和拆成多个局部 `psum`
-3. 最后再归约
+1. 将 `output_tile` 沿 `ro`、空间点或局部 bank 进一步拆分
+2. 降低单 bank 上的读-改-写压力
+3. 最后再统一归并
 
 预期效果：
 
-降低 carried dependence，压低主卷积 loop 的 `Final II`
+继续压低局部 tile 累加链带来的 carried dependence
 
 风险：
 
-1. 局部寄存器或局部数组增加
-2. 归约阶段可能带来新的资源开销
+1. 局部 SRAM / 寄存器资源增加
+2. bank 合并阶段会引入额外归约开销
 
-候选方案 A2：按 `ri` 或 `kh/kw` 方向分块归约
-
-思路：
-
-1. 先按某一维度形成较短的局部求和链
-2. 再把多个局部和合并
-
-预期效果：
-
-缩短单条加法依赖链长度
-
-候选方案 A3：配合小规模并行展开
+候选方案 A2：按 `ri` 或空间点方向分阶段归约
 
 思路：
 
-1. 在可控维度上引入适度 unroll
-2. 与局部 `psum` 组合
+1. 先形成更短的局部累加片段
+2. 再在 tile 内执行阶段化归并
 
 预期效果：
 
-在不显著拉高资源的前提下提高并行度
+缩短单条局部累加依赖链长度
+
+候选方案 A3：配合 `output_tile` 定向 partition
+
+思路：
+
+1. 针对局部热点维度做更有针对性的 `ARRAY_PARTITION`
+2. 与局部累加银行化配合使用
+
+预期效果：
+
+在可控资源增长下提升局部 tile 累加并行度
 
 注意：
 
@@ -266,44 +319,45 @@ HLS 现象：
 
 降低单一 pipeline 段内的访问复杂度
 
-### 6.3 面向问题 C：输出端口冲突
+### 6.3 面向问题 C：局部输出 tile 后处理与写回路径
 
-候选方案 C1：输出后处理读写分离
-
-思路：
-
-1. 先只读取需要的输出极点相关值到局部变量或局部 buffer
-2. 计算完平均值后，再统一回写
-
-预期效果：
-
-减少同一循环内对 `output_r` 的读写打架
-
-候选方案 C2：增加中间输出缓冲
+候选方案 C1：tile 后处理与写回阶段化
 
 思路：
 
-1. 主卷积先写到 `output_frame_local`
-2. 后处理基于 local buffer 完成
-3. 最后统一写回外层输出数组
+1. 先在局部 tile 内完成极点修正
+2. 再进入独立 writeback 阶段
+3. 避免后处理和写回混在同一逻辑层次里
 
 预期效果：
 
-明显降低 `output_r` 的端口竞争
+让输出路径形成更清晰的阶段边界
+
+候选方案 C2：输出路径 dataflow 化
+
+思路：
+
+1. 将局部累加、极点修正、最终写回拆成更明确的子阶段
+2. 在保证正确性的前提下评估是否适合 `dataflow`
+3. 让输出路径与主计算更容易重叠
+
+预期效果：
+
+降低输出收尾阶段的顺序执行开销
 
 风险：
 
-BRAM 增加的可能性较大
+控制逻辑和中间 buffer 可能增加
 
-候选方案 C3：极点后处理独立成单独阶段
+候选方案 C3：极点统计单元独立化
 
 思路：
 
-不要把输出平滑和主输出回写强绑在同一个数据路径里。
+将输出侧极点统计与最终写回单独抽象为更清晰的微架构单元。
 
 预期效果：
 
-更容易在 HLS 中形成清晰的数据流阶段边界
+更容易在论文与 HLS 实现中保持一致的结构边界
 
 ---
 
@@ -311,28 +365,29 @@ BRAM 增加的可能性较大
 
 建议按以下顺序推进，每完成一步都重新验证。
 
-### 阶段 1：主 MAC 累加链优化
+### 阶段 1：共享主干结构重构
 
 目标：
 
-先解决主计算核的串行累加依赖。
+完成从“单点串行 `sum += ...` + 全局输出回改”到“局部 `output_tile` 累加 + tile 内后处理”的稳定版重构。
+
+检查项：
+
+1. Python/C 验证通过
+2. `layer2-5` 总 latency 明显下降
+3. 新结构可用于论文中的共享主干架构表述
+
+### 阶段 2：局部 `output_tile` 累加优化
+
+目标：
+
+进一步压低局部 tile 累加链的依赖与阶段开销。
 
 检查项：
 
 1. Python/C 验证仍通过
-2. 主卷积相关 loop 的 `Final II` 是否下降
+2. 主计算热点 loop 的 interval / II 是否继续下降
 3. DSP/LUT/FF 是否可接受
-
-### 阶段 2：输出后处理读写解耦
-
-目标：
-
-降低输出极点平滑阶段对 `output_r` 的读写冲突。
-
-检查项：
-
-1. 输出后处理相关 loop 的 `Final II` 是否显著下降
-2. BRAM 增长是否可接受
 
 ### 阶段 3：PadIco 输入访问优化
 
@@ -345,7 +400,18 @@ BRAM 增加的可能性较大
 1. `pad_ico` 相关 loop 的 `Final II` 是否下降
 2. 是否引入过多 buffer 资源
 
-### 阶段 4：综合整理为“共享参数化架构”
+### 阶段 4：输出路径阶段化完善
+
+目标：
+
+把局部后处理、writeback 和最终输出路径整理为更清晰的数据流结构。
+
+检查项：
+
+1. 局部后处理与写回阶段是否更清晰可控
+2. 是否具备继续引入 dataflow 的基础
+
+### 阶段 5：综合整理为“共享参数化架构”
 
 目标：
 
@@ -379,10 +445,11 @@ BRAM 增加的可能性较大
 
 本阶段不是追求“一步到位的最佳架构”，而是要先得到一版能明确说明以下问题的优化结果：
 
-1. 为什么主 MAC 的累加链会限制吞吐
-2. 为什么输出后处理会形成严重端口冲突
-3. 为什么 `PadIco` 会在共享主干块中成为访存热点
-4. 这些问题分别适合用什么结构化方法解决
+1. 为什么局部 `output_tile` 累加仍会限制吞吐
+2. 为什么 `PadIco` 输入访问仍是共享主干中的主要访存热点
+3. 为什么输入侧几何预处理需要继续演进成更清晰的缓冲化结构
+4. 为什么输出路径需要从“功能后处理”继续演进成“结构化 tile 收尾阶段”
+5. 这些问题分别适合用什么结构化方法解决
 
 也就是说，本阶段的成果应当是：
 
@@ -422,7 +489,7 @@ BRAM 增加的可能性较大
 
 ### 11.1 学术型架构图
 
-下面这张图给出 `layer2-5` 共享卷积块的总体结构。
+下面这张图给出 `layer2-5` 共享卷积块面向最终成果的总体结构。
 
 读图建议：
 
@@ -438,34 +505,40 @@ BRAM 增加的可能性较大
 ```mermaid
 flowchart LR
     A[Input Feature Map\nT x Cin x Rin x Charts x H x W] --> B[Input Global Buffer]
-    B --> C[PadIco and Pole Processing Unit]
-    C --> D[Reordered / Padded Feature Buffer]
-    D --> E[Input Tile Buffer]
+    B --> C[Geometry Preprocess Cluster\nPadIco + Reorder + Pole Statistics]
+    C --> D[Padded Frame Buffer]
+    D --> E[Spatial Window / Input Tile Staging]
 
-    F[Weight Buffer\nCompact 7-neighbor Weights] --> G[Kernel Expansion / Index Decode]
-    H[Kernel Expansion Index Buffer] --> G
-    I[Reorder Index Buffer] --> C
-    J[Layer Config\nlayer2/layer3/layer4/layer5] --> K[Schedule / Tile Controller]
+    F[Compact Weight Buffer\n7-neighbor weights] --> K[Index Decode and Weight Expansion]
+    G[Kernel Expansion Index Buffer] --> K
+    H[Reorder Index Buffer] --> C
+    I[Layer Config\nlayer2/layer3/layer4/layer5] --> J[Unified Frame / Tile Scheduler]
 
-    K --> C
-    K --> E
-    K --> G
-    K --> L
-    K --> M
-    K --> N
+    J --> C
+    J --> E
+    J --> K
+    J --> M
+    J --> N
+    J --> O
 
-    E --> L[Shared ConvIco Compute Core\nIC/OC Tiled MAC Array]
-    G --> L
+    K --> L[Local Expanded Kernel Cache]
+    E --> M[Shared ConvIco Compute Core\nWindow MAC Array]
+    L --> M
 
-    L --> M[Partial Sum Accumulator / Output Tile Buffer]
-    M --> N[Output Pole Post-Processing Unit]
-    N --> O[Output Feature Buffer]
-    O --> P[Output Feature Map\nT x Cout x Rout x Charts x H x W]
+    M --> N[Local Output Tile Accumulator]
+    N --> O[Output Tile Post-Process\nPole Cleanup + Pole Smoothing]
+    O --> P[Output Writeback Buffer]
+    P --> Q[Output Feature Map\nT x Cout x Rout x Charts x H x W]
 
-    linkStyle 0,1,2,3,10,12,13,14 stroke:#1f77b4,stroke-width:2px;
-    linkStyle 4,5,6 stroke:#2ca02c,stroke-width:2px;
-    linkStyle 7,8,9,11 stroke:#ff7f0e,stroke-width:2px;
+    linkStyle 0,1,2,3,15,17,18,19,20 stroke:#1f77b4,stroke-width:2px;
+    linkStyle 4,5,6,14,16 stroke:#2ca02c,stroke-width:2px;
+    linkStyle 7,8,9,10,11,12,13 stroke:#ff7f0e,stroke-width:2px;
 ```
+
+与最初框架图相比，这一版本明确增加了两类最终会保留下来的结构边界：
+
+1. `Kernel Expansion / Index Decode` 被细化为“索引译码与权重展开”加“本地展开 kernel 缓存”。
+2. 输出端被细化为“局部 output tile 累加”与“局部 tile 内极点修正后再统一写回”，不再表现为直接对全局 `output` 的读写回改。
 
 ### 11.2 图例
 
@@ -487,141 +560,161 @@ flowchart LR
 它是整个共享块的数据入口，决定输入数据如何被后续模块重复利用。
 
 与其他模块的关系：
-它把原始输入送给 `PadIco and Pole Processing Unit`，因此是前处理链路的起点。
+它把原始输入送给 `Geometry Preprocess Cluster`，因此是前处理链路的起点。
 
-2. `PadIco and Pole Processing Unit`
+2. `Geometry Preprocess Cluster`
 作用：
-负责 `PadIco`、极点平滑和 chart 间重排。
+负责 `PadIco`、chart 间重排、极点统计以及几何规则化前处理。
 
 意义：
-这是该网络区别于普通 2D CNN 的关键几何处理模块。
+这是共享 `ConvIco` 块区别于普通 2D CNN 的核心几何适配单元，也是当前输入端口冲突最集中的结构区域。
 
 与其他模块的关系：
-它一方面从 `Input Global Buffer` 读取原始特征，另一方面使用 `Reorder Index Buffer` 中的索引信息完成几何映射，输出给 `Reordered / Padded Feature Buffer`。
+它一方面读取 `Input Global Buffer` 和 `Reorder Index Buffer`，另一方面把几何预处理后的结果写入 `Padded Frame Buffer`。
 
-3. `Reordered / Padded Feature Buffer`
+3. `Padded Frame Buffer`
 作用：
-保存经过重排和 padding 后的中间特征图。
+保存已经完成几何重排、边界补齐和极点补值后的规则化特征图。
 
 意义：
-它把原始不规则的几何访问，转换为后续更规则、更适合硬件 tile 化读取的存储形态。
+它把原始不规则的球面邻域访问转换成后续窗口化卷积可直接消费的规则数据布局。
 
 与其他模块的关系：
-它是前处理与卷积计算之间的中间桥梁，为 `Input Tile Buffer` 提供规则数据源。
+它承接 `Geometry Preprocess Cluster` 的输出，并向 `Spatial Window / Input Tile Staging` 提供规则窗口数据源。
 
-4. `Input Tile Buffer`
+4. `Spatial Window / Input Tile Staging`
 作用：
-将全局 padded 特征切成局部 tile。
+从 `Padded Frame Buffer` 中提取局部空间窗口，并为主计算核组织输入暂存。
 
 意义：
-它是降低输入端口冲突、提高局部数据复用的关键模块。
+它是输入侧降低访存冲突、提升局部数据复用和支撑窗口 MAC 并行化的关键模块。
 
 与其他模块的关系：
-它从 `Reordered / Padded Feature Buffer` 读取数据，并将局部 tile 送入 `Shared ConvIco Compute Core`。
+它从 `Padded Frame Buffer` 取数，并将窗口级输入送入 `Shared ConvIco Compute Core`。
 
-5. `Weight Buffer`
+5. `Compact Weight Buffer`
 作用：
-保存紧凑 7 邻域权重。
+保存紧凑的 7-neighbor 卷积权重。
 
 意义：
-它体现了该网络卷积核参数的紧凑表达，而不是使用普通 `3 x 3` 完整核的直接存储。
+它体现了 `ConvIco` 卷积核不同于普通 `3 x 3` 核的参数组织方式，是参数压缩表达的起点。
 
 与其他模块的关系：
-它将权重送入 `Kernel Expansion / Index Decode`，供后续展开和映射。
+它向 `Index Decode and Weight Expansion` 提供原始紧凑权重。
 
-6. `Kernel Expansion / Index Decode`
+6. `Kernel Expansion Index Buffer`
 作用：
-根据 `kernel_expansion_idx` 将紧凑权重映射到实际邻域位置。
+保存 `kernel_expansion_idx` 对应的邻域映射信息。
 
 意义：
-这是当前网络卷积权重组织方式的核心特征之一，也是普通 CNN 中通常不存在的专用模块。
+它决定紧凑 7-neighbor 权重如何恢复成计算核实际使用的 `3 x 3` 邻域布局。
 
 与其他模块的关系：
-它接收 `Weight Buffer` 和 `Kernel Expansion Index Buffer` 的输入，并将展开后的权重访问信息送给 `Shared ConvIco Compute Core`。
+它与 `Compact Weight Buffer` 一起驱动 `Index Decode and Weight Expansion`。
 
-7. `Schedule / Tile Controller`
+7. `Unified Frame / Tile Scheduler`
 作用：
-控制 layer 号、tile 顺序、IC/OC 分块和模块启动。
+统一控制 layer 选择、frame 顺序、tile 顺序、OC/RO 调度以及各模块启动时序。
 
 意义：
-它决定同一个共享硬件核如何在 `layer2` 到 `layer5` 之间复用。
+它决定同一套共享硬件骨架如何在 `layer2` 到 `layer5` 之间复用，也是“共享参数化”最直接的控制体现。
 
 与其他模块的关系：
-它不直接参与数值计算，但负责协调 `PadIco`、`Input Tile Buffer`、`Kernel Expansion / Index Decode`、`Shared ConvIco Compute Core`、`Partial Sum Accumulator` 和 `Output Pole Post-Processing Unit` 的时序关系。
+它不直接参与数值运算，但负责协调 `Geometry Preprocess Cluster`、`Spatial Window / Input Tile Staging`、`Index Decode and Weight Expansion`、`Shared ConvIco Compute Core`、`Local Output Tile Accumulator` 和 `Output Tile Post-Process` 的时序关系。
 
-8. `Shared ConvIco Compute Core`
+8. `Index Decode and Weight Expansion`
 作用：
-执行主卷积 MAC 计算。
+根据 `kernel_expansion_idx` 将紧凑权重译码并展开到当前计算阶段需要的邻域位置。
 
 意义：
-这是论文中最核心的共享参数化卷积核，也是后续所有性能优化最主要的承载单元。
+它是参数准备路径中的专用变换单元，使共享主干能够同时兼容网络原始参数组织和硬件侧规则窗口计算。
+
+与其他模块的关系：
+它接收 `Compact Weight Buffer` 与 `Kernel Expansion Index Buffer` 的输入，并将展开结果送入 `Local Expanded Kernel Cache`。
+
+9. `Local Expanded Kernel Cache`
+作用：
+缓存当前 `co/ro/ci/ri` 组合对应的局部 `3 x 3` 展开 kernel。
+
+意义：
+它避免对同一空间窗口重复进行索引展开，是当前稳定版本中已经落地的重要结构单元。
+
+与其他模块的关系：
+它承接 `Index Decode and Weight Expansion` 的输出，并将本地展开后的 kernel 提供给 `Shared ConvIco Compute Core`。
+
+10. `Shared ConvIco Compute Core`
+作用：
+执行基于窗口输入和本地展开 kernel 的主卷积 MAC 计算。
+
+意义：
+这是论文中最核心的共享参数化卷积主干，也是后续所有吞吐优化最主要的承载单元。
 
 其内部目标应体现：
-- `IC/OC tiling`
-- 局部并行 MAC
-- 可复用的 `layer2-5` 主干计算结构
+- `IC/OC` 方向的统一调度
+- 面向局部窗口的规则 MAC
+- 可在 `layer2-5` 间复用的稳定主干结构
 
 与其他模块的关系：
-它从 `Input Tile Buffer` 获取输入 tile，从 `Kernel Expansion / Index Decode` 获取权重映射结果，并将中间部分和输出到 `Partial Sum Accumulator / Output Tile Buffer`。
+它从 `Spatial Window / Input Tile Staging` 获取输入窗口，从 `Local Expanded Kernel Cache` 获取局部 kernel，并将卷积结果送入 `Local Output Tile Accumulator`。
 
-9. `Partial Sum Accumulator / Output Tile Buffer`
+11. `Local Output Tile Accumulator`
 作用：
-保存局部部分和，并作为输出 tile 的临时缓存。
+保存局部输出 tile 的部分和，并承担 tile 级输出累加。
 
 意义：
-它是降低主 MAC 串行累加依赖的重要结构抓手，也是实现分阶段归约的自然位置。
+它是取代“单输出点串行 `sum += ...`”的关键结构，也是当前稳定版 latency 显著下降的核心抓手之一。
 
 与其他模块的关系：
-它承接 `Shared ConvIco Compute Core` 的中间结果，并将整理后的输出 tile 送给 `Output Pole Post-Processing Unit`。
+它承接 `Shared ConvIco Compute Core` 的卷积结果，并把累加完成的局部 tile 送给 `Output Tile Post-Process`。
 
-10. `Output Pole Post-Processing Unit`
+12. `Output Tile Post-Process`
 作用：
-负责输出端极点清零、极点平滑和最终后处理回写。
+在局部 `output tile` 内完成极点清零、极点平滑和最终几何修正。
 
 意义：
-这是当前输出端口冲突最严重的模块，也是必须独立优化和单独建模的部分。
+它把原先对全局 `output` 的读写竞争，重构为 tile 内局部修正，是输出后处理解耦的关键模块。
 
 与其他模块的关系：
-它读取 `Partial Sum Accumulator / Output Tile Buffer` 的结果，对极点相关位置进行修正，再把最终结果送入 `Output Feature Buffer`。
+它读取 `Local Output Tile Accumulator` 的结果，完成局部修正后再把最终 tile 送入 `Output Writeback Buffer`。
 
-11. `Output Feature Buffer`
+13. `Output Writeback Buffer`
 作用：
-承接最终输出特征图。
+承接最终输出 tile，并负责统一写回外层输出特征图。
 
 意义：
-它是共享块的输出落点，为层间接口或外部存储提供统一写回位置。
+它是共享块的输出落点，也是局部输出路径和全局输出数组之间的隔离层。
 
 与其他模块的关系：
-它从 `Output Pole Post-Processing Unit` 获取最终输出，并写回 `Output Feature Map`。
+它从 `Output Tile Post-Process` 获取最终 tile，并写回 `Output Feature Map`。
 
 ### 11.4 模块之间是如何配合的
 
 按执行顺序看，整个共享块可分成五个协同阶段：
 
 1. 输入准备阶段
-`Input Global Buffer -> PadIco and Pole Processing Unit -> Reordered / Padded Feature Buffer`
+`Input Global Buffer -> Geometry Preprocess Cluster -> Padded Frame Buffer`
 
-这一阶段的作用是把原始特征图转换成适合卷积计算核使用的几何重排形式。
+这一阶段的作用是把原始特征图转换成适合共享主干使用的规则化球面存储形态。
 
 2. Tile 组织阶段
-`Reordered / Padded Feature Buffer -> Input Tile Buffer`
+`Padded Frame Buffer -> Spatial Window / Input Tile Staging`
 
-这一阶段的作用是从全局 padded 特征中提取局部 tile，降低后续计算阶段对全局存储的直接访问压力。
+这一阶段的作用是从规则化特征图中提取局部窗口，为后续 MAC 核提供可重复利用的输入暂存。
 
 3. 参数准备阶段
-`Weight Buffer + Kernel Expansion Index Buffer -> Kernel Expansion / Index Decode`
+`Compact Weight Buffer + Kernel Expansion Index Buffer -> Index Decode and Weight Expansion -> Local Expanded Kernel Cache`
 
-这一阶段的作用是把紧凑 7 邻域权重转换成当前 MAC 实际需要的邻域映射形式。
+这一阶段的作用是把紧凑 7-neighbor 权重转换成当前窗口 MAC 实际使用的本地 `3 x 3` kernel。
 
 4. 主计算阶段
-`Input Tile Buffer + Kernel Expansion / Index Decode -> Shared ConvIco Compute Core -> Partial Sum Accumulator / Output Tile Buffer`
+`Spatial Window / Input Tile Staging + Local Expanded Kernel Cache -> Shared ConvIco Compute Core -> Local Output Tile Accumulator`
 
-这一阶段完成共享卷积块的主体运算，也是当前吞吐率受限最明显的地方。
+这一阶段完成共享卷积块的主体卷积运算，也是当前吞吐率最主要的承载路径。
 
 5. 输出修正阶段
-`Partial Sum Accumulator / Output Tile Buffer -> Output Pole Post-Processing Unit -> Output Feature Buffer`
+`Local Output Tile Accumulator -> Output Tile Post-Process -> Output Writeback Buffer`
 
-这一阶段负责把卷积输出修正成与 PyTorch `ConvIco` 一致的最终几何输出。
+这一阶段负责在局部 tile 内完成极点修正，并把结果统一写回外层输出特征图。
 
 ### 11.5 该架构图在论文中的作用
 
@@ -630,80 +723,100 @@ flowchart LR
 1. 作为 `layer2-5` 共享主干块的总览图。
 2. 说明“网络结构特征”如何映射为“硬件功能模块”。
 3. 为后文的优化章节提供结构锚点，例如：
-   - 主 MAC 累加相关优化对应 `Shared ConvIco Compute Core`
-   - 输入端口冲突优化对应 `PadIco + Input Tile Buffer`
-   - 输出端口冲突优化对应 `Output Pole Post-Processing Unit`
+   - 主窗口 MAC 优化对应 `Shared ConvIco Compute Core`
+   - 局部累加链优化对应 `Local Output Tile Accumulator`
+   - 输入端口冲突优化对应 `Geometry Preprocess Cluster + Spatial Window / Input Tile Staging`
+   - 输出后处理解耦优化对应 `Output Tile Post-Process + Output Writeback Buffer`
 
 ### 11.6 该架构图对应的论文表述建议
 
 可以配套使用如下表述：
 
-`针对 layer2-5 在通道规模、旋转维和空间分辨率上的一致性，本文将其统一抽象为共享参数化 ConvIco 主干块。该块由输入重排与极点处理单元、权重展开与索引译码单元、共享 tiled MAC 计算阵列、局部部分和累加单元以及输出极点后处理单元构成，从而形成一套面向该网络结构特征的数据流与存储协同硬件架构。`
+`针对 layer2-5 在通道规模、旋转维和空间分辨率上的一致性，本文将其统一抽象为共享参数化 ConvIco 主干块。该块由几何预处理与规则化存储单元、索引译码与局部 kernel 展开单元、共享窗口 MAC 计算核心、局部输出 tile 累加单元以及 tile 内极点后处理与统一写回单元构成，从而形成一套面向该网络结构特征的数据流与存储协同硬件架构。`
 
 ### 11.7 论文插图增强版架构图
 
-如果后续需要放进论文正文，建议优先使用下面这种更接近“分层框图”的版本。
+如果后续需要放进论文正文，建议优先使用下面这种已经对齐当前稳定版实现方向和后续最终成果的“分层框图”版本。
 
 ```mermaid
 flowchart TB
-    subgraph S0[Configuration and Control Layer]
+    subgraph S0[Configuration and Scheduling Layer]
         C0[Layer Selector]
-        C1[Tile Scheduler]
-        C2[Address / Index Controller]
+        C1[Frame / Tile Scheduler]
+        C2[Address and Bank Controller]
+        C3[OC / RO Dispatch Controller]
     end
 
     subgraph S1[Input Preparation Layer]
         I0[Input Global Memory]
-        I1[Input Global Buffer]
-        I2[PadIco and Pole Smoothing]
-        I3[Reorder Mapping]
-        I4[Padded Feature Buffer]
-        I5[Input Tile Buffer]
+        I1[Input Frame Buffer]
+        I2[Geometry Preprocess Engine]
+        I3[PadIco / Reorder Mapper]
+        I4[Pole Statistic Generator]
+        I5[Padded Frame SRAM]
+        I6[Spatial Window / Input Tile Staging]
     end
 
     subgraph S2[Parameter Preparation Layer]
-        P0[Compact Weight Buffer]
-        P1[Kernel Expansion Index Buffer]
-        P2[Kernel Expansion and Decode]
+        P0[Compact Weight SRAM]
+        P1[Kernel Expansion Index SRAM]
+        P2[Index Decode]
+        P3[Expanded 3x3 Kernel Cache]
     end
 
-    subgraph S3[Shared Compute Layer]
-        M0[Shared ConvIco Compute Core]
-        M1[IC Tiling]
-        M2[OC Tiling]
-        M3[Local Partial Sum Array]
+    subgraph S3[Shared Compute and Accumulation Layer]
+        M0[Shared ConvIco Window MAC Engine]
+        M1[IC / OC Tiling Controller]
+        M2[Local Output Tile Accumulator]
+        M3[Output Tile SRAM]
     end
 
-    subgraph S4[Output Processing Layer]
-        O0[Output Tile Buffer]
-        O1[Output Pole Post-Processing]
-        O2[Output Feature Buffer]
+    subgraph S4[Output Finalization Layer]
+        O0[Output Tile Pole Cleanup]
+        O1[Local Pole Smoothing]
+        O2[Writeback Buffer]
         O3[Output Global Memory]
     end
 
     C0 --> C1
     C1 --> C2
+    C1 --> C3
 
     C2 --> I1
-    C2 --> I3
+    C2 --> I5
     C2 --> P2
-    C2 --> M0
-    C2 --> O1
+    C2 --> M3
+    C3 --> I6
+    C3 --> P3
+    C3 --> M0
+    C3 --> O0
 
-    I0 --> I1 --> I2 --> I3 --> I4 --> I5
+    I0 --> I1 --> I2
+    I2 --> I3
+    I2 --> I4
+    I3 --> I5
+    I4 --> I5
+    I5 --> I6
+
     P0 --> P2
     P1 --> P2
+    P2 --> P3
 
-    I5 --> M0
-    P2 --> M0
+    I6 --> M0
+    P3 --> M0
     M1 --> M0
-    M2 --> M0
-    M0 --> M3 --> O0 --> O1 --> O2 --> O3
+    M0 --> M2 --> M3 --> O0 --> O1 --> O2 --> O3
 
-    linkStyle 0,1,2,3,4,5,9,12,13,14 stroke:#ff7f0e,stroke-width:2px;
-    linkStyle 6,7,8 stroke:#1f77b4,stroke-width:2px;
-    linkStyle 10,11,15,16,17,18 stroke:#2ca02c,stroke-width:2px;
+    linkStyle 0,1,2,3,4,5,6,7,8,9,10,23 stroke:#ff7f0e,stroke-width:2px;
+    linkStyle 11,12,13,14,15,16,17,21,24,25,26,27,28,29 stroke:#1f77b4,stroke-width:2px;
+    linkStyle 18,19,20,22 stroke:#2ca02c,stroke-width:2px;
 ```
+
+增强版中，最终会重点保留的微架构特征已经被显式画出：
+
+1. 输入侧不再只抽象成单一 `PadIco`，而是细化为几何预处理、pole 统计、padded frame 存储和窗口级输入暂存。
+2. 参数侧不再只画“权重展开”，而是细化为 `Index Decode -> Expanded 3x3 Kernel Cache -> MAC Engine`。
+3. 输出侧明确采用 `Local Output Tile Accumulator -> Output Tile SRAM -> Local Pole Smoothing -> Writeback` 的闭环路径。
 
 该版本更适合在论文中表达以下观点：
 
@@ -719,16 +832,16 @@ flowchart TB
 建议按下面顺序阅读增强版架构图：
 
 1. 先从上到下看层次。
-最上层是控制层，中间是输入与参数准备层，再往下是共享计算层，最后是输出处理层。
+最上层是统一调度层，中间依次是输入准备层、参数准备层、共享计算与累加层，最后是输出最终收尾层。
 
 2. 再看蓝色链路。
 蓝色代表主数据流，表示特征图是如何在各存储和计算模块间传输的。
 
 3. 再看绿色链路。
-绿色代表参数流，表示权重与索引如何进入共享计算核。
+绿色代表参数流，表示紧凑权重如何经过索引译码与本地 kernel 展开后进入共享计算核。
 
 4. 最后看橙色链路。
-橙色代表控制流，表示统一调度器如何驱动不同模块协同运行。
+橙色代表控制流，表示统一调度器如何协调 frame、tile、bank 和输出收尾阶段。
 
 ### 11.9 当前瓶颈位置标注图
 
@@ -736,16 +849,16 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    A[Input Buffer] --> B[PadIco and Pole Processing]
-    B --> C[Input Tile Buffer]
-    C --> D[Shared ConvIco MAC Core]
-    D --> E[Output Tile Buffer]
-    E --> F[Output Pole Post-Processing]
-    F --> G[Output Buffer]
+    A[Input Buffer] --> B[Geometry Preprocess Cluster]
+    B --> C[Padded Frame / Window Staging]
+    C --> D[Shared ConvIco Window MAC Core]
+    D --> E[Local Output Tile Accumulator]
+    E --> F[Output Tile Post-Process]
+    F --> G[Writeback Buffer]
 
     X1[[Bottleneck B1\nInput Port Conflicts]] -.-> B
-    X2[[Bottleneck B2\nAccumulation Dependency]] -.-> D
-    X3[[Bottleneck B3\nOutput Port Conflicts]] -.-> F
+    X2[[Bottleneck B2\nLocal Tile Accumulation]] -.-> E
+    X3[[Bottleneck B3\nOutput Finalization Overhead]] -.-> F
 
     linkStyle 0,1,2,3,4,5 stroke:#1f77b4,stroke-width:2px;
     linkStyle 6,7,8 stroke:#d62728,stroke-width:2px;
@@ -756,10 +869,10 @@ flowchart LR
 1. 让“瓶颈分析”可以直接映射到具体模块，而不是只停留在 HLS 报告数字。
 2. 方便把后续优化章节写成：
    - 针对 B1 的输入访存优化
-   - 针对 B2 的累加链优化
-   - 针对 B3 的输出后处理解耦优化
+   - 针对 B2 的局部累加链优化
+   - 针对 B3 的输出路径阶段化优化
 
-### 11.7 图文配套建议
+### 11.10 图文配套建议
 
 后续在论文中，建议这两张图配套使用：
 
@@ -780,9 +893,9 @@ flowchart LR
 截至当前版本，可以明确认为：
 
 1. `layer2-5` 已经是后续硬件架构优化的主战场。
-2. 当前共享块功能正确，但 latency 仍然非常高。
-3. 主要问题已经比较清晰地收敛为三类：
-   1. 累加相关
-   2. 输入端口冲突
-   3. 输出端口冲突
-4. 下一步最合理的动作，是先对主 MAC 累加链做结构化改造。
+2. 当前共享块已经完成一轮值得保留的稳定结构重构，功能正确且综合结果显著改善。
+3. 当前版本下，`layer2-5` 的主要剩余问题已经收敛为三类：
+   1. 局部 `output_tile` 累加相关
+   2. `PadIco` 输入端口冲突
+   3. 输出路径的阶段化完善
+4. 下一步最合理的动作，是继续压缩局部 tile 累加链，并同步推进 `PadIco` 输入访存优化。
