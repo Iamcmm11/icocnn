@@ -132,7 +132,7 @@ class OneSourceTrackingLearner(TrackingLearner):
 			
 			DOA_batch = DOA_batch.contiguous()
 			DOA_batch_cart = sigma * sph2cart(DOA_batch)
-			loss = torch.nn.functional.mse_loss(DOA_batch_pred_cart.view(-1, 3), DOA_batch_cart.view(-1, 3))
+			loss = torch.nn.functional.mse_loss(DOA_batch_pred_cart.reshape(-1, 3), DOA_batch_cart.reshape(-1, 3))
 			loss.backward()
 
 			trajectory_idx += trajectories_per_gpu_call
@@ -172,10 +172,10 @@ class OneSourceTrackingLearner(TrackingLearner):
 				
 				DOA_batch = DOA_batch.contiguous()
 				DOA_batch_cart = sigma * sph2cart(DOA_batch)
-				loss_data += torch.nn.functional.mse_loss(DOA_batch_pred_cart.view(-1, 3), DOA_batch_cart.view(-1, 3))
+				loss_data += torch.nn.functional.mse_loss(DOA_batch_pred_cart.reshape(-1, 3), DOA_batch_cart.reshape(-1, 3))
 
 				DOA_batch_pred = cart2sph(DOA_batch_pred_cart)
-				rmsae_data += rms_angular_error_deg(DOA_batch[..., 5:, :].view(-1, 2), DOA_batch_pred[..., 5:, :].view(-1, 2))
+				rmsae_data += rms_angular_error_deg(DOA_batch[..., 5:, :].reshape(-1, 2), DOA_batch_pred[..., 5:, :].reshape(-1, 2))
 
 			loss_data /= nb_batchs
 			rmsae_data /= nb_batchs
@@ -376,7 +376,7 @@ class OneSourceClassificationLearner(TrackingLearner):
 					rmasaes = torch.tensor([rms_angular_error_deg(DOA_batch[b,s,...], DOA_batch_pred[b,:]) for s in range(DOA_batch.shape[1])])
 					DOA_batch_best_prediction_ref[b,...] = DOA_batch[b,rmasaes.argmin(),...]
 
-				rmsae_data += rms_angular_error_deg(DOA_batch_best_prediction_ref.view(-1, 2), DOA_batch_pred.view(-1, 2))
+				rmsae_data += rms_angular_error_deg(DOA_batch_best_prediction_ref.reshape(-1, 2), DOA_batch_pred.reshape(-1, 2))
 
 			rmsae_data /= nb_batchs
 
@@ -579,7 +579,7 @@ class MultiSourceClassificationLearner(TrackingLearner):
 				DOA_batch_pred = self.match_DOAs(output_max_coor, DOA_batch)
 
 				rmsae_best_source += torch.sqrt(torch.mean( rms_angular_error_deg(DOA_batch, DOA_batch_pred).min(1)[0] **2))
-				rmsae_all += rms_angular_error_deg(DOA_batch.view(-1, 2), DOA_batch_pred.view(-1, 2))
+				rmsae_all += rms_angular_error_deg(DOA_batch.reshape(-1, 2), DOA_batch_pred.reshape(-1, 2))
 
 			rmsae_best_source /= nb_batchs
 			rmsae_all /= nb_batchs
@@ -668,7 +668,7 @@ class MultiSourceTrackingLearner(TrackingLearner):
 	def best_pairing_error(y, y_pred, error_func):
 		errors = []
 		for pairing in permutations(range(y.shape[0])):
-			errors.append( error_func(y_pred[pairing, ...].view(-1, y_pred.shape[-1]), y.view(-1, y.shape[-1])) )
+			errors.append( error_func(y_pred[pairing, ...].reshape(-1, y_pred.shape[-1]), y.reshape(-1, y.shape[-1])) )
 		return min(errors)
 
 	@staticmethod
@@ -888,7 +888,7 @@ class RecursiveMultiSourceTrackingLearner(TrackingLearner):
 	def best_pairing_error(y, y_pred, error_func):
 		errors = []
 		for pairing in permutations(range(y.shape[0])):
-			errors.append( error_func(y_pred[pairing, ...].view(-1, y_pred.shape[-1]), y.view(-1, y.shape[-1])) )
+			errors.append( error_func(y_pred[pairing, ...].reshape(-1, y_pred.shape[-1]), y.reshape(-1, y.shape[-1])) )
 		return min(errors)
 
 	@staticmethod
@@ -1676,7 +1676,7 @@ class MapSeparationLearner(TrackingLearner):
 	def best_pairing_error(y, y_pred, error_func):
 		errors = []
 		for pairing in permutations(range(y.shape[0])):
-			errors.append( error_func(y_pred[pairing, ...].view(-1, y_pred.shape[-1]), y.view(-1, y.shape[-1])) )
+			errors.append( error_func(y_pred[pairing, ...].reshape(-1, y_pred.shape[-1]), y.reshape(-1, y.shape[-1])) )
 		return min(errors)
 
 	def train_epoch(self, dataset, trajectories_per_batch, trajectories_per_gpu_call=5, lr=0.001, epoch=None):
@@ -1857,7 +1857,7 @@ class MapCancelatorLearner(TrackingLearner):
 	def best_pairing_error(y, y_pred, error_func):
 		errors = []
 		for pairing in permutations(range(y.shape[0])):
-			errors.append( error_func(y_pred[pairing, ...].view(-1, y_pred.shape[-1]), y.view(-1, y.shape[-1])) )
+			errors.append( error_func(y_pred[pairing, ...].reshape(-1, y_pred.shape[-1]), y.reshape(-1, y.shape[-1])) )
 		return min(errors)
 
 	def train_epoch(self, dataset, trajectories_per_batch, trajectories_per_gpu_call=5, lr=0.001, epoch=None):

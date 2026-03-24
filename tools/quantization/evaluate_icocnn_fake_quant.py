@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -90,9 +91,8 @@ class FakeQuantWrapper(nn.Module):
         self._hooks = []
 
 
-def build_test_dataset(k=4096, trajectory_seconds=20):
-    path_test = os.path.join(ROOT, "datasets", "LibriSpeech", "test-clean")
-    corpus_dataset_test = at_dataset.LibriSpeechDataset(path_test, trajectory_seconds, return_vad=True)
+def build_test_dataset(test_path, k=4096, trajectory_seconds=20):
+    corpus_dataset_test = at_dataset.LibriSpeechDataset(test_path, trajectory_seconds, return_vad=True)
 
     windowing = at_dataset.Windowing(k, k * 3 // 4, window=np.hanning)
 
@@ -129,17 +129,71 @@ def build_learner(model, device, r=2, k=4096, fs=16000, n_mics=12):
 
 
 def evaluate(learner, dataset, batch_size, nb_batches):
-    loss, rmsae = learner.test_epoch(dataset, batch_size, nb_batchs=nb_batches)
+    learner.model.eval()
+    total_batches = (len(dataset) // batch_size) if nb_batches is None else nb_batches
+
+    with torch.no_grad():
+        loss_data = 0
+        rmsae_data = 0
+        progress = tqdm(range(total_batches), desc="eval", leave=False, ascii=True)
+
+        for idx in progress:
+            mic_sig_batch, acoustic_scene_batch = dataset.get_batch(idx * batch_size, (idx + 1) * batch_size)
+            x_batch, doa_batch = learner.preprocessor.data_transformation(mic_sig_batch, acoustic_scene_batch)
+            doa_batch_pred_cart = learner.model(x_batch).contiguous()
+
+            doa_batch = doa_batch.contiguous()
+            doa_batch_cart = at_learners.sph2cart(doa_batch)
+            batch_loss = torch.nn.functional.mse_loss(
+                doa_batch_pred_cart.reshape(-1, 3),
+                doa_batch_cart.reshape(-1, 3),
+            )
+
+            doa_batch_pred = at_learners.cart2sph(doa_batch_pred_cart)
+            batch_rmsae = at_learners.rms_angular_error_deg(
+                doa_batch[..., 5:, :].reshape(-1, 2),
+                doa_batch_pred[..., 5:, :].reshape(-1, 2),
+            )
+
+            loss_data += batch_loss
+            rmsae_data += batch_rmsae
+
+            progress.set_postfix(
+                loss=float((loss_data / (idx + 1)).detach().cpu().item()),
+                rmsae=float((rmsae_data / (idx + 1)).detach().cpu().item()),
+            )
+
+        loss_data /= total_batches
+        rmsae_data /= total_batches
+
     return {
-        "loss": float(loss.detach().cpu().item() if torch.is_tensor(loss) else loss),
-        "rmsae_deg": float(rmsae.detach().cpu().item() if torch.is_tensor(rmsae) else rmsae),
+        "loss": float(loss_data.detach().cpu().item() if torch.is_tensor(loss_data) else loss_data),
+        "rmsae_deg": float(rmsae_data.detach().cpu().item() if torch.is_tensor(rmsae_data) else rmsae_data),
     }
 
 
 def load_model(model_path, device, r=2, channels=32):
     model = at_models.IcoTempCNN(r, channels)
     state_dict = torch.load(model_path, map_location=device)
-    model.load_state_dict(state_dict)
+    missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+
+    # Older checkpoints may not store deterministic mask buffers from icoCNN.
+    non_mask_missing = [key for key in missing_keys if not key.endswith(".mask")]
+    if non_mask_missing or unexpected_keys:
+        details = {
+            "missing_keys": missing_keys,
+            "unexpected_keys": unexpected_keys,
+        }
+        raise RuntimeError(
+            "Checkpoint is incompatible with the current model definition:\n"
+            + json.dumps(details, indent=2, ensure_ascii=False)
+        )
+
+    if missing_keys:
+        print("Ignoring deterministic missing buffer keys:")
+        for key in missing_keys:
+            print(f"  - {key}")
+
     model.to(device)
     return model
 
@@ -156,8 +210,12 @@ def summarize_delta(baseline, current):
 def main():
     parser = argparse.ArgumentParser(description="Evaluate fake-quantized icoCNN accuracy drift on the PyTorch model.")
     parser.add_argument("--model-path", default=os.path.join(ROOT, "models", "1sourceTracking_icoCNN_robot_K4096_r2_model.bin"))
+    parser.add_argument("--test-path", default=os.path.join(ROOT, "datasets", "LibriSpeech", "test-clean"),
+                        help="Path to the LibriSpeech test split directory.")
     parser.add_argument("--r", type=int, default=2)
     parser.add_argument("--channels", type=int, default=32)
+    parser.add_argument("--trajectory-seconds", type=int, default=20)
+    parser.add_argument("--k", type=int, default=4096)
     parser.add_argument("--batch-size", type=int, default=5, help="Trajectory batch size. Matches the original 1sourceTracking_icoCNN.py test/eval setting.")
     parser.add_argument("--nb-batches", type=int, default=10, help="Number of evaluation batches. Use --full-eval to run the whole test set.")
     parser.add_argument("--full-eval", action="store_true", help="Evaluate on the full test split instead of a limited number of batches.")
@@ -170,7 +228,7 @@ def main():
     args = parser.parse_args()
 
     device = torch.device(args.device)
-    dataset = build_test_dataset(k=4096)
+    dataset = build_test_dataset(args.test_path, k=args.k, trajectory_seconds=args.trajectory_seconds)
     nb_batches = None if args.full_eval else args.nb_batches
 
     base_model = load_model(args.model_path, device, r=args.r, channels=args.channels)
