@@ -1,4 +1,5 @@
 # Layer2-5 硬件优化与策略跟踪
+报告分析需要分析每一次的关键参数比如pipeline，优化后的pipeline效果是多少，其次DSP以及BRAM的两个资源较少的内容，分析每次实验之后为什么多了，为什么少了
 
 ## 0. 2026-03-22 阶段 1 稳定版更新
 
@@ -52,6 +53,161 @@
 2. 针对 `PadIco` 引入输入局部缓冲或 `ri` 维分块，专门消解 `input_r_load_* due to limited memory ports`。
 3. 在保持当前稳定版可随时回归的前提下，再决定是否引入更激进的 `unroll` / `dataflow` 组合。
 
+### 0.7 2026-03-24 量化调参与当前默认配置
+
+本轮在
+[ico_conv_layer2_5.hpp](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/ico_conv_layer2_5.hpp)
+中将量化类型改为可配置宏，并最终收敛到当前默认组合：
+
+- `input_t = ap_fixed<16, 4>`
+- `weight_t = ap_fixed<14, 3>`
+- `act_t = ap_fixed<24, 8>`
+- `acc_t = ap_fixed<40, 18>`
+
+其中：
+
+1. `input_t` 保持紧凑，避免输入侧存储代价回弹。
+2. `weight_t` 从首版量化尝试的 `8,2` 提升到 `14,3`，用于修复主卷积路径中的主要量化误差来源。
+3. `act_t/acc_t` 保持更宽，用于降低 `output_tile` 反复读改写累加时的截断损失。
+
+本轮已重新执行本地定点 C 验证和 `synth`。最新综合结果来自
+[layer2_5_latest_summary.md](G:/3DSLED/icocnn/hls_src/hls_reports/layer2_5_latest_summary.md)
+与
+[conv_ico_layer2_5_csynth.rpt](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/layer2_5_hls_prj/sol1/syn/report/conv_ico_layer2_5_csynth.rpt)。
+
+### 0.8 相对 2026-03-22 新稳定版的量化收益
+
+| 指标 | 2026-03-22 新稳定版 | 2026-03-24 量化综合版 | 相对变化 |
+|---|---:|---:|---:|
+| Estimated Clock | `4.472 ns` | `4.048 ns` | `-9.48%` |
+| Total Latency | `498988881 cycles` | `315787473 cycles` | `-36.71%` |
+| 估算执行时间 | `2.495 sec` | `1.579 sec` | `-36.71%` |
+| BRAM_18K | `50` | `26` | `-48.00%` |
+| DSP | `139` | `54` | `-61.15%` |
+| FF | `37847` | `27382` | `-27.65%` |
+| LUT | `32331` | `48087` | `+48.73%` |
+
+若相对最早重构前 baseline 观察，则当前量化综合版的总 latency 已累计下降 `94.79%`，BRAM 已累计下降 `60.61%`。
+
+### 0.9 量化版阶段结论
+
+1. 当前默认量化组合在综合侧依然显著优于 `2026-03-22` 新稳定版，尤其是 `BRAM`、`DSP` 和总 latency，说明这组定点位宽在硬件代价上是成立的。
+2. `Estimated Clock` 从 `4.472 ns` 进一步改善到 `4.048 ns`，再次说明当前瓶颈不在时序频率，而在数据流与访存组织。
+3. 代价并非单向下降，`LUT` 从 `32331` 升到 `48087`，表明定点转换、舍入/饱和逻辑和更宽中间位宽正在把一部分成本转移到组合逻辑与控制逻辑上。
+4. 从当前 `csynth` 看，主热点仍集中在主卷积循环与 `PadIco` 输入侧，量化没有改变“下一阶段应优先解决访存组织”的总体判断。
+5. 相比首版激进权重量化，当前版本已经把量化误差从“不可接受的大偏差”压回到“接近可用的低误差区间”，说明 `weight_t` 是当前最敏感的精度控制点。
+
+### 0.10 本地定点验证结果
+
+基于带 `ap_fixed` 头文件的本地 C 验证，四层结果如下：
+
+| 层 | Max Error | RMSE | 结论 |
+|---|---:|---:|---|
+| `layer2` | `0.0119269` | `0.00335319` | 未过当前 `1e-3` 阈值，但较首版量化显著改善 |
+| `layer3` | `0.0150612` | `0.00344091` | 未过当前 `1e-3` 阈值，但误差已压到 `1e-2` 量级 |
+| `layer4` | `0.0137136` | `0.00343121` | 未过当前 `1e-3` 阈值，但误差已压到 `1e-2` 量级 |
+| `layer5` | `0.0119314` | `0.00279214` | 未过当前 `1e-3` 阈值，但较首版量化显著改善 |
+
+这一轮说明：
+
+1. 首版 `weight_t = ap_fixed<8,2>` 的主要问题确实在权重量化过于激进。
+2. 将 `weight_t` 提升到 `ap_fixed<14,3>` 后，四层最大误差已稳定降到约 `0.012 ~ 0.015`。
+3. 当前量化版本虽仍未达到原来的严格 `PASS` 阈值，但已经从“明显失真”进入“只差最后一轮精修”的状态。
+
+### 0.11 量化版风险与当前缺口
+
+1. 当前量化版已明显改善，但尚未达到现有测试中 `max_err < 1e-3` 的严格判定阈值，因此还不能视为最终闭环版本。
+2. 当前主要缺口已经从“量化策略方向错误”收缩为“剩余约一个数量级的精度修正”，问题范围显著缩小。
+3. `PadIco` 相关 pipeline 仍存在 `input_r_load_* due to limited memory ports`，说明输入端口冲突仍是当前最明确的结构性瓶颈。
+4. 主卷积热点仍由 `VITIS_LOOP_312_7` / `VITIS_LOOP_317_8` 一带主导，意味着局部 `output_tile` 的读改写累加链条依旧值得继续拆解。
+
+### 0.12 量化后的下一步计划
+
+1. 量化数值闭环仍应优先完成，但下一轮不再需要大范围扫位宽，而应围绕当前默认组合做“小步精修”。首选方向是继续微调 `weight_t` 的小数位，或只对最敏感的权重/偏置路径做选择性加宽。
+2. 若要继续冲击 `1e-3` 阈值，优先保留当前 `weight_t = ap_fixed<14,3>` 与 `input_t = ap_fixed<16,4>`，只尝试更细的 `act_t/acc_t` 或 bias 路径精度修正，避免把 `BRAM/DSP` 收益整体吃回去。
+3. 一旦量化误差稳定收敛到可接受区间，就应转入结构优化第二阶段，优先利用当前释放出来的 `BRAM/DSP` 余量去解决 `PadIco` 输入端口冲突。
+4. 在 `PadIco` 输入端口冲突得到缓解后，再回到局部 `output_tile` 累加路径，尝试更细粒度的 partial-sum banking 或分阶段归约，继续压缩主计算循环的启动间隔。
+
+### 0.13 2026-03-24 A/B/C/D 骨架版重构
+
+本轮按照当前设计路线，直接把后续结构工作包中的 A/B/C/D 主骨架落到
+[ico_conv_layer2_5.cpp](G:/3DSLED/icocnn/hls_src/HLS/layer2-5/ico_conv_layer2_5.cpp)
+中，用于验证这些结构边界是否值得继续保留。
+
+本轮新增的结构动作如下：
+
+1. A：输入侧增加 `staged_input`，先完成输入量化与局部 staging，再进入 `PadIco`，不再让 `PadIco` 直接从顶层 `input` 取数。
+2. A：`PadIco` 逻辑继续保留几何行为，但其输入已经从“顶层大数组直接访存”变为“局部 frame buffer 驱动”。
+3. B：主计算路径引入 `co_base` 的显式 tile 调度，形成 `OC_TILE = 2` 的输出通道 tile 骨架。
+4. B：主计算路径引入 `ri_partial[OC_TILE][RIN][...]`，先做 `ri` 级 partial sum，再归并到 `output_tile`，不再在最内层直接反复更新全局局部部分和。
+5. C：输出路径拆分为 `post_process_output_tiles()` 与 `writeback_output_tiles()` 两个显式阶段。
+6. C：局部后处理不再与最终写回混在同一段逻辑里，新增 `output_post` 作为输出收尾阶段边界。
+7. D：顶层已经具备较清晰的 tile 骨架：
+   `stage_input -> pad_ico_quantized -> init_output_tiles -> main_conv/partial_sum -> post_process -> writeback`
+
+### 0.14 A/B/C/D 骨架版实验结果
+
+本轮保持当前默认量化位宽不变，仅验证结构骨架变化本身的影响。
+
+#### 0.14.1 本地 C 验证
+
+| 层 | Max Error | RMSE | 结论 |
+|---|---:|---:|---|
+| `layer2` | `0.0119422` | `0.00335674` | 与骨架重构前量化版基本一致 |
+| `layer3` | `0.0150730` | `0.00343874` | 与骨架重构前量化版基本一致 |
+| `layer4` | `0.0136983` | `0.00343253` | 与骨架重构前量化版基本一致 |
+| `layer5` | `0.0119041` | `0.00279112` | 与骨架重构前量化版基本一致 |
+
+这说明：
+
+1. 这次 A/B/C/D 骨架重构没有破坏当前量化行为。
+2. 输入 staging、`ri` partial sum 和输出路径拆段虽然改变了结构，但数值结果仍与重构前量化版保持同一量级。
+
+#### 0.14.2 HLS 综合结果
+
+相对“骨架重构前的当前默认量化版”对比如下：
+
+| 指标 | 骨架重构前量化版 | A/B/C/D 骨架版 | 相对变化 |
+|---|---:|---:|---:|
+| Estimated Clock | `4.048 ns` | `4.209 ns` | `+3.98%` |
+| Total Latency | `315787473 cycles` | `261686621 cycles` | `-17.13%` |
+| 估算执行时间 | `1.579 sec` | `1.308 sec` | `-17.16%` |
+| BRAM_18K | `26` | `64` | `+146.15%` |
+| DSP | `54` | `72` | `+33.33%` |
+| FF | `27382` | `43639` | `+59.37%` |
+| LUT | `48087` | `69382` | `+44.28%` |
+
+同时，本轮 `csynth` 给出了一个很值得记录的现象：
+
+1. `All loop constraints were satisfied`，说明这次结构重组确实在调度层面打通了之前的一部分限制。
+2. `Total Latency` 已进一步压到 `261686621 cycles`，相对 `2026-03-22` 新稳定版累计下降 `47.56%`。
+
+#### 0.14.3 本轮取舍结论
+
+1. 从“结构方向是否有效”看，这次 A/B/C/D 骨架版是成功的，因为 latency 进一步下降，且 loop constraint 已全部满足。
+2. 从“是否已经成为新的稳定工程版本”看，这一版还不能直接定为最终保留版，因为 `BRAM/DSP/FF/LUT` 全面明显上升，尤其 `BRAM` 从 `26` 升到 `64`，资源代价过大。
+3. 因此，这一版更适合被视为“结构方向验证版”：
+   它证明了输入 staging、局部 partial sum 组织和输出阶段化是值得继续保留的方向，但后续必须继续做资源压缩。
+
+### 0.15 A/B/C/D 当前完成度清单
+
+本节用于明确本轮到底把哪些工作包“做到了什么程度”。
+
+| 工作包 | 当前状态 | 说明 |
+|---|---|---|
+| A：PadIco 输入访存重构 | `部分完成` | 已引入 `staged_input` 和前处理局部 staging，但还没有做到更激进的 `ri` 分块/输入局部缓存压缩版本 |
+| B：局部部分和组织重构 | `部分完成` | 已引入 `ri_partial` 与 `co-tile` 骨架，但还没有做到更精细的 banking 与低资源归并版本 |
+| C：输出路径阶段化 | `基本完成` | 已拆成 `post_process` 与 `writeback` 两个清晰阶段，但后续仍可继续压缩输出阶段资源 |
+| D：tile/dataflow 化收束 | `部分完成` | 已有显式 `co-tile` 调度骨架，但尚未引入双缓冲和真正的顶层 `dataflow` 重叠 |
+
+### 0.16 这轮之后的下一步
+
+在 A/B/C/D 骨架已经验证有效之后，下一轮不应再重新证明“方向是否成立”，而应直接转入“资源回收版”设计：
+
+1. 保留 `staged_input` 和输出路径阶段化这两个已经验证有效的结构边界。
+2. 优先压缩 `ri_partial`、`output_post` 和相关局部 SRAM 的资源开销，避免 `BRAM` 与 `LUT` 继续膨胀。
+3. 在资源回收到可接受区间后，再决定是否继续引入更激进的双缓冲或顶层 `dataflow`。
+
 ## 1. 文档定位
 
 本文档用于专门跟踪 `layer2-5` 共享参数化卷积块的硬件优化过程。
@@ -100,11 +256,13 @@
 2. Python 中间层导出
 3. C 端完整输出验证
 4. Python/C 中间层对比
-5. HLS quick 综合与报告解析
+5. 2026-03-22 稳定版功能回归与 HLS 验证
+6. 2026-03-24 量化版定点验证与 `synth` 调参
+7. 2026-03-24 A/B/C/D 骨架版结构验证
 
 结论：
 
-`当前共享块功能正确，Python/C 一致性通过，可进入硬件架构优化阶段。`
+`2026-03-22 稳定版功能正确；2026-03-24 量化版已完成一轮有效调参；当前代码所在分支进一步完成了 A/B/C/D 骨架验证，证明结构方向有效，但还不是资源最优的最终稳定保留版。`
 
 ### 3.2 当前 HLS 摘要
 
@@ -116,19 +274,20 @@
 当前关键指标：
 
 - Target Clock: `5.00 ns`
-- Estimated Clock: `4.472 ns`
-- Total Latency: `498988881 cycles`
-- 约合执行时间: `2.495 sec`
-- BRAM_18K: `50`
-- DSP: `139`
-- FF: `37847`
-- LUT: `32331`
+- Estimated Clock: `4.209 ns`
+- Total Latency: `261686621 cycles`
+- 约合执行时间: `1.308 sec`
+- BRAM_18K: `64`
+- DSP: `72`
+- FF: `43639`
+- LUT: `69382`
 
 当前结论：
 
 1. 时钟仍满足要求，问题依然不在频率。
-2. `layer2-5` 已经完成一轮稳定结构重构，总 latency 较 baseline 显著下降。
-3. 当前剩余矛盾已从“单点串行 `sum += ...` + 全局输出端口冲突”，收敛为“`PadIco` 输入端口冲突 + 局部 `output_tile` 累加调度”。
+2. 当前代码已经进入 A/B/C/D 骨架验证版，latency 进一步下降到 `261686621 cycles`，说明结构方向有效。
+3. 当前版本的主要问题已从“方向不清晰”转为“资源代价过高”，也就是如何在保留结构收益的前提下回收 `BRAM/LUT/FF`。
+4. 当前剩余矛盾仍可拆成两层：一层是“量化误差距离严格阈值还差最后一轮精修”，另一层是“`PadIco` 输入访存和局部部分和组织还需继续做低资源化收敛”。
 
 ---
 
@@ -504,12 +663,12 @@ HLS 现象：
 
 ```mermaid
 flowchart LR
-    A[Input Feature Map\nT x Cin x Rin x Charts x H x W] --> B[Input Global Buffer]
+    A[Input Feature Map\nT x Cin x Rin x Charts x H x W\nfloat host interface] --> B[Input Global Buffer]
     B --> C[Geometry Preprocess Cluster\nPadIco + Reorder + Pole Statistics]
-    C --> D[Padded Frame Buffer]
+    C --> D[Padded Frame Buffer\ninput_t = ap_fixed<16,4>]
     D --> E[Spatial Window / Input Tile Staging]
 
-    F[Compact Weight Buffer\n7-neighbor weights] --> K[Index Decode and Weight Expansion]
+    F[Compact Weight Buffer\n7-neighbor weights\nweight_t = ap_fixed<14,3>] --> K[Index Decode and Weight Expansion]
     G[Kernel Expansion Index Buffer] --> K
     H[Reorder Index Buffer] --> C
     I[Layer Config\nlayer2/layer3/layer4/layer5] --> J[Unified Frame / Tile Scheduler]
@@ -522,10 +681,10 @@ flowchart LR
     J --> O
 
     K --> L[Local Expanded Kernel Cache]
-    E --> M[Shared ConvIco Compute Core\nWindow MAC Array]
+    E --> M[Shared ConvIco Compute Core\nWindow MAC Array\n16b input x 14b weight]
     L --> M
 
-    M --> N[Local Output Tile Accumulator]
+    M --> N[Local Output Tile Accumulator\nact_t = ap_fixed<24,8>\nacc_t = ap_fixed<40,18>]
     N --> O[Output Tile Post-Process\nPole Cleanup + Pole Smoothing]
     O --> P[Output Writeback Buffer]
     P --> Q[Output Feature Map\nT x Cout x Rout x Charts x H x W]
@@ -599,6 +758,9 @@ flowchart LR
 意义：
 它体现了 `ConvIco` 卷积核不同于普通 `3 x 3` 核的参数组织方式，是参数压缩表达的起点。
 
+当前量化细节：
+当前默认实现中，该缓冲承载的是 `weight_t = ap_fixed<14,3>`，这已经被证明是当前误差和综合代价之间较好的折中点。
+
 与其他模块的关系：
 它向 `Index Decode and Weight Expansion` 提供原始紧凑权重。
 
@@ -649,6 +811,9 @@ flowchart LR
 意义：
 这是论文中最核心的共享参数化卷积主干，也是后续所有吞吐优化最主要的承载单元。
 
+当前量化细节：
+它当前以 `input_t = ap_fixed<16,4>` 和 `weight_t = ap_fixed<14,3>` 为主要乘法输入，并依赖更宽的内部累加位宽维持数值稳定性。
+
 其内部目标应体现：
 - `IC/OC` 方向的统一调度
 - 面向局部窗口的规则 MAC
@@ -663,6 +828,9 @@ flowchart LR
 
 意义：
 它是取代“单输出点串行 `sum += ...`”的关键结构，也是当前稳定版 latency 显著下降的核心抓手之一。
+
+当前量化细节：
+当前默认实现中，该模块对应更宽的局部部分和表示，即 `act_t = ap_fixed<24,8>` 与 `acc_t = ap_fixed<40,18>`，用于抑制局部 tile 反复读改写过程中的量化损失。
 
 与其他模块的关系：
 它承接 `Shared ConvIco Compute Core` 的卷积结果，并把累加完成的局部 tile 送给 `Output Tile Post-Process`。
@@ -753,21 +921,21 @@ flowchart TB
         I2[Geometry Preprocess Engine]
         I3[PadIco / Reorder Mapper]
         I4[Pole Statistic Generator]
-        I5[Padded Frame SRAM]
+        I5[Padded Frame SRAM\ninput_t 16b]
         I6[Spatial Window / Input Tile Staging]
     end
 
     subgraph S2[Parameter Preparation Layer]
-        P0[Compact Weight SRAM]
+        P0[Compact Weight SRAM\nweight_t 14b]
         P1[Kernel Expansion Index SRAM]
         P2[Index Decode]
         P3[Expanded 3x3 Kernel Cache]
     end
 
     subgraph S3[Shared Compute and Accumulation Layer]
-        M0[Shared ConvIco Window MAC Engine]
+        M0[Shared ConvIco Window MAC Engine\n16b x 14b -> 40b]
         M1[IC / OC Tiling Controller]
-        M2[Local Output Tile Accumulator]
+        M2[Local Output Tile Accumulator\nact_t 24b]
         M3[Output Tile SRAM]
     end
 
@@ -817,6 +985,7 @@ flowchart TB
 1. 输入侧不再只抽象成单一 `PadIco`，而是细化为几何预处理、pole 统计、padded frame 存储和窗口级输入暂存。
 2. 参数侧不再只画“权重展开”，而是细化为 `Index Decode -> Expanded 3x3 Kernel Cache -> MAC Engine`。
 3. 输出侧明确采用 `Local Output Tile Accumulator -> Output Tile SRAM -> Local Pole Smoothing -> Writeback` 的闭环路径。
+4. 当前量化版本的关键位宽边界也被显式画出，便于在论文中同时表达“结构重构”和“定点实现”这两条设计主线。
 
 该版本更适合在论文中表达以下观点：
 

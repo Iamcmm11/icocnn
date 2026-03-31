@@ -128,17 +128,27 @@ def build_learner(model, device, r=2, k=4096, fs=16000, n_mics=12):
     return learner
 
 
-def evaluate(learner, dataset, batch_size, nb_batches):
-    learner.model.eval()
+def collect_eval_batches(dataset, batch_size, nb_batches):
     total_batches = (len(dataset) // batch_size) if nb_batches is None else nb_batches
+    batches = []
+    progress = tqdm(range(total_batches), desc="cache_eval_batches", leave=False, ascii=True)
+    for idx in progress:
+        mic_sig_batch, acoustic_scene_batch = dataset.get_batch(idx * batch_size, (idx + 1) * batch_size)
+        batches.append((np.copy(mic_sig_batch), copy.deepcopy(acoustic_scene_batch)))
+    return batches
+
+
+def evaluate(learner, eval_batches, desc="eval"):
+    learner.model.eval()
+    total_batches = len(eval_batches)
 
     with torch.no_grad():
         loss_data = 0
         rmsae_data = 0
-        progress = tqdm(range(total_batches), desc="eval", leave=False, ascii=True)
+        progress = tqdm(range(total_batches), desc=desc, leave=False, ascii=True)
 
         for idx in progress:
-            mic_sig_batch, acoustic_scene_batch = dataset.get_batch(idx * batch_size, (idx + 1) * batch_size)
+            mic_sig_batch, acoustic_scene_batch = eval_batches[idx]
             x_batch, doa_batch = learner.preprocessor.data_transformation(mic_sig_batch, acoustic_scene_batch)
             doa_batch_pred_cart = learner.model(x_batch).contiguous()
 
@@ -225,26 +235,35 @@ def main():
     parser.add_argument("--skip-activation-quant", action="store_true")
     parser.add_argument("--quantize-bias", action="store_true")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--seed", type=int, default=1234, help="Random seed used when caching the evaluation batches.")
     args = parser.parse_args()
 
     device = torch.device(args.device)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+
     dataset = build_test_dataset(args.test_path, k=args.k, trajectory_seconds=args.trajectory_seconds)
     nb_batches = None if args.full_eval else args.nb_batches
+    eval_batches = collect_eval_batches(dataset, args.batch_size, nb_batches)
 
     base_model = load_model(args.model_path, device, r=args.r, channels=args.channels)
     baseline_learner = build_learner(base_model, device, r=args.r)
-    baseline = evaluate(baseline_learner, dataset, args.batch_size, nb_batches)
+    baseline = evaluate(baseline_learner, eval_batches, desc="baseline_fp32")
 
     results = {
         "config": {
             "model_path": args.model_path,
             "batch_size": args.batch_size,
             "nb_batches": "full" if args.full_eval else args.nb_batches,
+            "cached_eval_batches": len(eval_batches),
             "input_bits": args.input_bits,
             "weight_bits": args.weight_bits,
             "activation_bits": [] if args.skip_activation_quant else args.activation_bits,
             "quantize_bias": args.quantize_bias,
             "device": str(device),
+            "seed": args.seed,
         },
         "baseline_fp32": baseline,
         "experiments": [],
@@ -259,7 +278,7 @@ def main():
         # Weight-only quantization
         wrapped = FakeQuantWrapper(quant_weight_model, input_bits=None, activation_bits=None)
         learner = build_learner(wrapped, device, r=args.r)
-        weight_only = evaluate(learner, dataset, args.batch_size, nb_batches)
+        weight_only = evaluate(learner, eval_batches, desc=f"weight{weight_bits}")
         weight_only_result = {
             "name": f"weight{weight_bits}",
             "weight_bits": weight_bits,
@@ -285,7 +304,7 @@ def main():
                 activation_bits=act_bits,
             )
             learner = build_learner(wrapped, device, r=args.r)
-            metrics = evaluate(learner, dataset, args.batch_size, nb_batches)
+            metrics = evaluate(learner, eval_batches, desc=f"w{weight_bits}_a{act_bits}_in{args.input_bits}")
             result = {
                 "name": f"w{weight_bits}_a{act_bits}_in{args.input_bits}",
                 "weight_bits": weight_bits,
