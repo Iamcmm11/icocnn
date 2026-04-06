@@ -1,0 +1,12 @@
+{
+  "variant": "baseline",
+  "device": "cpu",
+  "seed": 42,
+  "param_count": 290017,
+  "maba_mac_proxy": 0,
+  "latency_step_ms": 171.34910820000187,
+  "final_test_loss": 0.0671648159623146,
+  "final_test_rmsae_deg": 20.107959747314453,
+  "model_path": "maba_doa/outputs/maba_doa_r2_baseline_20260406_182558/model.bin",
+  "output_dir": "maba_doa/outputs/maba_doa_r2_baseline_20260406_182558"
+}
