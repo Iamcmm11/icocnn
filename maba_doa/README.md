@@ -13,6 +13,7 @@ The implementation is intentionally pure PyTorch (no Triton/CUDA custom kernels)
 - `maba_doa/models.py`: `MABATemporalRefiner` and `IcoTempCNNWithMABA`
 - `maba_doa/train_maba_doa.py`: single-run training and evaluation
 - `maba_doa/run_ablation.py`: fixed baseline + ablation suite
+- `maba_doa/plot_history_compare.py`: compare `history.csv` curves and export summary table
 - `maba_doa/visualize_maps.py`: map-level before/after visualization and jitter report
 - `maba_doa/configs/default.yaml`: default experiment config
 - `maba_doa/tests/test_maba_doa.py`: shape and integration smoke tests
@@ -70,6 +71,26 @@ All outputs are written to `maba_doa/outputs/`:
 
 ```bash
 python maba_doa/visualize_maps.py --config maba_doa/configs/default.yaml --checkpoint maba_doa/outputs/<run_dir>/model.bin --frame 0 --output maba_doa/outputs/map_refinement.png
+```
+
+## History comparison
+
+Auto-pick latest `baseline/maba/ablation_*` runs under outputs:
+
+```bash
+python maba_doa/plot_history_compare.py --output-root maba_doa/outputs
+```
+
+The script skips incomplete runs automatically, exports:
+
+1. `history_compare.png`: Loss/RMSAE vs epoch curves
+2. `history_compare_summary.csv`: per-run final/best metrics
+3. `history_compare_merged.csv`: merged per-epoch history rows
+
+Or compare explicit run dirs:
+
+```bash
+python maba_doa/plot_history_compare.py --run-dirs maba_doa/outputs/<run_a> maba_doa/outputs/<run_b>
 ```
 
 ## Testing
