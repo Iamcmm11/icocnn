@@ -1,0 +1,12 @@
+{
+  "variant": "baseline",
+  "device": "cuda",
+  "seed": 42,
+  "param_count": 290017,
+  "maba_mac_proxy": 0,
+  "latency_step_ms": 29.040903950044594,
+  "final_test_loss": 0.02587093971669674,
+  "final_test_rmsae_deg": 8.122758865356445,
+  "model_path": "maba_doa/outputs/maba_doa_r2_baseline_20260406_220454/model.bin",
+  "output_dir": "maba_doa/outputs/maba_doa_r2_baseline_20260406_220454"
+}

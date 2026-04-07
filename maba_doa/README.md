@@ -1,12 +1,24 @@
 # MABA-DOA Experiments
 
-This directory contains a reproducible sandbox for:
+该目录提供了一套可复现的实验沙盒，用于比较以下方案：
 
-1. `Baseline`: original `IcoTempCNN`
+1. `Baseline`: 原始 `IcoTempCNN`
 2. `+MABA`: `apply_cnn() -> MABA -> SoftArgMax`
-3. `Ablation`: no-gate / no-state variants
+3. `Ablation`: `no-gate` / `no-state` 两个消融变体
 
-The implementation is intentionally pure PyTorch (no Triton/CUDA custom kernels), so it can be trained in the current repository environment.
+其中，两个消融变体与完整 `+MABA` 的区别如下：
+
+1. `maba`: 完整时序精炼结构，包含 `Linear In -> causal DW-Conv -> gated state scan -> Linear Out`，并在输出端与原始响应图做残差相加。
+2. `ablation_no_gate`: 保留时序状态扫描，但去掉动态门控 `alpha_t = sigmoid(G_t)`。此时遗忘系数退化为一个跨时间共享的可学习常量向量，因此模型仍然有递推记忆，但失去了逐帧自适应调节能力。
+3. `ablation_no_state`: 保留输入投影、因果深度卷积和输出投影，但跳过递推状态更新。此时模块退化为一个没有选择性记忆累积的前馈式时序混合块。
+
+可以把这三者理解为：
+
+1. `+MABA` 用来验证完整设计是否有效；
+2. `no-gate` 用来验证动态门控是否是性能提升的关键来源；
+3. `no-state` 用来验证递推状态路径本身是否带来了收益。
+
+实现刻意保持为纯 PyTorch 版本，不依赖 Triton 或自定义 CUDA kernel，因此可以直接在当前仓库环境中训练和复现实验。
 
 ## Structure
 

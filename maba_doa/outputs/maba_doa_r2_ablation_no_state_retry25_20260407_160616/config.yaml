@@ -2,13 +2,13 @@ experiment:
   name: maba_doa_r2
   output_root: maba_doa/outputs
   seed: 42
-device: cpu
+device: cuda
 data:
   r: 2
   fs: 16000
   trajectory_seconds: 20
-  train_path: datasets/LibriSpeech/train-clean-100
-  test_path: datasets/LibriSpeech/test-clean
+  train_path: datasets/LibriSpeech/LibriSpeech/train-clean-100
+  test_path: datasets/LibriSpeech/LibriSpeech/test-clean
   use_vad: true
   nb_points: 156
   snr:
@@ -17,7 +17,7 @@ data:
     K: 4096
     hop_ratio: 0.75
 model:
-  variant: baseline
+  variant: ablation_no_state
   channels: 32
   cin: 1
   smooth_vertices: true
@@ -28,7 +28,7 @@ model:
     dropout: 0.1
     use_residual: true
 training:
-  epochs: 1
+  epochs: 25
   trajectories_per_batch: 5
   trajectories_per_gpu_call: 1
   lr: 0.0001
