@@ -3,12 +3,12 @@
   **** SW Build 5238294 on Nov  8 2024
   **** IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
   **** SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-  **** Start of session at: Tue Mar 24 15:46:16 2026
+  **** Start of session at: Tue Apr  7 17:23:36 2026
     ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
     ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 
 source G:/PostGraduateFile/Xilinx/Vitis/2024.2/scripts/vitis_hls/hls.tcl -notrace
-INFO: [HLS 200-10] For user 'Lenovo' on host 'laptop-lc5o154v' (Windows NT_amd64 version 10.0) on Tue Mar 24 15:46:18 +0800 2026
+INFO: [HLS 200-10] For user 'Lenovo' on host 'laptop-lc5o154v' (Windows NT_amd64 version 10.0) on Tue Apr 07 17:23:37 +0800 2026
 INFO: [HLS 200-10] In directory 'G:/3DSLED/icocnn/hls_src/HLS/layer2-5'
 WARNING: [HLS 200-2053] The vitis_hls executable is deprecated. Consider using vitis-run --mode hls --tcl
 Sourcing Tcl script 'run_hls.tcl'
@@ -41,9 +41,9 @@ INFO: [HLS 200-1611] Setting target device to 'xc7k325t-ffg900-2'
 INFO: [HLS 200-1510] Running: create_clock -period 5.0 -name default 
 INFO: [SYN 201-201] Setting up clock 'default' with a period of 5ns.
 INFO: [HLS 200-1510] Running: csynth_design 
-INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.131 seconds; current allocated memory: 617.906 MB.
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.139 seconds; current allocated memory: 617.391 MB.
 INFO: [HLS 200-10] Analyzing design file 'ico_conv_layer2_5.cpp' ... 
-INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 9.271 seconds; current allocated memory: 621.270 MB.
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 11.226 seconds; current allocated memory: 621.203 MB.
 INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
 INFO: [HLS 200-1995] There were 24,895 instructions in the design after the 'Compile/Link' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/HLS/layer2-5/layer2_5_hls_prj/sol1/syn/report/csynth_design_size.rpt
 INFO: [HLS 200-1995] There were 10,342 instructions in the design after the 'Unroll/Inline (step 1)' phase of compilation. See the Design Size Report for more details: G:/3DSLED/icocnn/hls_src/HLS/layer2-5/layer2_5_hls_prj/sol1/syn/report/csynth_design_size.rpt
@@ -109,14 +109,14 @@ INFO: [HLS 214-248] Applying array_partition to '_ZZ17conv_ico_layer2_5PA32_A6_A
 INFO: [HLS 214-248] Applying array_partition to '_ZZ17conv_ico_layer2_5PA32_A6_A5_A2_A4_fPA32_A6_A7_KfPS5_PA6_A32_A6_A9_A4_KiPA5_A4_A6_SB_S4_E12staged_input_1_0': Complete partitioning on dimension 2.
 INFO: [HLS 214-248] Applying array_partition to '_ZZ17conv_ico_layer2_5PA32_A6_A5_A2_A4_fPA32_A6_A7_KfPS5_PA6_A32_A6_A9_A4_KiPA5_A4_A6_SB_S4_E12staged_input_0_3': Complete partitioning on dimension 2.
 INFO: [HLS 214-248] Applying array_partition to '_ZZ17conv_ico_layer2_5PA32_A6_A5_A2_A4_fPA32_A6_A7_KfPS5_PA6_A32_A6_A9_A4_KiPA5_A4_A6_SB_S4_E12staged_input_0_1': Complete partitioning on dimension 2.
-INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 33.957 seconds; current allocated memory: 623.633 MB.
-INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.005 seconds; current allocated memory: 623.637 MB.
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 34.369 seconds; current allocated memory: 623.902 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.006 seconds; current allocated memory: 623.902 MB.
 INFO: [HLS 200-10] Starting code transformations ...
-INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.904 seconds; current allocated memory: 637.531 MB.
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.97 seconds; current allocated memory: 638.328 MB.
 INFO: [HLS 200-10] Checking synthesizability ...
 WARNING: [SYNCHK 200-23] ico_conv_layer2_5.cpp:8: variable-indexed range selection may cause suboptimal QoR.
 INFO: [SYNCHK 200-10] 0 error(s), 1 warning(s).
-INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.249 seconds; current allocated memory: 650.809 MB.
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.345 seconds; current allocated memory: 650.809 MB.
 WARNING: [XFORM 203-561] Updating loop lower bound from 0 to 2 for loop 'VITIS_LOOP_377_1' (ico_conv_layer2_5.cpp:377:32) in function 'conv_ico_layer2_5'.
 INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (ico_conv_layer2_5.cpp:7:43) to (ico_conv_layer2_5.cpp:8:5) in function 'to_weight_t'... converting 29 basic blocks.
 INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (ico_conv_layer2_5.cpp:11:37) to (ico_conv_layer2_5.cpp:12:5) in function 'to_act_t'... converting 29 basic blocks.
@@ -125,7 +125,7 @@ INFO: [XFORM 203-401] Performing if-conversion on hyperblock to (ico_conv_layer2
 INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (ico_conv_layer2_5.cpp:187:9) to (ico_conv_layer2_5.cpp:188:26) in function 'conv_ico_layer2_5'... converting 29 basic blocks.
 INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (ico_conv_layer2_5.cpp:384:9) to (ico_conv_layer2_5.cpp:383:31) in function 'conv_ico_layer2_5'... converting 5 basic blocks.
 INFO: [XFORM 203-602] Inlining function 'to_act_t' into 'conv_ico_layer2_5' (ico_conv_layer2_5.cpp:302->ico_conv_layer2_5.cpp:431) automatically.
-INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 5 seconds. CPU system time: 0 seconds. Elapsed time: 4.789 seconds; current allocated memory: 690.434 MB.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 5 seconds. CPU system time: 0 seconds. Elapsed time: 5.241 seconds; current allocated memory: 690.320 MB.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_323_2'(ico_conv_layer2_5.cpp:323:27) and 'VITIS_LOOP_324_3'(ico_conv_layer2_5.cpp:324:31) in function 'post_process_output_tiles' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_322_1'(ico_conv_layer2_5.cpp:322:23) and 'VITIS_LOOP_323_2'(ico_conv_layer2_5.cpp:323:27) in function 'post_process_output_tiles' into perfectly nested loops.
 INFO: [HLS 200-2061] Successfully converted nested loops 'VITIS_LOOP_336_5'(ico_conv_layer2_5.cpp:336:27) and 'VITIS_LOOP_337_6'(ico_conv_layer2_5.cpp:337:31) in function 'post_process_output_tiles' into perfectly nested loops.
@@ -160,7 +160,7 @@ INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_182_1' (ico_conv_layer2
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_303_2' (ico_conv_layer2_5.cpp:303:27) in function 'conv_ico_layer2_5'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_382_2' (ico_conv_layer2_5.cpp:382:27) in function 'conv_ico_layer2_5'.
 INFO: [XFORM 203-541] Flattening a loop nest 'VITIS_LOOP_377_1' (ico_conv_layer2_5.cpp:377:23) in function 'conv_ico_layer2_5'.
-INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 4 seconds. CPU system time: 0 seconds. Elapsed time: 4.671 seconds; current allocated memory: 838.648 MB.
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 5 seconds. CPU system time: 0 seconds. Elapsed time: 4.978 seconds; current allocated memory: 839.352 MB.
 INFO: [HLS 200-10] Starting hardware synthesis ...
 INFO: [HLS 200-10] Synthesizing 'conv_ico_layer2_5' ...
 WARNING: [SYN 201-103] Legalizing function name 'post_process_output_tiles_Pipeline_VITIS_LOOP_322_1_VITIS_LOOP_323_2_VITIS_LOOP_' to 'post_process_output_tiles_Pipeline_VITIS_LOOP_322_1_VITIS_LOOP_323_2_VITIS_LOOP_s'.
@@ -185,13 +185,13 @@ WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer2_5_Pipeline_
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.647 seconds; current allocated memory: 852.750 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.697 seconds; current allocated memory: 852.785 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.141 seconds; current allocated memory: 853.773 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.166 seconds; current allocated memory: 853.863 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_quantized_Pipeline_VITIS_LOOP_210_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -205,13 +205,13 @@ WARNING: [HLS 200-1016] The critical path in module 'pad_ico_quantized_Pipeline_
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.722 seconds; current allocated memory: 861.094 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 0.767 seconds; current allocated memory: 861.988 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.257 seconds; current allocated memory: 861.109 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.275 seconds; current allocated memory: 861.992 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_quantized_Pipeline_VITIS_LOOP_231_4_VITIS_LOOP_232_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -219,13 +219,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_231_4_VITIS_LOOP_232_5'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 5, loop 'VITIS_LOOP_231_4_VITIS_LOOP_232_5'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.353 seconds; current allocated memory: 861.164 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.369 seconds; current allocated memory: 862.031 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.064 seconds; current allocated memory: 861.164 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.065 seconds; current allocated memory: 862.031 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_quantized_Pipeline_VITIS_LOOP_241_6_VITIS_LOOP_242_7_VITIS_LOOP_243_8_VI' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -246,13 +246,13 @@ WARNING: [HLS 200-1016] The critical path in module 'pad_ico_quantized_Pipeline_
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.314 seconds; current allocated memory: 863.234 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.327 seconds; current allocated memory: 864.195 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.137 seconds; current allocated memory: 863.309 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.154 seconds; current allocated memory: 864.211 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_quantized_Pipeline_VITIS_LOOP_266_10_VITIS_LOOP_267_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -260,13 +260,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_266_10_VITIS_LOOP_267_11'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 4, loop 'VITIS_LOOP_266_10_VITIS_LOOP_267_11'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.168 seconds; current allocated memory: 863.344 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.174 seconds; current allocated memory: 864.227 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.049 seconds; current allocated memory: 863.344 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.049 seconds; current allocated memory: 864.227 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'pad_ico_quantized' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -279,13 +279,13 @@ WARNING: [HLS 200-1016] The critical path in module 'pad_ico_quantized' consists
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.096 seconds; current allocated memory: 863.500 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.102 seconds; current allocated memory: 864.266 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.079 seconds; current allocated memory: 863.727 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.102 seconds; current allocated memory: 864.297 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_303_2_VITIS_LOOP_304_3' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -303,37 +303,37 @@ WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer2_5_Pipeline_
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.407 seconds; current allocated memory: 868.074 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.482 seconds; current allocated memory: 868.809 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.157 seconds; current allocated memory: 868.277 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.164 seconds; current allocated memory: 868.809 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'expanded_weight_at' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.222 seconds; current allocated memory: 868.340 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.238 seconds; current allocated memory: 868.930 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.071 seconds; current allocated memory: 868.547 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.077 seconds; current allocated memory: 868.957 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'to_weight_t' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.117 seconds; current allocated memory: 869.035 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.119 seconds; current allocated memory: 869.551 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.071 seconds; current allocated memory: 869.402 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.071 seconds; current allocated memory: 869.641 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_462_9' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -341,13 +341,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_462_9'.
 INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 14, loop 'VITIS_LOOP_462_9'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.447 seconds; current allocated memory: 875.121 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.5 seconds; current allocated memory: 875.285 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.187 seconds; current allocated memory: 875.121 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.185 seconds; current allocated memory: 875.293 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_486_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -357,19 +357,20 @@ INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 9,
 WARNING: [HLS 200-871] Estimated clock period (3.867 ns) exceeds the target (target clock period: 5.000 ns, clock uncertainty: 1.350 ns, effective delay budget: 3.650 ns).
 Resolution: For help on HLS 200-871 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-871.html
 WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_486_11' consists of the following:
-	'add' operation 41 bit ('add_ln500', ico_conv_layer2_5.cpp:500) [500]  (1.616 ns)
+	'add' operation 40 bit ('add_ln500_2', ico_conv_layer2_5.cpp:500) [499]  (1.616 ns)
+	'xor' operation 1 bit ('xor_ln500_1', ico_conv_layer2_5.cpp:500) [506]  (0.000 ns)
 	'select' operation 40 bit ('accum', ico_conv_layer2_5.cpp:500) [508]  (0.821 ns)
 	'add' operation 24 bit ('add_ln501', ico_conv_layer2_5.cpp:501) [514]  (1.430 ns)
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.198 seconds; current allocated memory: 887.887 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.275 seconds; current allocated memory: 888.844 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.287 seconds; current allocated memory: 887.945 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.309 seconds; current allocated memory: 888.871 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'post_process_output_tiles_Pipeline_VITIS_LOOP_322_1_VITIS_LOOP_323_2_VITIS_LOOP_s' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -389,13 +390,13 @@ WARNING: [HLS 200-1016] The critical path in module 'post_process_output_tiles_P
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.525 seconds; current allocated memory: 899.301 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 2 seconds. CPU system time: 0 seconds. Elapsed time: 1.61 seconds; current allocated memory: 900.484 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.237 seconds; current allocated memory: 899.301 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.26 seconds; current allocated memory: 900.629 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'post_process_output_tiles_Pipeline_VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_s' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -403,13 +404,13 @@ INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-61] Pipelining loop 'VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_337_6'.
 INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_337_6'
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.315 seconds; current allocated memory: 899.324 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.337 seconds; current allocated memory: 900.660 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.081 seconds; current allocated memory: 899.324 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.081 seconds; current allocated memory: 900.660 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'post_process_output_tiles_Pipeline_VITIS_LOOP_344_7_VITIS_LOOP_345_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -423,25 +424,25 @@ WARNING: [HLS 200-1016] The critical path in module 'post_process_output_tiles_P
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.959 seconds; current allocated memory: 907.719 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.067 seconds; current allocated memory: 910.531 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.335 seconds; current allocated memory: 907.832 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.361 seconds; current allocated memory: 910.531 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'post_process_output_tiles' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.38 seconds; current allocated memory: 907.836 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 0.379 seconds; current allocated memory: 910.531 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.077 seconds; current allocated memory: 907.836 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.081 seconds; current allocated memory: 910.531 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_377_1_VITIS_LOOP_382_2_VITIS_LOOP_383_3' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -461,25 +462,25 @@ WARNING: [HLS 200-1016] The critical path in module 'conv_ico_layer2_5_Pipeline_
 
 Resolution: For help on HLS 200-1016 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.381 seconds; current allocated memory: 908.168 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.434 seconds; current allocated memory: 910.922 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.142 seconds; current allocated memory: 908.168 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.152 seconds; current allocated memory: 910.922 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-42] -- Implementing module 'conv_ico_layer2_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [SCHED 204-11] Starting scheduling ...
 INFO: [SCHED 204-11] Finished scheduling.
-INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.383 seconds; current allocated memory: 909.621 MB.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.426 seconds; current allocated memory: 912.570 MB.
 INFO: [BIND 205-100] Starting micro-architecture generation ...
 INFO: [BIND 205-101] Performing variable lifetime analysis.
 INFO: [BIND 205-101] Exploring resource sharing.
 INFO: [BIND 205-101] Binding ...
 INFO: [BIND 205-100] Finished micro-architecture generation.
-INFO: [HLS 200-111] Finished Binding: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.262 seconds; current allocated memory: 909.965 MB.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.285 seconds; current allocated memory: 912.840 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_182_1_VITIS_LOOP_183_2_VITIS_LOOP_184_3_VI' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -489,7 +490,7 @@ INFO: [RTGEN 206-100] Generating core module 'fpext_32ns_64_2_no_dsp_1': 1 insta
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_16_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_1_1_1': 3 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_182_1_VITIS_LOOP_183_2_VITIS_LOOP_184_3_VI'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.526 seconds; current allocated memory: 913.160 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.555 seconds; current allocated memory: 915.793 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_quantized_Pipeline_VITIS_LOOP_210_2' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -497,14 +498,14 @@ INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_quantized
 INFO: [RTGEN 206-104] Estimated max fanout for 'pad_ico_quantized_Pipeline_VITIS_LOOP_210_2' is 7126 from HDL expression: (1'b0 == ap_block_pp0_stage0_11001)
 INFO: [RTGEN 206-100] Generating core module 'mul_62s_64ns_125_5_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_quantized_Pipeline_VITIS_LOOP_210_2'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.495 seconds; current allocated memory: 928.746 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.627 seconds; current allocated memory: 930.570 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_quantized_Pipeline_VITIS_LOOP_231_4_VITIS_LOOP_232_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_quantized_Pipeline_VITIS_LOOP_231_4_VITIS_LOOP_232_5' pipeline 'VITIS_LOOP_231_4_VITIS_LOOP_232_5' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_13_3_16_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_quantized_Pipeline_VITIS_LOOP_231_4_VITIS_LOOP_232_5'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 2 seconds. Elapsed time: 2.325 seconds; current allocated memory: 946.871 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 2 seconds. Elapsed time: 2.576 seconds; current allocated memory: 948.547 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_quantized_Pipeline_VITIS_LOOP_241_6_VITIS_LOOP_242_7_VITIS_LOOP_243_8_VI' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -515,32 +516,32 @@ INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_16_1_1': 1 instance(
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_16_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'srem_32s_7ns_32_36_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_quantized_Pipeline_VITIS_LOOP_241_6_VITIS_LOOP_242_7_VITIS_LOOP_243_8_VI'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.658 seconds; current allocated memory: 949.191 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.611 seconds; current allocated memory: 951.480 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_quantized_Pipeline_VITIS_LOOP_266_10_VITIS_LOOP_267_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'pad_ico_quantized_Pipeline_VITIS_LOOP_266_10_VITIS_LOOP_267_11' pipeline 'VITIS_LOOP_266_10_VITIS_LOOP_267_11' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_quantized_Pipeline_VITIS_LOOP_266_10_VITIS_LOOP_267_11'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.022 seconds; current allocated memory: 958.199 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 1.056 seconds; current allocated memory: 960.410 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'pad_ico_quantized' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [RTGEN 206-100] Generating core module 'mul_62s_64ns_125_5_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'pad_ico_quantized'.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer2_5_pad_ico_quantized_north_vertex_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.347 seconds; current allocated memory: 960.738 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.332 seconds; current allocated memory: 963.109 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_303_2_VITIS_LOOP_304_3' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_303_2_VITIS_LOOP_304_3' pipeline 'VITIS_LOOP_303_2_VITIS_LOOP_304_3' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_303_2_VITIS_LOOP_304_3'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 0.692 seconds; current allocated memory: 967.781 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.675 seconds; current allocated memory: 970.328 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'expanded_weight_at' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_15_3_32_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'expanded_weight_at'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.381 seconds; current allocated memory: 977.844 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 1.134 seconds; current allocated memory: 980.242 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'to_weight_t' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -549,7 +550,7 @@ INFO: [RTGEN 206-100] Generating core module 'fpext_32ns_64_2_no_dsp_1': 1 insta
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_14_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_1_1_1': 3 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'to_weight_t'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.425 seconds; current allocated memory: 979.785 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.467 seconds; current allocated memory: 982.832 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_462_9' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -557,7 +558,7 @@ INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'conv_ico_layer2_5
 INFO: [RTGEN 206-100] Generating core module 'mul_26s_25s_51_5_1': 18 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_16_1_1': 12 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_462_9'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.68 seconds; current allocated memory: 986.750 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.724 seconds; current allocated memory: 990.121 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_486_11' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -566,7 +567,7 @@ INFO: [RTGEN 206-100] Generating core module 'sparsemux_13_3_24_1_1': 2 instance
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_24_1_1': 24 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_40_1_1': 24 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_486_11'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.926 seconds; current allocated memory: 1007.918 MB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.98 seconds; current allocated memory: 1011.793 MB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'post_process_output_tiles_Pipeline_VITIS_LOOP_322_1_VITIS_LOOP_323_2_VITIS_LOOP_s' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -574,13 +575,13 @@ INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'post_process_outp
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_13_3_24_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_24_1_1': 24 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'post_process_output_tiles_Pipeline_VITIS_LOOP_322_1_VITIS_LOOP_323_2_VITIS_LOOP_s'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 2.669 seconds; current allocated memory: 1.006 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 2 seconds. Elapsed time: 2.858 seconds; current allocated memory: 1.009 GB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'post_process_output_tiles_Pipeline_VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_s' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'post_process_output_tiles_Pipeline_VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_s' pipeline 'VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_337_6' pipeline type 'loop pipeline'
 INFO: [RTGEN 206-100] Finished creating RTL model for 'post_process_output_tiles_Pipeline_VITIS_LOOP_335_4_VITIS_LOOP_336_5_VITIS_LOOP_s'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 1.675 seconds; current allocated memory: 1.021 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 1.806 seconds; current allocated memory: 1.024 GB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'post_process_output_tiles_Pipeline_VITIS_LOOP_344_7_VITIS_LOOP_345_8' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -589,13 +590,13 @@ INFO: [RTGEN 206-104] Estimated max fanout for 'post_process_output_tiles_Pipeli
 INFO: [RTGEN 206-100] Generating core module 'mul_62s_64ns_125_5_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'urem_4ns_4ns_4_8_1': 1 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'post_process_output_tiles_Pipeline_VITIS_LOOP_344_7_VITIS_LOOP_345_8'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.012 seconds; current allocated memory: 1.029 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 1.154 seconds; current allocated memory: 1.033 GB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'post_process_output_tiles' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [RTGEN 206-100] Generating core module 'mul_62s_64ns_125_5_1': 2 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'post_process_output_tiles'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 2 seconds. Elapsed time: 3.061 seconds; current allocated memory: 1.053 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 2 seconds. Elapsed time: 3.32 seconds; current allocated memory: 1.058 GB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_377_1_VITIS_LOOP_382_2_VITIS_LOOP_383_3' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -605,7 +606,7 @@ INFO: [RTGEN 206-100] Generating core module 'ctlz_24_24_1_1': 1 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_13_3_24_1_1': 2 instance(s).
 INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_24_1_1': 24 instance(s).
 INFO: [RTGEN 206-100] Finished creating RTL model for 'conv_ico_layer2_5_Pipeline_VITIS_LOOP_377_1_VITIS_LOOP_382_2_VITIS_LOOP_383_3'.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.675 seconds; current allocated memory: 1.065 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 0.741 seconds; current allocated memory: 1.069 GB.
 INFO: [HLS 200-10] ----------------------------------------------------------------
 INFO: [HLS 200-10] -- Generating RTL for module 'conv_ico_layer2_5' 
 INFO: [HLS 200-10] ----------------------------------------------------------------
@@ -704,12 +705,12 @@ INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer2_5_p_ZZ17conv_ico_layer
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer2_5_output_tile_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer2_5_output_post_RAM_AUTO_1R1W' using auto RAMs.
 INFO: [RTMG 210-278] Implementing memory 'conv_ico_layer2_5_ri_partial_RAM_AUTO_1R1W' using auto RAMs.
-INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 2.44 seconds; current allocated memory: 1.098 GB.
-INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 3.404 seconds; current allocated memory: 1.128 GB.
-INFO: [HLS 200-111] Finished Updating report files: CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 2.48 seconds; current allocated memory: 1.167 GB.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 2 seconds. CPU system time: 0 seconds. Elapsed time: 2.649 seconds; current allocated memory: 1.104 GB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 2 seconds. CPU system time: 2 seconds. Elapsed time: 3.667 seconds; current allocated memory: 1.133 GB.
+INFO: [HLS 200-111] Finished Updating report files: CPU user time: 2 seconds. CPU system time: 0 seconds. Elapsed time: 2.72 seconds; current allocated memory: 1.171 GB.
 INFO: [VHDL 208-304] Generating VHDL RTL for conv_ico_layer2_5.
 INFO: [VLOG 209-307] Generating Verilog RTL for conv_ico_layer2_5.
 INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were satisfied.
 INFO: [HLS 200-789] **** Estimated Fmax: 237.59 MHz
-INFO: [HLS 200-2161] Finished Command csynth_design Elapsed time: 00:01:35; Allocated memory: 576.941 MB.
-INFO: [HLS 200-112] Total CPU user time: 44 seconds. Total CPU system time: 16 seconds. Total elapsed time: 101.592 seconds; peak allocated memory: 1.167 GB.
+INFO: [HLS 200-2161] Finished Command csynth_design Elapsed time: 00:01:41; Allocated memory: 581.820 MB.
+INFO: [HLS 200-112] Total CPU user time: 47 seconds. Total CPU system time: 17 seconds. Total elapsed time: 108.731 seconds; peak allocated memory: 1.171 GB.

@@ -105,7 +105,7 @@ if errorlevel 1 (
 
 echo.
 echo [DONE] Flow finished.
-echo Summary: hls_reports\latest_summary.md
+echo Summary: ..\..\latest_summary.md
 
 popd
 exit /b 0

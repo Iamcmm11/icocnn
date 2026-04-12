@@ -152,10 +152,10 @@ def main():
 
     summary = parse_csynth_xml(csynth_xml)
 
-    hls_reports = root / "hls_reports"
-    hls_reports.mkdir(exist_ok=True)
+    reports_root = root.parent.parent / "hls_reports"
+    reports_root.mkdir(exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    snap_dir = hls_reports / f"{args.project}_{args.solution}_{stamp}"
+    snap_dir = reports_root / f"{args.project}_{args.solution}_{stamp}"
     snap_dir.mkdir(parents=True, exist_ok=True)
 
     copied = {}
@@ -179,7 +179,7 @@ def main():
         report_paths=copied,
     )
 
-    latest_path = hls_reports / "latest_summary.md"
+    latest_path = reports_root / "latest_summary.md"
     shutil.copy2(summary_path, latest_path)
 
     print("=== HLS Summary ===")
