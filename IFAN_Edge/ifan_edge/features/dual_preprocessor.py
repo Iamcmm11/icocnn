@@ -32,7 +32,14 @@ class DualFeatureIcoPreprocessor(at_learners.Preprocessor):
         self.fs = fs
         self.apply_vad = apply_vad
 
-        self.phat = SRPPHATIcoMapAdapter(N=N, K=K, r=r, rn=rn, fs=fs, c=c)
+        self.phat = SRPPHATIcoMapAdapter(
+            N=N,
+            K=K,
+            r=r,
+            rn=rn,
+            fs=fs,
+            c=c,
+        )
         self.lms = SRPLMSIcoMap(
             N=N,
             K=K,

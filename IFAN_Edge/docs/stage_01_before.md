@@ -1,22 +1,28 @@
-# Stage 01 Before
+# 阶段 01 开始前
 
-## Goal
+## 阶段目标
 
-Build the IFAN stage-1 dual-feature front-end on top of the existing `icocnn` baseline.
+阶段 1 的目标是先把 IFAN 的前端工程链路搭起来，只围绕 `PHAT + LMS` 主线产出可供阶段 2 使用的双特征二十面体输入。
 
-## Baseline
+## 当时已有条件
 
-- Existing online `SRP-PHAT` preprocessing is available in the root repository.
-- Existing `IcoTempCNN` training and LOCATA evaluation pipelines are available in the root repository.
-- No dedicated `IFAN_Edge/` workspace exists yet.
-- No `SRP-LMS` icosahedral feature path exists yet.
-- No dual-feature preprocessor exists yet.
+- 仓库根目录已经具备在线 `SRP-PHAT` 预处理链路。
+- 仓库根目录已经具备 `IcoTempCNN` 的训练与评估基础。
+- 麦克风阵列与二十面体卷积相关依赖已经可用。
 
-## Planned Outputs
+## 当时缺失内容
 
-- `IFAN_Edge/` workspace skeleton
-- phase documentation templates
+- 还没有独立的 `IFAN_Edge/` 工作区。
+- 还没有 `SRPLMSIcoMap` 分支实现。
+- 还没有统一的 `DualFeatureIcoPreprocessor`。
+- 还没有针对阶段 1 的形状检查和导出脚本。
+
+## 计划交付
+
+- `IFAN_Edge/` 工程骨架
+- 阶段文档模板
 - `SRPPHATIcoMapAdapter`
 - `SRPLMSIcoMap`
 - `DualFeatureIcoPreprocessor`
-- stage-1 visualization and shape-consistency scripts
+- `scripts/check_stage1_shapes.py`
+- `scripts/visualize_stage1_features.py`

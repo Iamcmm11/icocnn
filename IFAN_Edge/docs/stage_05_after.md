@@ -1,3 +1,3 @@
-# Stage 05 After
+# 阶段 05 完成后
 
-Reserved for the stage-5 implementation record.
+预留给阶段 5 的实现记录。

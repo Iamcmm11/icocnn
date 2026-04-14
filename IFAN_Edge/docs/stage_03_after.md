@@ -1,3 +1,3 @@
-# Stage 03 After
+# 阶段 03 完成后
 
-Reserved for the stage-3 implementation record.
+预留给阶段 3 的实现记录。

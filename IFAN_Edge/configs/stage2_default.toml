@@ -1,0 +1,21 @@
+[project]
+name = "IFAN_Edge"
+stage = 2
+
+[model]
+r = 2
+phat_in_channels = 1
+aux_in_channels = 1
+branch_channels = 16
+fused_channels = 16
+use_residual_block = false
+smooth_vertices = true
+variant = "ifan"
+
+[fusion]
+mode = "shared_attention_sum"
+attention_shared = true
+concat_after_fusion = false
+
+[notes]
+summary = "Default PHAT/LMS stage-2 config with parallel branches, shared attention, and elementwise-sum fusion."

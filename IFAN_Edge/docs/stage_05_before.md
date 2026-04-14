@@ -1,3 +1,3 @@
-# Stage 05 Before
+# 阶段 05 开始前
 
-Stage 5 will add IFAN-Edge compression, LC-SRP-Edge hooks, channel scaling, and deployment-oriented variants.
+阶段 5 将补充 IFAN-Edge 轻量化、`LC-SRP-Edge` 接口、通道缩放与部署导向变体。

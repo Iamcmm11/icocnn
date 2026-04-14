@@ -28,9 +28,7 @@ class SRPLMSIcoMap(nn.Module):
         lms_order: int = 64,
         step_size: float = 0.01,
         normalize: bool = True,
-        avoid_negatives: bool = False,
         eps: float = 1e-8,
-        normalized_lms: bool = True,
     ):
         super().__init__()
         self.N = N
@@ -42,9 +40,8 @@ class SRPLMSIcoMap(nn.Module):
         self.filter_len = self.lms_order * 2 + 1
         self.step_size = float(step_size)
         self.normalize = normalize
-        self.avoid_negatives = avoid_negatives
         self.eps = float(eps)
-        self.normalized_lms = normalized_lms
+        self.normalized_lms = True
 
         grid = icoCNN.icosahedral_grid_coordinates(r)
         self.grid_shape = tuple(grid.shape[:-1])
@@ -88,9 +85,9 @@ class SRPLMSIcoMap(nn.Module):
 
     def _normalize_maps(self, maps: torch.Tensor) -> torch.Tensor:
         original_shape = maps.shape
-        maps = maps + 1e-12
         maps = maps.reshape(maps.shape[:-3] + (-1,))
-        denom = maps.amax(dim=-1, keepdim=True).clamp_min(1e-12)
+        maps = maps + 1e-12
+        denom = maps.abs().amax(dim=-1, keepdim=True).clamp_min(1e-12)
         maps = maps / denom
         return maps.reshape(original_shape)
 
@@ -104,12 +101,9 @@ class SRPLMSIcoMap(nn.Module):
         for n in range(self.N):
             for m in range(self.N):
                 pair_filters = self._estimate_pair_filters(batch_frames[:, n, :], batch_frames[:, m, :])
-                tau_idx = (tau0[n, m] + self.lms_order).clamp(0, self.filter_len - 1)
-                sampled = pair_filters[:, tau_idx.reshape(-1)]
+                tau_idx = (tau0[n, m] + self.lms_order).reshape(-1).clamp(0, self.filter_len - 1)
+                sampled = pair_filters[:, tau_idx]
                 maps = maps + sampled.reshape((batch_frames.shape[0],) + self.grid_shape)
-
-        if self.avoid_negatives:
-            maps = torch.relu(maps)
 
         if self.normalize:
             maps = self._normalize_maps(maps)

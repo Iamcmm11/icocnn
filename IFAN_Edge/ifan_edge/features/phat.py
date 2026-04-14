@@ -25,12 +25,29 @@ def ensure_mic_tensor(mic_sig_batch) -> torch.Tensor:
 class SRPPHATIcoMapAdapter(nn.Module):
     """Stage-1 PHAT feature adapter with the same output contract as the LMS branch."""
 
-    def __init__(self, N: int, K: int, r: int, rn, fs: int, c: float = 343.0):
+    def __init__(
+        self,
+        N: int,
+        K: int,
+        r: int,
+        rn,
+        fs: int,
+        c: float = 343.0,
+        normalize: bool = True,
+    ):
         super().__init__()
         dist_max = np.max([np.max([np.linalg.norm(rn[n, :] - rn[m, :]) for m in range(N)]) for n in range(N)])
         tau_max = int(np.ceil(dist_max / c * fs))
         self.gcc = at_modules.GCC(N, K, tau_max=tau_max, transform="PHAT")
-        self.srp = at_modules.SRP_icosahedral_map(N, K, r, rn, fs, c=c)
+        self.srp = at_modules.SRP_icosahedral_map(
+            N,
+            K,
+            r,
+            rn,
+            fs,
+            c=c,
+            normalize=normalize,
+        )
 
     def forward(self, mic_sig_batch) -> torch.Tensor:
         mic_sig_batch = ensure_mic_tensor(mic_sig_batch)

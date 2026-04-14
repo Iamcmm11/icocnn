@@ -15,7 +15,6 @@ step = 3072
 [lms]
 order = 64
 step_size = 0.01
-normalize = true
 
 [[scenarios]]
 name = "scene_1"

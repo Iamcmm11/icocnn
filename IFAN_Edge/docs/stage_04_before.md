@@ -1,3 +1,3 @@
-# Stage 04 Before
+# 阶段 04 开始前
 
-Stage 4 will add LOCATA evaluation, trajectory plots, and baseline acceptance checks.
+阶段 4 将补充 LOCATA 评估、轨迹可视化和 IFAN 基线验收。

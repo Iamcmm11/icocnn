@@ -1,3 +1,3 @@
-# Stage 03 Before
+# 阶段 03 开始前
 
-Stage 3 will introduce IFAN training schedules, convergence validation, and ablation plumbing.
+阶段 3 将补充 IFAN 训练调度、收敛验证与消融实验支撑。
