@@ -30,3 +30,10 @@ The shared tensor contract is:
 For `r=2`, this becomes:
 
 `[B, 2, T, 5, 4, 8]`
+
+## Stage 3 Entry Points
+
+- Default config: `configs/stage3_default.toml`
+- Training entry: `scripts/train_stage3_ifan.py`
+- Baseline comparison entry: `scripts/compare_stage3_baseline.py`
+- Model mainline: paper-faithful dual-input `PHAT + LMS` IFAN with shared attention, fixed `16`-channel width, deep fusion head, and optional `final_head_pooling`

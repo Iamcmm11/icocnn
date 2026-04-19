@@ -4,10 +4,34 @@ from .stage1 import (
     save_dual_feature_projection_figure,
     save_single_projection_figure,
 )
+from .stage2 import build_source_dataset, resolve_librispeech_split, run_engineering_check
+from .stage3 import (
+    STAGE3_SCENARIOS,
+    build_librispeech_dataset,
+    build_random_trajectory_dataset,
+    build_scenario_caches,
+    cache_ifan_batches,
+    compute_metrics,
+    evaluate_model_on_cache,
+    resolve_librispeech_split as resolve_librispeech_split_for_stage3,
+    select_model_inputs,
+)
 
 __all__ = [
     "STAGE1_SCENARIOS",
     "save_dual_feature_figure",
     "save_dual_feature_projection_figure",
     "save_single_projection_figure",
+    "build_source_dataset",
+    "resolve_librispeech_split",
+    "run_engineering_check",
+    "STAGE3_SCENARIOS",
+    "build_librispeech_dataset",
+    "build_random_trajectory_dataset",
+    "build_scenario_caches",
+    "cache_ifan_batches",
+    "compute_metrics",
+    "evaluate_model_on_cache",
+    "resolve_librispeech_split_for_stage3",
+    "select_model_inputs",
 ]

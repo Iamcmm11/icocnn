@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from typing import Optional
 
 import torch
 import torch.nn as nn
+from einops import rearrange
 
 from ..bridges import at_modules, icoCNN
 
 
-class IFANEdgeVariant(str, Enum):
-    FULL = "ifan"
-    LARGE = "ifan_edge_large"
-    MEDIUM = "ifan_edge_medium"
-    SMALL = "ifan_edge_small"
+PAPER_IFAN_BRANCH_CHANNELS = 16
+PAPER_IFAN_FUSION_BLOCKS = 4
+PAPER_IFAN_PARAM_TARGET = 125_457
 
 
 @dataclass
@@ -21,32 +20,32 @@ class IFANModelConfig:
     r: int = 2
     phat_in_channels: int = 1
     aux_in_channels: int = 1
-    branch_channels: int = 16
-    fused_channels: int = 16
-    use_residual_block: bool = False
     smooth_vertices: bool = True
-    variant: IFANEdgeVariant = IFANEdgeVariant.FULL
+    final_head_pooling: bool = False
+
+    @property
+    def branch_channels(self) -> int:
+        return PAPER_IFAN_BRANCH_CHANNELS
+
+    @property
+    def fused_channels(self) -> int:
+        return PAPER_IFAN_BRANCH_CHANNELS
+
+    @property
+    def fusion_head_channels(self) -> int:
+        return PAPER_IFAN_BRANCH_CHANNELS
 
 
-class ResidualIcoBlock(nn.Module):
-    """Optional residual learning block over icosahedral features."""
+class ResidualLearningModule(nn.Module):
+    """Residual feature enhancement module used inside each frontend branch."""
 
-    def __init__(self, r: int, channels: int, smooth_vertices: bool = True, enabled: bool = True):
+    def __init__(self, r: int, channels: int, smooth_vertices: bool = True):
         super().__init__()
-        self.enabled = enabled
-        if enabled:
-            self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
-            self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
-            self.norm = icoCNN.LNormIco(channels, 6)
-        else:
-            self.conv1 = None
-            self.conv2 = None
-            self.norm = None
+        self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
+        self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
+        self.norm = icoCNN.LNormIco(channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if not self.enabled:
-            return x
-
         residual = x
         x = torch.relu(self.conv1(x))
         x = self.conv2(x)
@@ -54,8 +53,8 @@ class ResidualIcoBlock(nn.Module):
         return torch.relu(x + residual)
 
 
-class SharedAttentionFusion(nn.Module):
-    """Shared-weight attention fusion for PHAT and LMS branches."""
+class FeatureAttentionWeightModule(nn.Module):
+    """Shared-weight attention over enhanced branch features."""
 
     def __init__(self, r: int, channels: int, smooth_vertices: bool = True):
         super().__init__()
@@ -63,32 +62,15 @@ class SharedAttentionFusion(nn.Module):
         self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
         self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
 
-    def _attention_weights(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm(x)
         x = torch.relu(self.conv1(x))
         x = torch.sigmoid(self.conv2(x))
         return x
 
-    def forward(
-        self,
-        phat_feat: torch.Tensor,
-        lms_feat: torch.Tensor,
-        return_attention: bool = False,
-    ):
-        phat_weight = self._attention_weights(phat_feat)
-        lms_weight = self._attention_weights(lms_feat)
 
-        phat_weighted = phat_feat * phat_weight
-        lms_weighted = lms_feat * lms_weight
-        fused = phat_weighted + lms_weighted
-
-        if return_attention:
-            return fused, phat_weight, lms_weight
-        return fused
-
-
-class _IFANBranch(nn.Module):
-    """Single lightweight branch for one input feature."""
+class FrontendFeatureBranch(nn.Module):
+    """Paper-style branch: keep direct feature and enhanced residual feature."""
 
     def __init__(self, config: IFANModelConfig, in_channels: int):
         super().__init__()
@@ -100,63 +82,276 @@ class _IFANBranch(nn.Module):
             6,
             smooth_vertices=config.smooth_vertices,
         )
-        self.residual = ResidualIcoBlock(
+        self.residual = ResidualLearningModule(
             r=config.r,
             channels=config.branch_channels,
             smooth_vertices=config.smooth_vertices,
-            enabled=config.use_residual_block,
         )
 
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        direct = torch.relu(self.stem(x))
+        enhanced = self.residual(direct)
+        return direct, enhanced
+
+
+class FusionTemporalBlock(nn.Module):
+    """One paper-style fusion block: IcoConv -> ReLU -> Conv1d -> LNorm -> optional ReLU."""
+
+    def __init__(
+        self,
+        r: int,
+        in_channels: int,
+        out_channels: int,
+        *,
+        smooth_vertices: bool = True,
+        apply_relu: bool = True,
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.apply_relu = apply_relu
+        self.conv = icoCNN.ConvIco(r, in_channels, out_channels, 6, 6, smooth_vertices=smooth_vertices)
+        self.temporal = at_modules.CausConv1d(out_channels, out_channels, kernel_size=5, dilation=1)
+        self.norm = icoCNN.LNormIco(out_channels, 6)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = torch.relu(self.stem(x))
-        x = self.residual(x)
+        x = torch.relu(self.conv(x))
+        bsz, time_steps, channels, regions, charts, height, width = x.shape
+        x = rearrange(x, "b t c r ch h w -> (b r ch h w) c t")
+        x = self.temporal(x)
+        x = rearrange(
+            x,
+            "(b r ch h w) c t -> b t c r ch h w",
+            b=bsz,
+            r=regions,
+            ch=charts,
+            h=height,
+            w=width,
+        )
+        x = self.norm(x)
+        if self.apply_relu:
+            x = torch.relu(x)
         return x
 
 
+class FinalFusionBlock(nn.Module):
+    """Final paper-style block: keep 16 channels through the last temporal layer."""
+
+    def __init__(self, r: int, channels: int, *, smooth_vertices: bool = True):
+        super().__init__()
+        self.conv = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
+        self.temporal = at_modules.CausConv1d(channels, channels, kernel_size=5, dilation=1)
+        self.norm = icoCNN.LNormIco(channels, 6)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.relu(self.conv(x))
+        bsz, time_steps, channels, regions, charts, height, width = x.shape
+        x = rearrange(x, "b t c r ch h w -> (b r ch h w) c t")
+        x = self.temporal(x)
+        x = rearrange(
+            x,
+            "(b r ch h w) c t -> b t c r ch h w",
+            b=bsz,
+            r=regions,
+            ch=charts,
+            h=height,
+            w=width,
+        )
+        x = self.norm(x)
+        return x
+
+
+class ChannelReadout(nn.Module):
+    """Learned per-position readout from 16 feature channels to one score map."""
+
+    def __init__(self, in_channels: int):
+        super().__init__()
+        self.proj = nn.Linear(in_channels, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = rearrange(x, "b t c r ch h w -> b t r ch h w c")
+        x = self.proj(x)
+        return rearrange(x, "b t r ch h w c -> b t c r ch h w")
+
+
+# Backward-compatible alias for older imports/docs.
+ResidualIcoBlock = ResidualLearningModule
+SharedAttentionFusion = FeatureAttentionWeightModule
+
+
 class IFANModel(nn.Module):
-    """Stage-2 IFAN backbone with dual branches and shared attention fusion."""
+    """Paper-faithful dual-input IFAN backbone using shared-weight attention and a deep fusion head."""
 
     def __init__(self, config: IFANModelConfig):
         super().__init__()
         self.config = config
-        if config.branch_channels != config.fused_channels:
+        if config.r < 1:
+            raise ValueError(f"IFAN expects r >= 1, got {config.r}")
+        if config.phat_in_channels != 1 or config.aux_in_channels != 1:
             raise ValueError(
-                "This stage-2 implementation keeps channels constant across branches and fusion. "
-                f"Got branch_channels={config.branch_channels}, fused_channels={config.fused_channels}."
+                "This paper-style IFAN implementation expects one PHAT and one LMS channel. "
+                f"Got phat_in_channels={config.phat_in_channels}, aux_in_channels={config.aux_in_channels}."
             )
 
-        self.phat_branch = _IFANBranch(config, in_channels=config.phat_in_channels)
-        self.aux_branch = _IFANBranch(config, in_channels=config.aux_in_channels)
-        self.fusion = SharedAttentionFusion(
+        self.phat_branch = FrontendFeatureBranch(config, in_channels=config.phat_in_channels)
+        self.aux_branch = FrontendFeatureBranch(config, in_channels=config.aux_in_channels)
+        self.shared_attention = FeatureAttentionWeightModule(
             r=config.r,
             channels=config.branch_channels,
             smooth_vertices=config.smooth_vertices,
         )
 
-        pooled_r = max(config.r - 1, 1)
-        self.pool = icoCNN.PoolIco(config.r, 6, smooth_vertices=config.smooth_vertices) if config.r > 1 else None
-        self.fusion_conv = icoCNN.ConvIco(
-            pooled_r,
-            config.fused_channels,
-            config.fused_channels,
-            6,
-            6,
-            smooth_vertices=config.smooth_vertices,
-        )
-        self.fusion_norm = icoCNN.LNormIco(config.fused_channels, 6)
-        self.output_conv = icoCNN.ConvIco(
-            pooled_r,
-            config.fused_channels,
-            1,
-            6,
-            6,
-            smooth_vertices=config.smooth_vertices,
-        )
-        self.clean_vertices = icoCNN.CleanVertices(pooled_r)
+        self.pre_fusion_pool = icoCNN.PoolIco(config.r, 6, smooth_vertices=config.smooth_vertices) if config.r > 1 else None
+        self.fusion_r = config.r - 1 if config.r > 1 else config.r
 
-        ico_grid = torch.from_numpy(icoCNN.icosahedral_grid_coordinates(pooled_r)).float()
+        self.fusion_blocks = nn.ModuleList(
+            [
+                FusionTemporalBlock(
+                    r=self.fusion_r,
+                    in_channels=config.branch_channels,
+                    out_channels=config.branch_channels,
+                    smooth_vertices=config.smooth_vertices,
+                    apply_relu=True,
+                )
+                for _ in range(PAPER_IFAN_FUSION_BLOCKS)
+            ]
+        )
+        self.final_block = FinalFusionBlock(
+            r=self.fusion_r,
+            channels=config.branch_channels,
+            smooth_vertices=config.smooth_vertices,
+        )
+        self.channel_readout = ChannelReadout(config.branch_channels)
+
+        self.final_pool = None
+        output_r = self.fusion_r
+        if config.final_head_pooling:
+            if self.fusion_r < 1:
+                raise ValueError("final_head_pooling requires a fusion resolution >= 1.")
+            self.final_pool = icoCNN.PoolIco(self.fusion_r, 6, smooth_vertices=False)
+            output_r = self.fusion_r - 1
+        self.output_r = output_r
+        self.clean_vertices = icoCNN.CleanVertices(output_r)
+        ico_grid = torch.from_numpy(icoCNN.icosahedral_grid_coordinates(output_r)).float()
         ico_grid = ico_grid.permute(3, 0, 1, 2).contiguous()
         self.sam = at_modules.SoftArgMax(ico_grid.shape[1:], indexes=ico_grid, include_exp=True)
+
+    @staticmethod
+    def _count_params(module: Optional[nn.Module]) -> int:
+        if module is None:
+            return 0
+        return sum(param.numel() for param in module.parameters())
+
+    def count_parameters(self, trainable_only: bool = True) -> int:
+        params = self.parameters() if not trainable_only else (param for param in self.parameters() if param.requires_grad)
+        return sum(param.numel() for param in params)
+
+    def expected_input_channels(self) -> int:
+        return self.config.phat_in_channels + self.config.aux_in_channels
+
+    def parameter_breakdown(self) -> dict[str, int]:
+        breakdown = {
+            "phat_stem": self._count_params(self.phat_branch.stem),
+            "lms_stem": self._count_params(self.aux_branch.stem),
+            "phat_residual": self._count_params(self.phat_branch.residual),
+            "lms_residual": self._count_params(self.aux_branch.residual),
+            "shared_attention": self._count_params(self.shared_attention),
+            "fusion_blocks": sum(self._count_params(block) for block in self.fusion_blocks),
+            "final_head": self._count_params(self.final_block),
+            "channel_readout": self._count_params(self.channel_readout),
+        }
+        breakdown["total"] = sum(breakdown.values())
+        return breakdown
+
+    @staticmethod
+    def _convico_mac_proxy(
+        time_steps: int,
+        charts: int,
+        height: int,
+        width: int,
+        cin: int,
+        cout: int,
+        rin: int,
+        rout: int,
+        kernel_neighbors: int = 7,
+    ) -> int:
+        return int(time_steps) * int(charts) * int(height) * int(width) * int(cin) * int(cout) * int(rin) * int(rout) * int(kernel_neighbors)
+
+    @staticmethod
+    def _conv1d_mac_proxy(
+        time_steps: int,
+        charts: int,
+        height: int,
+        width: int,
+        regions: int,
+        cin: int,
+        cout: int,
+        kernel_size: int = 5,
+    ) -> int:
+        positions = int(charts) * int(height) * int(width) * int(regions)
+        return int(time_steps) * int(positions) * int(cin) * int(cout) * int(kernel_size)
+
+    def mac_proxy(self, input_shape: tuple[int, int, int, int, int, int], kernel_neighbors: int = 7) -> dict[str, int]:
+        batch, channels, time_steps, charts, height, width = input_shape
+        expected_channels = self.expected_input_channels()
+        if batch != 1:
+            raise ValueError(f"MAC proxy expects batch size 1, got {input_shape}")
+        if channels != expected_channels:
+            raise ValueError(f"Expected {expected_channels} feature channels for MAC proxy, got {input_shape}")
+
+        branch_channels = self.config.branch_channels
+        stem = self._convico_mac_proxy(time_steps, charts, height, width, 1, branch_channels, 1, 6, kernel_neighbors)
+        residual_conv = self._convico_mac_proxy(
+            time_steps,
+            charts,
+            height,
+            width,
+            branch_channels,
+            branch_channels,
+            6,
+            6,
+            kernel_neighbors,
+        )
+        fusion_height = max(height // 2, 1) if self.pre_fusion_pool is not None else height
+        fusion_width = max(width // 2, 1) if self.pre_fusion_pool is not None else width
+        temporal_block_conv = self._convico_mac_proxy(
+            time_steps,
+            charts,
+            fusion_height,
+            fusion_width,
+            branch_channels,
+            branch_channels,
+            6,
+            6,
+            kernel_neighbors,
+        )
+        temporal_block_1d = self._conv1d_mac_proxy(time_steps, charts, fusion_height, fusion_width, 6, branch_channels, branch_channels)
+        final_conv = temporal_block_conv
+        final_1d = self._conv1d_mac_proxy(
+            time_steps,
+            charts,
+            fusion_height,
+            fusion_width,
+            6,
+            branch_channels,
+            branch_channels,
+        )
+        channel_readout = int(time_steps) * 6 * int(charts) * int(fusion_height) * int(fusion_width) * branch_channels
+
+        breakdown = {
+            "phat_stem": stem,
+            "lms_stem": stem,
+            "phat_residual": 2 * residual_conv,
+            "lms_residual": 2 * residual_conv,
+            "shared_attention_conv1": residual_conv,
+            "shared_attention_conv2": residual_conv,
+            "fusion_block_conv": 4 * temporal_block_conv,
+            "fusion_block_temporal": 4 * temporal_block_1d,
+            "final_head_conv": final_conv,
+            "final_head_temporal": final_1d,
+            "channel_readout": channel_readout,
+        }
+        breakdown["total"] = sum(breakdown.values())
+        return breakdown
 
     @staticmethod
     def _validate_input(x: torch.Tensor) -> None:
@@ -169,41 +364,75 @@ class IFANModel(nn.Module):
     def _branch_input(x: torch.Tensor) -> torch.Tensor:
         return x.unsqueeze(3)
 
-    def forward(self, x: torch.Tensor, return_attention: bool = False):
+    def _fuse_branch(self, direct: torch.Tensor, enhanced: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        weight = self.shared_attention(enhanced)
+        fused = direct + enhanced * weight
+        return fused, weight
+
+    def forward(self, x: torch.Tensor, return_attention: bool = False, return_debug: bool = False):
         self._validate_input(x)
-        expected_channels = self.config.phat_in_channels + self.config.aux_in_channels
+        expected_channels = self.expected_input_channels()
         if x.shape[1] != expected_channels:
-            raise ValueError(
-                f"Expected {expected_channels} input channels "
-                f"({self.config.phat_in_channels} PHAT + {self.config.aux_in_channels} aux), "
-                f"got shape {tuple(x.shape)}"
-            )
+            raise ValueError(f"Expected {expected_channels} input channels, got shape {tuple(x.shape)}")
+        debug: dict[str, torch.Tensor | list[torch.Tensor] | dict[str, torch.Tensor]] | None = {} if return_debug else None
 
         phat = self._branch_input(x[:, : self.config.phat_in_channels, ...].transpose(1, 2))
         aux = self._branch_input(x[:, self.config.phat_in_channels :, ...].transpose(1, 2))
 
-        phat_feat = self.phat_branch(phat)
-        aux_feat = self.aux_branch(aux)
+        phat_direct, phat_enhanced = self.phat_branch(phat)
+        aux_direct, aux_enhanced = self.aux_branch(aux)
+        phat_fused, phat_weight = self._fuse_branch(phat_direct, phat_enhanced)
+        aux_fused, aux_weight = self._fuse_branch(aux_direct, aux_enhanced)
+        attention = {
+            "phat": phat_weight,
+            "aux": aux_weight,
+            "lms": aux_weight,
+        }
+        if debug is not None:
+            debug["phat_stem"] = phat_direct
+            debug["phat_enhanced"] = phat_enhanced
+            debug["phat_fused"] = phat_fused
+            debug["lms_stem"] = aux_direct
+            debug["lms_enhanced"] = aux_enhanced
+            debug["lms_fused"] = aux_fused
 
-        if return_attention:
-            fused, phat_weight, aux_weight = self.fusion(phat_feat, aux_feat, return_attention=True)
-        else:
-            fused = self.fusion(phat_feat, aux_feat, return_attention=False)
+        fused = phat_fused + aux_fused
+        if debug is not None:
+            debug["post_second_fusion"] = fused
+        if self.pre_fusion_pool is not None:
+            fused = self.pre_fusion_pool(fused)
+        if debug is not None:
+            debug["fusion_feature"] = fused
 
-        if self.pool is not None:
-            fused = self.pool(fused)
+        fusion_head_blocks: list[torch.Tensor] = []
+        for block in self.fusion_blocks:
+            fused = block(fused)
+            if debug is not None:
+                fusion_head_blocks.append(fused)
+        if debug is not None:
+            debug["fusion_head_blocks"] = fusion_head_blocks
+        logits = self.final_block(fused)
+        if debug is not None:
+            debug["final_head_logits"] = logits
+        logits = self.channel_readout(logits)
+        if debug is not None:
+            debug["channel_readout_logits"] = logits
 
-        fused = torch.relu(self.fusion_conv(fused))
-        fused = torch.relu(self.fusion_norm(fused))
-        logits = self.output_conv(fused)
-        logits = logits.max(dim=2).values
+        if self.final_pool is not None:
+            logits = self.final_pool(logits)
+        if debug is not None:
+            debug["post_final_pool_logits"] = logits
+
+        logits = logits.squeeze(2)
         logits = logits.max(dim=2).values
         logits = self.clean_vertices(logits)
         coords = self.sam(logits)
+        if debug is not None:
+            debug["attention"] = attention
+            debug["softargmax_input"] = logits
 
+        if return_debug:
+            return coords, debug
         if return_attention:
-            attention = {"phat": phat_weight, "aux": aux_weight}
-            if self.config.aux_in_channels == 1:
-                attention["lms"] = aux_weight
             return coords, attention
         return coords

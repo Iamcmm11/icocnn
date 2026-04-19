@@ -4,3 +4,4 @@ hls_src/HLS/layer1/layer1_hls_prj/
 hls_src/HLS/layer2-5/layer2_5_hls_prj/
 datasets/LibriSpeech
 *.pyc
+IFAN_Edge/outputs

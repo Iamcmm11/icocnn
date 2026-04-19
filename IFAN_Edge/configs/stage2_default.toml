@@ -8,7 +8,7 @@ phat_in_channels = 1
 aux_in_channels = 1
 branch_channels = 16
 fused_channels = 16
-use_residual_block = false
+use_residual_block = true
 smooth_vertices = true
 variant = "ifan"
 
@@ -18,4 +18,4 @@ attention_shared = true
 concat_after_fusion = false
 
 [notes]
-summary = "Default PHAT/LMS stage-2 config with parallel branches, shared attention, and elementwise-sum fusion."
+summary = "Default PHAT/LMS stage-2 config with C=16 dual branches, residual blocks, shared attention, and elementwise-sum fusion."
