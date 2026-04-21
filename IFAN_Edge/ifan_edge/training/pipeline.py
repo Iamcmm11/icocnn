@@ -30,6 +30,15 @@ from ..eval.stage3 import (
 from ..features import DualFeatureIcoPreprocessor
 from ..models import IFANModel, IFANModelConfig, PAPER_IFAN_BRANCH_CHANNELS
 
+DEFAULT_STAGE3_MAINLINE_ANCHOR_RUN = (
+    "IFAN_Edge/outputs/stage3/ifan_stage3_full20_freqblock_paper_original_20260419_005314"
+)
+DEFAULT_STAGE3_MAINLINE_LOCATA_REPORT = (
+    "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_best.json"
+)
+DEFAULT_STAGE3_BENCHMARK_SUITE = "simulated_4scene+hard_scenes+locata_eval_benchmark2_task1_3_5"
+DEFAULT_STAGE3_LIGHTWEIGHT_READY_DELTA_DEG = 0.3
+
 
 def _validate_paper_mainline_model_section(model: dict[str, Any]) -> None:
     deprecated_equal_expected = {
@@ -77,14 +86,14 @@ class IFANTrainingConfig:
     lms_map_normalize: bool = True
     lms_map_mode: str = "tau_sample"
     lms_peak_sigma: float = 2.0
-    lms_update_mode: str = "frame_reset"
-    lms_normalized: bool = True
+    lms_update_mode: str = "trajectory_tracking"
+    lms_normalized: bool = False
     lms_include_self_pairs: bool = True
-    lms_backend: str = "time_reference"
+    lms_backend: str = "frequency_block"
     lms_block_size: int = 256
     lms_fft_size: int | None = None
     nb_points: int = 156
-    epochs: int = 80
+    epochs: int = 40
     phase1_epochs: int = 20
     batch_size_phase1: int = 1
     batch_size_phase2: int = 10
@@ -107,6 +116,14 @@ class IFANTrainingConfig:
     validation_snr_min: float = 5.0
     validation_snr_max: float = 30.0
     baseline_checkpoint_path: str = "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
+    experiment_role: str = "mainline_baseline"
+    srp_variant: str = "paper_original"
+    temporal_conv_variant: str = "standard_1d"
+    temporal_module: str = "conv"
+    primary_benchmark_suite: str = DEFAULT_STAGE3_BENCHMARK_SUITE
+    mainline_anchor_run: str = DEFAULT_STAGE3_MAINLINE_ANCHOR_RUN
+    mainline_anchor_locata_report: str = DEFAULT_STAGE3_MAINLINE_LOCATA_REPORT
+    lightweight_ready_delta_deg: float = DEFAULT_STAGE3_LIGHTWEIGHT_READY_DELTA_DEG
 
     @classmethod
     def from_toml(cls, path: str | Path) -> "IFANTrainingConfig":
@@ -122,6 +139,8 @@ class IFANTrainingConfig:
         training = raw.get("training", {})
         evaluation = raw.get("evaluation", {})
         checkpoints = raw.get("checkpoints", {})
+        contract = raw.get("contract", {})
+        gates = raw.get("gates", {})
 
         return cls(
             stage_name=str(project.get("stage_name", cls.stage_name)),
@@ -177,6 +196,18 @@ class IFANTrainingConfig:
             validation_snr_min=float(evaluation.get("validation_snr_min", cls.validation_snr_min)),
             validation_snr_max=float(evaluation.get("validation_snr_max", cls.validation_snr_max)),
             baseline_checkpoint_path=str(paths.get("baseline_checkpoint_path", cls.baseline_checkpoint_path)),
+            experiment_role=str(contract.get("experiment_role", cls.experiment_role)),
+            srp_variant=str(contract.get("srp_variant", cls.srp_variant)),
+            temporal_conv_variant=str(contract.get("temporal_conv_variant", cls.temporal_conv_variant)),
+            temporal_module=str(contract.get("temporal_module", cls.temporal_module)),
+            primary_benchmark_suite=str(contract.get("primary_benchmark_suite", cls.primary_benchmark_suite)),
+            mainline_anchor_run=str(contract.get("mainline_anchor_run", cls.mainline_anchor_run)),
+            mainline_anchor_locata_report=str(
+                contract.get("mainline_anchor_locata_report", cls.mainline_anchor_locata_report)
+            ),
+            lightweight_ready_delta_deg=float(
+                gates.get("lightweight_ready_delta_deg", cls.lightweight_ready_delta_deg)
+            ),
         )
 
     def model_config(self) -> IFANModelConfig:
@@ -190,6 +221,29 @@ class IFANTrainingConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    def experiment_contract(self) -> dict[str, Any]:
+        return {
+            "stage": self.stage_name,
+            "experiment_role": self.experiment_role,
+            "model_topology": "paper_dual_mainline",
+            "feature_pair": "phat+lms",
+            "srp_variant": self.srp_variant,
+            "lms_backend": self.lms_backend,
+            "temporal_conv_variant": self.temporal_conv_variant,
+            "temporal_module": self.temporal_module,
+            "primary_benchmark_suite": self.primary_benchmark_suite,
+            "baseline_anchor": {
+                "run_dir": self.mainline_anchor_run,
+                "locata_report": self.mainline_anchor_locata_report,
+                "baseline_checkpoint_path": self.baseline_checkpoint_path,
+            },
+            "lightweight_gate": {
+                "ready_delta_deg": self.lightweight_ready_delta_deg,
+                "requires_locata_overall_win": True,
+                "requires_task3_task5_no_material_regression": True,
+            },
+        }
 
 
 class IFANTrainingPipeline:
@@ -224,6 +278,25 @@ class IFANTrainingPipeline:
         self.output_dir = output_dir
         self.checkpoint_dir = checkpoint_dir
         return output_dir
+
+    def build_model_profile(self, model: IFANModel) -> dict[str, Any]:
+        input_shape = (
+            1,
+            model.expected_input_channels(),
+            6,
+            5,
+            2**self.config.r,
+            2 ** (self.config.r + 1),
+        )
+        mac_proxy = model.mac_proxy(input_shape)
+        return {
+            "trainable_params": int(model.count_parameters(trainable_only=True)),
+            "total_params": int(model.count_parameters(trainable_only=False)),
+            "parameter_breakdown": {key: int(value) for key, value in model.parameter_breakdown().items()},
+            "mac_proxy_total": int(mac_proxy["total"]),
+            "mac_proxy_breakdown": {key: int(value) for key, value in mac_proxy.items() if key != "total"},
+            "mac_proxy_input_shape": list(input_shape),
+        }
 
     @staticmethod
     def move_ifan_preprocessor(preprocessor: DualFeatureIcoPreprocessor, device: torch.device) -> None:
@@ -271,7 +344,9 @@ class IFANTrainingPipeline:
         *,
         source_dataset,
         preprocessor: DualFeatureIcoPreprocessor,
+        progress_callback=None,
     ) -> list[dict[str, torch.Tensor]]:
+        callback = self._on_validation_cache_progress if progress_callback is None else progress_callback
         with temporary_seed(self.config.seed + 101):
             dataset = build_random_trajectory_dataset(
                 source_dataset=source_dataset,
@@ -288,7 +363,7 @@ class IFANTrainingPipeline:
                 model_config=self.model_config,
                 input_ablation_mode=self.config.input_ablation_mode,
                 batch_size=self.config.validation_batch_size,
-                progress_callback=self._on_validation_cache_progress,
+                progress_callback=callback,
             )
 
     def build_training_dataset(self, *, source_dataset, snr_min: float, snr_max: float):
@@ -635,12 +710,14 @@ class IFANTrainingPipeline:
 
         model = IFANModel(self.model_config).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.config.lr_phase1)
+        model_profile = self.build_model_profile(model)
         print(
             json.dumps(
                 {
                     "event": "optimizer_ready",
                     "initial_lr": self.config.lr_phase1,
                     "trainable_params": model.count_parameters(trainable_only=True),
+                    "mac_proxy_total": model_profile["mac_proxy_total"],
                 },
                 ensure_ascii=False,
             ),
@@ -663,6 +740,8 @@ class IFANTrainingPipeline:
                         "smooth_vertices": self.model_config.smooth_vertices,
                         "input_ablation_mode": self.config.input_ablation_mode,
                     },
+                    "experiment_contract": self.config.experiment_contract(),
+                    "model_profile": model_profile,
                     "train_split_path": str(train_split_path),
                     "validation_split_path": str(val_split_path),
                     "device": str(device),
@@ -684,6 +763,9 @@ class IFANTrainingPipeline:
                     "branch_channels": self.model_config.branch_channels,
                     "final_head_pooling": self.model_config.final_head_pooling,
                     "input_ablation_mode": self.config.input_ablation_mode,
+                    "experiment_role": self.config.experiment_role,
+                    "srp_variant": self.config.srp_variant,
+                    "temporal_module": self.config.temporal_module,
                     "epochs": self.config.epochs,
                 },
                 ensure_ascii=False,
@@ -825,6 +907,8 @@ class IFANTrainingPipeline:
             "branch_channels": self.model_config.branch_channels,
             "final_head_pooling": self.model_config.final_head_pooling,
             "input_ablation_mode": self.config.input_ablation_mode,
+            "experiment_contract": self.config.experiment_contract(),
+            "model_profile": model_profile,
             "best_val_rmsae_deg": best_val_rmsae,
             "final_epoch": history_rows[-1] if history_rows else {},
             "baseline_compare": baseline_compare,

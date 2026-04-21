@@ -26,10 +26,10 @@ lms_step_size = 0.01
 lms_map_normalize = true
 lms_map_mode = "tau_sample"
 lms_peak_sigma = 2.0
-lms_update_mode = "frame_reset"
-lms_normalized = true
+lms_update_mode = "trajectory_tracking"
+lms_normalized = false
 lms_include_self_pairs = true
-lms_backend = "time_reference"
+lms_backend = "frequency_block"
 lms_block_size = 256
 # lms_fft_size = 512  # Optional override; defaults to the next power of two >= lms_block_size + filter_len - 1.
 
@@ -39,7 +39,7 @@ final_head_pooling = false
 smooth_vertices = true
 
 [training]
-epochs = 80
+epochs = 40
 phase1_epochs = 20
 batch_size_phase1 = 1
 batch_size_phase2 = 10
@@ -65,5 +65,17 @@ scenario_eval_batch_size = 1
 [checkpoints]
 every_n_epochs = 10
 
+[contract]
+experiment_role = "mainline_baseline"
+srp_variant = "paper_original"
+temporal_conv_variant = "standard_1d"
+temporal_module = "conv"
+primary_benchmark_suite = "simulated_4scene+hard_scenes+locata_eval_benchmark2_task1_3_5"
+mainline_anchor_run = "IFAN_Edge/outputs/stage3/ifan_stage3_full20_freqblock_paper_original_20260419_005314"
+mainline_anchor_locata_report = "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_best.json"
+
+[gates]
+lightweight_ready_delta_deg = 0.3
+
 [notes]
-summary = "Stage-3 default IFAN training config for the paper-mainline dual PHAT+LMS architecture, with corrected gradient accumulation semantics, expanded validation cache, and four-scene baseline comparison."
+summary = "Stage-3 locked IFAN mainline baseline: paper-mainline dual PHAT+LMS, paper_original LMS behavior, frequency_block backend, fixed comparison contract, and four-scene baseline comparison."

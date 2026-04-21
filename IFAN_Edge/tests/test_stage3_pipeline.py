@@ -20,10 +20,18 @@ if str(PROJECT_ROOT) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from ifan_edge.eval.stage3 import resolve_librispeech_split, select_model_inputs
+from ifan_edge.eval.stage3 import (
+    compute_prediction_details,
+    resolve_librispeech_split,
+    resolve_stage3_scenario,
+    select_model_inputs,
+)
 from ifan_edge.features import SRPLMSIcoMap
 from ifan_edge.models import IFANModel, IFANModelConfig, PAPER_IFAN_PARAM_TARGET
 from ifan_edge.training import IFANTrainingConfig, IFANTrainingPipeline
+from scripts.assess_stage3_readiness import assess_readiness
+from scripts.audit_stage3_protocol import build_protocol_rows
+from utils import sph2cart
 
 
 def test_stage3_sources_parse() -> None:
@@ -32,6 +40,13 @@ def test_stage3_sources_parse() -> None:
         PROJECT_ROOT / "ifan_edge" / "training" / "pipeline.py",
         PROJECT_ROOT / "scripts" / "train_stage3_ifan.py",
         PROJECT_ROOT / "scripts" / "compare_stage3_baseline.py",
+        PROJECT_ROOT / "scripts" / "compare_stage3_runs.py",
+        PROJECT_ROOT / "scripts" / "evaluate_stage3_simulated.py",
+        PROJECT_ROOT / "scripts" / "evaluate_stage3_locata.py",
+        PROJECT_ROOT / "scripts" / "audit_stage3_protocol.py",
+        PROJECT_ROOT / "scripts" / "assess_stage3_readiness.py",
+        PROJECT_ROOT / "scripts" / "compare_stage3_lms_backends.py",
+        PROJECT_ROOT / "scripts" / "analyze_stage3_scene.py",
         PROJECT_ROOT / "scripts" / "diagnose_stage3_lms_peak.py",
     )
     for target in targets:
@@ -47,6 +62,33 @@ def test_stage3_librispeech_path_resolution(tmp_path: Path) -> None:
     assert resolve_librispeech_split(direct_root, "train-clean-100") == direct_root / "train-clean-100"
     assert resolve_librispeech_split(direct_root / "train-clean-100", "train-clean-100") == direct_root / "train-clean-100"
     assert resolve_librispeech_split(nested_root, "train-clean-100") == nested_root / "LibriSpeech" / "train-clean-100"
+
+
+def test_stage3_default_contract_matches_locked_mainline() -> None:
+    config = IFANTrainingConfig.from_toml(PROJECT_ROOT / "configs" / "stage3_default.toml")
+
+    assert config.epochs == 40
+    assert config.phase1_epochs == 20
+    assert config.lms_backend == "frequency_block"
+    assert config.lms_update_mode == "trajectory_tracking"
+    assert config.lms_normalized is False
+    assert config.srp_variant == "paper_original"
+    assert config.temporal_conv_variant == "standard_1d"
+    assert config.temporal_module == "conv"
+
+    contract = config.experiment_contract()
+    assert contract["experiment_role"] == "mainline_baseline"
+    assert contract["lightweight_gate"]["ready_delta_deg"] == pytest.approx(0.3)
+
+
+def test_stage3_protocol_audit_marks_epoch_budget_as_gap_for_40_epoch_mainline() -> None:
+    config = IFANTrainingConfig.from_toml(PROJECT_ROOT / "configs" / "stage3_default.toml")
+    rows = build_protocol_rows(config, locata_report=None)
+    row_map = {row["item"]: row for row in rows}
+
+    assert row_map["Training schedule"]["status"] == "gap"
+    assert row_map["LMS backend implementation"]["status"] == "context"
+    assert row_map["Sampling rate"]["status"] == "match"
 
 
 def test_stage3_ifan_paper_forward_variants() -> None:
@@ -131,6 +173,145 @@ def test_stage3_input_ablation_modes_zero_expected_branch() -> None:
     assert torch.count_nonzero(phat_only[:, 1:2, ...]).item() == 0
     assert torch.count_nonzero(lms_only[:, 0:1, ...]).item() == 0
     assert torch.allclose(lms_only[:, 1:2, ...], maps[:, 1:2, ...])
+
+
+class _ExactDoaModel(nn.Module):
+    def __init__(self, doa_batch: torch.Tensor):
+        super().__init__()
+        self.register_buffer("coords", sph2cart(doa_batch).contiguous())
+
+    def forward(self, x):
+        batch, _, time_steps, _, _, _ = x.shape
+        coords = self.coords
+        assert coords.shape[0] == batch
+        assert coords.shape[1] == time_steps
+        return coords
+
+
+def test_stage3_compute_prediction_details_returns_zero_for_exact_predictions() -> None:
+    doa_batch = torch.tensor(
+        [
+            [
+                [0.50, -0.20],
+                [0.55, -0.15],
+                [0.60, -0.10],
+                [0.65, -0.05],
+                [0.70, 0.00],
+                [0.75, 0.05],
+                [0.80, 0.10],
+            ]
+        ],
+        dtype=torch.float32,
+    )
+    inputs = torch.zeros(1, 2, doa_batch.shape[1], 5, 4, 8)
+    model = _ExactDoaModel(doa_batch)
+
+    details = compute_prediction_details(model, inputs, doa_batch)
+
+    assert details["offset_frames"] == 5
+    assert details["frame_errors_deg"].shape == (1, 2)
+    assert torch.allclose(details["frame_errors_deg"], torch.zeros_like(details["frame_errors_deg"]), atol=1e-4)
+    assert torch.allclose(details["trajectory_rmsae_deg"], torch.zeros_like(details["trajectory_rmsae_deg"]), atol=1e-4)
+    assert details["rmsae_deg"] == pytest.approx(0.0, abs=1e-4)
+
+
+def test_stage3_resolve_scenario_returns_scene_metadata() -> None:
+    scenario = resolve_stage3_scenario("scene_2")
+
+    assert scenario["name"] == "scene_2"
+    assert scenario["snr_db"] == pytest.approx(30.0)
+    assert scenario["t60_s"] == pytest.approx(0.8)
+
+
+def test_stage3_readiness_gate_prefers_lightweighting_after_stable_locata_win() -> None:
+    current_summary = {
+        "best_val_rmsae_deg": 6.7,
+        "baseline_compare": {
+            "mean_rmsae_deg": {"delta": 0.10},
+            "hard_scenarios_mean_rmsae_deg": {"delta": -0.05},
+        },
+    }
+    previous_summary = {
+        "best_val_rmsae_deg": 6.8,
+        "baseline_compare": {
+            "mean_rmsae_deg": {"delta": 0.25},
+            "hard_scenarios_mean_rmsae_deg": {"delta": 0.10},
+        },
+    }
+    current_locata = {
+        "overall": {
+            "ifan": {
+                "with_silences_rmsae_deg": {"mean": 7.30},
+                "without_silences_rmsae_deg": {"mean": 6.60},
+            },
+            "baseline": {
+                "with_silences_rmsae_deg": {"mean": 7.70},
+                "without_silences_rmsae_deg": {"mean": 7.10},
+            },
+            "delta_vs_baseline": {
+                "with_silences_rmsae_deg": {"mean": -0.40},
+                "without_silences_rmsae_deg": {"mean": -0.50},
+            },
+        },
+        "per_task": {
+            "task3": {
+                "delta_vs_baseline": {
+                    "with_silences_rmsae_deg": {"mean": 0.20},
+                    "without_silences_rmsae_deg": {"mean": 0.25},
+                }
+            },
+            "task5": {
+                "delta_vs_baseline": {
+                    "with_silences_rmsae_deg": {"mean": -0.10},
+                    "without_silences_rmsae_deg": {"mean": 0.15},
+                }
+            },
+        },
+    }
+    previous_locata = {
+        "overall": {
+            "ifan": {
+                "with_silences_rmsae_deg": {"mean": 7.45},
+                "without_silences_rmsae_deg": {"mean": 6.72},
+            },
+            "baseline": {
+                "with_silences_rmsae_deg": {"mean": 7.70},
+                "without_silences_rmsae_deg": {"mean": 7.10},
+            },
+            "delta_vs_baseline": {
+                "with_silences_rmsae_deg": {"mean": -0.25},
+                "without_silences_rmsae_deg": {"mean": -0.38},
+            },
+        },
+        "per_task": {
+            "task3": {
+                "delta_vs_baseline": {
+                    "with_silences_rmsae_deg": {"mean": 0.24},
+                    "without_silences_rmsae_deg": {"mean": 0.28},
+                }
+            },
+            "task5": {
+                "delta_vs_baseline": {
+                    "with_silences_rmsae_deg": {"mean": -0.05},
+                    "without_silences_rmsae_deg": {"mean": 0.18},
+                }
+            },
+        },
+    }
+
+    report = assess_readiness(
+        current_summary,
+        current_locata,
+        previous_summary=previous_summary,
+        previous_locata=previous_locata,
+        improvement_threshold_deg=0.3,
+        task_regression_tolerance_deg=0.3,
+    )
+
+    assert report["verdict"] == "ready_for_lightweighting"
+    assert report["reasons"]["overall_locata_win"] is True
+    assert report["reasons"]["task3_task5_stable"] is True
+    assert report["reasons"]["diminishing_returns"] is True
 
 
 class _DummyStage3Dataset:
@@ -389,6 +570,351 @@ def test_stage3_train_script_parser_accepts_frequency_block_options() -> None:
     assert args.lms_backend == "frequency_block"
     assert args.lms_block_size == 128
     assert args.lms_fft_size == 512
+
+
+def test_stage3_train_script_parser_accepts_schedule_overrides() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "train_stage3_ifan.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--seed",
+            "7",
+            "--phase1-epochs",
+            "30",
+            "--train-snr-min-phase2",
+            "5",
+            "--train-snr-max-phase2",
+            "15",
+            "--train-t60-min",
+            "0.3",
+            "--train-t60-max",
+            "1.1",
+        ]
+    )
+
+    assert args.seed == 7
+    assert args.phase1_epochs == 30
+    assert args.train_snr_min_phase2 == pytest.approx(5.0)
+    assert args.train_snr_max_phase2 == pytest.approx(15.0)
+    assert args.train_t60_min == pytest.approx(0.3)
+    assert args.train_t60_max == pytest.approx(1.1)
+
+
+def test_stage3_lms_backend_compare_parser_accepts_mode_scenario_and_overrides() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_lms_backends.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--mode",
+            "scenario",
+            "--scenario",
+            "scene_4",
+            "--size",
+            "3",
+            "--batch-size",
+            "1",
+            "--trajectory-seconds",
+            "5",
+            "--device",
+            "cpu",
+            "--lms-block-size",
+            "128",
+            "--lms-fft-size",
+            "512",
+        ]
+    )
+
+    assert args.mode == "scenario"
+    assert args.scenario == "scene_4"
+    assert args.size == 3
+    assert args.batch_size == 1
+    assert args.trajectory_seconds == 5
+    assert args.device == "cpu"
+    assert args.lms_block_size == 128
+    assert args.lms_fft_size == 512
+
+
+def test_stage3_lms_backend_compare_parser_accepts_scenario_suite_mode() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_lms_backends.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--mode",
+            "scenario_suite",
+            "--size",
+            "2",
+            "--batch-size",
+            "1",
+        ]
+    )
+
+    assert args.mode == "scenario_suite"
+    assert args.size == 2
+    assert args.batch_size == 1
+
+
+def test_stage3_simulated_eval_parser_accepts_multi_checkpoint_and_seeds() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_simulated.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--checkpoint",
+            "ckpt_a.pt",
+            "--checkpoint",
+            "ckpt_b.pt",
+            "--label",
+            "best",
+            "--label",
+            "last",
+            "--validation-size",
+            "128",
+            "--scenario-eval-size",
+            "64",
+            "--seeds",
+            "42",
+            "43",
+            "44",
+        ]
+    )
+
+    assert args.checkpoint == ["ckpt_a.pt", "ckpt_b.pt"]
+    assert args.label == ["best", "last"]
+    assert args.validation_size == 128
+    assert args.scenario_eval_size == 64
+    assert args.seeds == [42, 43, 44]
+
+
+def test_stage3_simulated_eval_aggregate_reports_mean_and_std() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_simulated.py"))
+    aggregate = module["aggregate_simulated_runs"]
+    runs = [
+        {
+            "validation": {"loss": 0.1, "rmsae_deg": 6.0},
+            "baseline_compare": {
+                "mean_rmsae_deg": {"ifan": 8.0, "baseline": 7.5, "delta": 0.5},
+                "hard_scenarios_mean_rmsae_deg": {"ifan": 9.0, "baseline": 8.5, "delta": 0.5},
+                "scenarios": [
+                    {
+                        "name": "scene_2",
+                        "snr_db": 30.0,
+                        "t60_s": 0.8,
+                        "ifan": {"loss": 0.2, "rmsae_deg": 9.0},
+                        "baseline": {"loss": 0.15, "rmsae_deg": 8.0},
+                        "rmsae_delta_deg": 1.0,
+                    }
+                ],
+            },
+        },
+        {
+            "validation": {"loss": 0.2, "rmsae_deg": 8.0},
+            "baseline_compare": {
+                "mean_rmsae_deg": {"ifan": 7.0, "baseline": 7.0, "delta": 0.0},
+                "hard_scenarios_mean_rmsae_deg": {"ifan": 8.0, "baseline": 8.5, "delta": -0.5},
+                "scenarios": [
+                    {
+                        "name": "scene_2",
+                        "snr_db": 30.0,
+                        "t60_s": 0.8,
+                        "ifan": {"loss": 0.1, "rmsae_deg": 7.0},
+                        "baseline": {"loss": 0.15, "rmsae_deg": 8.0},
+                        "rmsae_delta_deg": -1.0,
+                    }
+                ],
+            },
+        },
+    ]
+
+    report = aggregate(runs)
+
+    assert report["validation"]["rmsae_deg"]["mean"] == pytest.approx(7.0)
+    assert report["mean_rmsae_deg"]["delta"]["mean"] == pytest.approx(0.25)
+    assert report["scenarios"][0]["rmsae_delta_deg"]["std"] == pytest.approx(1.0)
+
+
+def test_stage3_scene_analysis_parser_accepts_output_dir_and_size() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "analyze_stage3_scene.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--checkpoint",
+            "best.pt",
+            "--scenario",
+            "scene_2",
+            "--size",
+            "64",
+            "--output-dir",
+            "outdir",
+        ]
+    )
+
+    assert args.checkpoint == "best.pt"
+    assert args.scenario == "scene_2"
+    assert args.size == 64
+    assert args.output_dir == "outdir"
+
+
+def test_stage3_run_compare_parser_accepts_labels_and_output() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_runs.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--before",
+            "run_a",
+            "--after",
+            "run_b",
+            "--before-label",
+            "pool_off",
+            "--after-label",
+            "pool_on",
+            "--output",
+            "report.json",
+        ]
+    )
+
+    assert args.before == "run_a"
+    assert args.after == "run_b"
+    assert args.before_label == "pool_off"
+    assert args.after_label == "pool_on"
+    assert args.output == "report.json"
+
+
+def test_stage3_run_compare_classifies_hard_gain_with_easy_cost() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_runs.py"))
+    classify = module["classify_transition"]
+    before = {
+        "baseline_compare": {
+            "mean_rmsae_deg": {"delta": 0.30},
+            "hard_scenarios_mean_rmsae_deg": {"delta": 1.00},
+            "scenarios": [
+                {"name": "scene_1", "snr_db": 30.0, "t60_s": 0.2, "rmsae_delta_deg": -0.5},
+                {"name": "scene_2", "snr_db": 30.0, "t60_s": 0.8, "rmsae_delta_deg": 0.0},
+                {"name": "scene_3", "snr_db": 5.0, "t60_s": 0.8, "rmsae_delta_deg": 0.8},
+                {"name": "scene_4", "snr_db": 5.0, "t60_s": 1.4, "rmsae_delta_deg": 1.2},
+            ],
+        }
+    }
+    after = {
+        "baseline_compare": {
+            "mean_rmsae_deg": {"delta": 0.45},
+            "hard_scenarios_mean_rmsae_deg": {"delta": 0.70},
+            "scenarios": [
+                {"name": "scene_1", "snr_db": 30.0, "t60_s": 0.2, "rmsae_delta_deg": 0.1},
+                {"name": "scene_2", "snr_db": 30.0, "t60_s": 0.8, "rmsae_delta_deg": 0.2},
+                {"name": "scene_3", "snr_db": 5.0, "t60_s": 0.8, "rmsae_delta_deg": 0.5},
+                {"name": "scene_4", "snr_db": 5.0, "t60_s": 1.4, "rmsae_delta_deg": 0.9},
+            ],
+        }
+    }
+
+    report = classify(before, after)
+
+    assert report["classification"]["improves_hard_scenes"] is True
+    assert report["classification"]["harms_easy_scenes"] is True
+    assert report["classification"]["net_improves_overall"] is False
+    assert report["classification"]["verdict"] == "hard_scene_gain_with_easy_scene_cost"
+
+
+def test_stage3_run_compare_marks_identical_runs_as_no_material_change() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_runs.py"))
+    classify = module["classify_transition"]
+    summary = {
+        "baseline_compare": {
+            "mean_rmsae_deg": {"delta": 0.30},
+            "hard_scenarios_mean_rmsae_deg": {"delta": 0.90},
+            "scenarios": [
+                {"name": "scene_1", "snr_db": 30.0, "t60_s": 0.2, "rmsae_delta_deg": -0.4},
+                {"name": "scene_2", "snr_db": 30.0, "t60_s": 0.8, "rmsae_delta_deg": 0.1},
+                {"name": "scene_3", "snr_db": 5.0, "t60_s": 0.8, "rmsae_delta_deg": 0.7},
+                {"name": "scene_4", "snr_db": 5.0, "t60_s": 1.4, "rmsae_delta_deg": 1.1},
+            ],
+        }
+    }
+
+    report = classify(summary, summary)
+
+    assert report["classification"]["verdict"] == "no_material_change"
+
+
+def test_stage3_locata_parser_accepts_subset_array_tasks_and_recording() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_locata.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--checkpoint",
+            "best.pt",
+            "--subset",
+            "eval",
+            "--array",
+            "benchmark2",
+            "--tasks",
+            "1",
+            "3",
+            "5",
+            "--recording",
+            "recording1",
+            "--device",
+            "cpu",
+        ]
+    )
+
+    assert args.checkpoint == "best.pt"
+    assert args.subset == "eval"
+    assert args.array == "benchmark2"
+    assert args.tasks == [1, 3, 5]
+    assert args.recording == ["recording1"]
+    assert args.device == "cpu"
+
+
+def test_stage3_locata_normalize_tasks_rejects_non_single_source_tasks() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_locata.py"))
+    normalize = module["normalize_tasks"]
+
+    assert normalize([1, 3, 5]) == (1, 3, 5)
+    with pytest.raises(ValueError, match="Only single-source LOCATA tasks"):
+        normalize([1, 2])
+
+
+def test_stage3_locata_paper_reference_payload_contains_tables() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_locata.py"))
+    payload = module["paper_reference_payload"]((1, 3, 5), "eval", "benchmark2")
+
+    assert payload["tables"]["with_silences"]["table"] == "Table III"
+    assert payload["tables"]["without_silences"]["table"] == "Table IV"
+    assert payload["tables"]["with_silences"]["reported_ifan_rmsae_deg"]["task1"] is None
+
+
+def test_stage3_locata_markdown_summary_mentions_training_dataset() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "evaluate_stage3_locata.py"))
+    render = module["markdown_summary"]
+    report = {
+        "checkpoint": "/tmp/best.pt",
+        "subset": "eval",
+        "array": "benchmark2",
+        "tasks": [1, 3, 5],
+        "overall": {
+            "ifan": {
+                "with_silences_rmsae_deg": {"mean": 4.0},
+                "without_silences_rmsae_deg": {"mean": 3.0},
+            },
+            "baseline": {
+                "with_silences_rmsae_deg": {"mean": 5.0},
+                "without_silences_rmsae_deg": {"mean": 4.0},
+            },
+        },
+        "per_task": {},
+        "paper_reference": {
+            "tables": {
+                "with_silences": {"table": "Table III"},
+                "without_silences": {"table": "Table IV"},
+            }
+        },
+    }
+
+    text = render(report)
+
+    assert "LibriSpeech train-clean-100" in text
+    assert "Table III" in text
+    assert "Table IV" in text
 
 
 def test_stage3_lms_trajectory_tracking_mode_keeps_cross_frame_state() -> None:

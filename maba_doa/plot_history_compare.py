@@ -15,6 +15,7 @@ KNOWN_VARIANTS = (
     "maba",
     "ablation_no_gate",
     "ablation_no_state",
+    "replace_1d_with_maba",
 )
 
 

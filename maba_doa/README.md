@@ -5,6 +5,7 @@
 1. `Baseline`: 原始 `IcoTempCNN`
 2. `+MABA`: `apply_cnn() -> MABA -> SoftArgMax`
 3. `Ablation`: `no-gate` / `no-state` 两个消融变体
+4. `Replace-1D-with-MABA`: 将主干前 6 个时序 `Conv1d(32->32)` block 替换为 MABA 风格时序模块，最后一个 `32->1` 输出卷积保持不变
 
 其中，两个消融变体与完整 `+MABA` 的区别如下：
 
@@ -18,11 +19,16 @@
 2. `no-gate` 用来验证动态门控是否是性能提升的关键来源；
 3. `no-state` 用来验证递推状态路径本身是否带来了收益。
 
+另外，当前仓库同时保留两条独立实验线：
+
+1. 末端插入版：只在 `apply_cnn()` 输出响应图后增加一个 map-level MABA 头，不改主干内部时序卷积；
+2. 主干替换版：把主干内部前 6 个 `CausConv1d(32->32)` 时序卷积替换为 MABA 风格 block，用于验证 MABA 是否可以直接承担主干时序建模。
+
 实现刻意保持为纯 PyTorch 版本，不依赖 Triton 或自定义 CUDA kernel，因此可以直接在当前仓库环境中训练和复现实验。
 
 ## Structure
 
-- `maba_doa/models.py`: `MABATemporalRefiner` and `IcoTempCNNWithMABA`
+- `maba_doa/models.py`: 末端插入版 MABA、主干替换版 MABA，以及对应模型定义
 - `maba_doa/train_maba_doa.py`: single-run training and evaluation
 - `maba_doa/run_ablation.py`: fixed baseline + ablation suite
 - `maba_doa/plot_history_compare.py`: compare `history.csv` curves and export summary table
@@ -54,6 +60,7 @@ Useful overrides:
 ```bash
 python maba_doa/train_maba_doa.py --config maba_doa/configs/default.yaml --variant baseline --epochs 2 --cpu
 python maba_doa/train_maba_doa.py --config maba_doa/configs/default.yaml --variant maba --epochs 2
+python maba_doa/train_maba_doa.py --config maba_doa/configs/default.yaml --variant replace_1d_with_maba --epochs 2
 ```
 
 ## One-command ablation suite
@@ -84,6 +91,25 @@ All outputs are written to `maba_doa/outputs/`:
 ```bash
 python maba_doa/visualize_maps.py --config maba_doa/configs/default.yaml --checkpoint maba_doa/outputs/<run_dir>/model.bin --frame 0 --output maba_doa/outputs/map_refinement.png
 ```
+
+## LOCATA evaluation
+
+Evaluate the trained `baseline` and `maba` checkpoints on LOCATA `dev` subset, single-source tasks `1/3/5`, using the `benchmark2` array:
+
+```bash
+python maba_doa/evaluate_locata.py \
+  --config maba_doa/configs/local_librispeech.yaml \
+  --baseline-summary maba_doa/outputs/maba_doa_r2_baseline_20260406_220454/summary.json \
+  --maba-summary maba_doa/outputs/maba_doa_r2_maba_20260407_005546/summary.json \
+  --locata-root datasets/LOCATA/LOCATA/dev \
+  --tasks 1 3 5 \
+  --array benchmark2
+```
+
+The script exports:
+
+1. `locata_eval_benchmark2_baseline_vs_maba.json`
+2. `locata_eval_benchmark2_baseline_vs_maba.md`
 
 ## History comparison
 

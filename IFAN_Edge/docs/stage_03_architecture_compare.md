@@ -69,8 +69,8 @@
 | 10. Fusion head 第 2 组 | 同上 | `IcoConv -> ReLU -> Conv1d -> L-norm -> ReLU` | 有 |
 | 11. Fusion head 第 3 组 | 同上 | `IcoConv -> ReLU -> Conv1d -> L-norm -> ReLU` | 有 |
 | 12. Fusion head 第 4 组 | 同上 | `IcoConv -> ReLU -> Conv1d -> L-norm -> ReLU` | 有 |
-| 13. 最后输出前一组 | baseline 最后一层仍是时空耦合 block | `IcoConv -> ReLU -> Conv1d -> L-norm -> Pooling`，通道仍保持 `16` | `IcoConv -> ReLU -> Conv1d(16->16) -> LNorm`，并支持 `final_head_pooling` 开关 |
-| 14. 输出层 | `SoftArgMax` | `SoftArgMax` | `SoftArgMax` |
+| 13. 最后输出前一组 | baseline 最后一层仍是时空耦合 block | `IcoConv -> ReLU -> Conv1d -> L-norm -> R-pooling / readout`，通道仍保持 `16` | `IcoConv -> ReLU -> Conv1d(16->16) -> LNorm -> channel readout -> R-pooling(max over R)`，并支持额外的 `final_head_pooling` 开关 |
+| 14. 输出层 | `CleanVertices -> SoftArgMax` | `SoftArgMax` | `CleanVertices -> SoftArgMax` |
 
 ---
 
@@ -112,7 +112,16 @@
 | 10 | `4 x (IcoConv -> ReLU -> Conv1d -> LNorm -> ReLU)` |
 | 11 | `final block: IcoConv -> ReLU -> Conv1d -> LNorm` |
 | 12 | `optional final_head_pooling` |
-| 13 | `max / max / CleanVertices / SoftArgMax` |
+| 13 | `channel_readout -> R-pooling(max over R) -> CleanVertices -> SoftArgMax` |
+
+这里需要特别澄清：
+
+1. 当前 IFAN 末端本来就已经有一层 **`R-pooling`**
+   - 它对应的是对 `R=6` 个 orientation channels 做 `max`
+   - 它不会降低 `icosahedral` 空间分辨率
+2. `final_head_pooling` 是额外的 **icosahedral pooling**
+   - 它会继续降低空间分辨率
+   - 它不是 baseline 图里 `R-pooling` 的同义词
 
 这条线和你描述的论文结构相比，目前剩下的不是新的主干偏差，而是两个显式歧义点：
 
@@ -198,7 +207,7 @@
 
 | 优先级 | 结构点 | 原因 |
 | --- | --- | --- |
-| 1 | `final_head_pooling` 默认应不应该开启 | 图示与文字仍有歧义 |
+| 1 | `final_head_pooling` 默认应不应该开启 | 图示与文字仍有歧义，而且它与末端已有的 `R-pooling` 不是同一种操作 |
 | 2 | `32 kernels` 是否只代表卷积核数而非通道数 | 文字解释仍需继续核实 |
 | 3 | 重构后新主线能否稳定优于旧版结构 | 需要训练验证 |
 | 4 | LMS 速度如何在不改语义前提下继续下降 | 这是后续实验成本核心 |

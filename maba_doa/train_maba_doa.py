@@ -17,7 +17,7 @@ import acousticTrackingLearners as at_learners
 import acousticTrackingModels as at_models
 from acousticTrackingDataset import Parameter
 
-from maba_doa.models import IcoTempCNNWithMABA
+from maba_doa.models import IcoTempCNNReplaceTemporalMABA, IcoTempCNNWithMABA
 
 try:
     import yaml
@@ -92,6 +92,20 @@ def build_model(cfg):
 
     if variant == "baseline":
         return at_models.IcoTempCNN(r, channels, Cin=cin, smooth_vertices=smooth_vertices)
+
+    if variant == "replace_1d_with_maba":
+        rcfg = cfg["model"]["replace_maba"]
+        return IcoTempCNNReplaceTemporalMABA(
+            r=r,
+            C=channels,
+            Cin=cin,
+            smooth_vertices=smooth_vertices,
+            replace_d_model=int(rcfg["d_model"]),
+            replace_state_dim=int(rcfg["state_dim"]),
+            replace_conv_kernel=int(rcfg["conv_kernel"]),
+            dropout=float(rcfg["dropout"]),
+            use_residual=bool(rcfg["use_residual"]),
+        )
 
     mcfg = cfg["model"]["maba"]
     use_gate = variant != "ablation_no_gate"
@@ -269,6 +283,7 @@ def main():
         "maba",
         "ablation_no_gate",
         "ablation_no_state",
+        "replace_1d_with_maba",
     ])
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--cpu", action="store_true")

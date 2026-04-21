@@ -52,7 +52,9 @@ def install_process_diagnostics() -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run IFAN stage-3 training, validation, and baseline comparison.")
     parser.add_argument("--config", default="IFAN_Edge/configs/stage3_default.toml")
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--phase1-epochs", type=int, default=None)
     parser.add_argument("--train-size", type=int, default=None, help="Override stage-3 train dataset size per epoch.")
     parser.add_argument("--val-size", type=int, default=None, help="Override fixed validation dataset size.")
     parser.add_argument("--scenario-eval-size", type=int, default=None, help="Override four-scenario evaluation size.")
@@ -60,6 +62,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
     parser.add_argument("--cpu", action="store_true", help="Shortcut for --device cpu.")
     parser.add_argument("--output-suffix", default=None)
+    parser.add_argument("--experiment-role", default=None, help="Override the experiment contract role recorded in summary metadata.")
+    parser.add_argument("--srp-variant", default=None, help="Override the recorded SRP variant tag for experiment comparison.")
+    parser.add_argument(
+        "--temporal-conv-variant",
+        choices=("standard_1d", "depthwise_separable_1d"),
+        default=None,
+        help="Override the recorded temporal convolution variant tag for experiment comparison.",
+    )
+    parser.add_argument(
+        "--temporal-module",
+        choices=("conv", "maba"),
+        default=None,
+        help="Override the recorded temporal module tag for experiment comparison.",
+    )
     parser.add_argument("--input-ablation-mode", choices=("none", "phat_only", "lms_only"), default=None)
     parser.add_argument("--final-head-pooling", action="store_true", help="Apply the optional final pooling stage before SoftArgMax.")
     parser.add_argument("--lms-plain", action="store_true", help="Disable NLMS-style normalization in the LMS branch.")
@@ -72,6 +88,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--lms-block-size", type=int, default=None, help="Block size for the frequency_block LMS backend.")
     parser.add_argument("--lms-fft-size", type=int, default=None, help="FFT size for the frequency_block LMS backend.")
     parser.add_argument("--lms-paper-original", action="store_true", help="Use the paper-style LMS preset: plain LMS, trajectory tracking, tau-sample readout, and full pair set.")
+    parser.add_argument("--batch-size-phase1", type=int, default=None)
+    parser.add_argument("--batch-size-phase2", type=int, default=None)
+    parser.add_argument("--micro-batch-size-phase1", type=int, default=None)
+    parser.add_argument("--micro-batch-size-phase2", type=int, default=None)
+    parser.add_argument("--lr-phase1", type=float, default=None)
+    parser.add_argument("--lr-phase2", type=float, default=None)
+    parser.add_argument("--train-t60-min", type=float, default=None)
+    parser.add_argument("--train-t60-max", type=float, default=None)
+    parser.add_argument("--train-snr-min-phase1", type=float, default=None)
+    parser.add_argument("--train-snr-max-phase1", type=float, default=None)
+    parser.add_argument("--train-snr-min-phase2", type=float, default=None)
+    parser.add_argument("--train-snr-max-phase2", type=float, default=None)
+    parser.add_argument("--validation-snr-min", type=float, default=None)
+    parser.add_argument("--validation-snr-max", type=float, default=None)
     return parser
 
 
@@ -81,8 +111,12 @@ def main() -> None:
     args = build_parser().parse_args()
     config = IFANTrainingConfig.from_toml(args.config)
 
+    if args.seed is not None:
+        config.seed = int(args.seed)
     if args.epochs is not None:
         config.epochs = int(args.epochs)
+    if args.phase1_epochs is not None:
+        config.phase1_epochs = int(args.phase1_epochs)
     if args.train_size is not None:
         config.train_dataset_size = int(args.train_size)
     if args.val_size is not None:
@@ -93,6 +127,14 @@ def main() -> None:
         config.trajectory_seconds = int(args.trajectory_seconds)
     if args.output_suffix is not None:
         config.output_suffix = str(args.output_suffix)
+    if args.experiment_role is not None:
+        config.experiment_role = str(args.experiment_role)
+    if args.srp_variant is not None:
+        config.srp_variant = str(args.srp_variant)
+    if args.temporal_conv_variant is not None:
+        config.temporal_conv_variant = str(args.temporal_conv_variant)
+    if args.temporal_module is not None:
+        config.temporal_module = str(args.temporal_module)
     if args.input_ablation_mode is not None:
         config.input_ablation_mode = str(args.input_ablation_mode)
     if args.final_head_pooling:
@@ -115,6 +157,34 @@ def main() -> None:
         config.lms_block_size = int(args.lms_block_size)
     if args.lms_fft_size is not None:
         config.lms_fft_size = int(args.lms_fft_size)
+    if args.batch_size_phase1 is not None:
+        config.batch_size_phase1 = int(args.batch_size_phase1)
+    if args.batch_size_phase2 is not None:
+        config.batch_size_phase2 = int(args.batch_size_phase2)
+    if args.micro_batch_size_phase1 is not None:
+        config.micro_batch_size_phase1 = int(args.micro_batch_size_phase1)
+    if args.micro_batch_size_phase2 is not None:
+        config.micro_batch_size_phase2 = int(args.micro_batch_size_phase2)
+    if args.lr_phase1 is not None:
+        config.lr_phase1 = float(args.lr_phase1)
+    if args.lr_phase2 is not None:
+        config.lr_phase2 = float(args.lr_phase2)
+    if args.train_t60_min is not None:
+        config.train_t60_min = float(args.train_t60_min)
+    if args.train_t60_max is not None:
+        config.train_t60_max = float(args.train_t60_max)
+    if args.train_snr_min_phase1 is not None:
+        config.train_snr_min_phase1 = float(args.train_snr_min_phase1)
+    if args.train_snr_max_phase1 is not None:
+        config.train_snr_max_phase1 = float(args.train_snr_max_phase1)
+    if args.train_snr_min_phase2 is not None:
+        config.train_snr_min_phase2 = float(args.train_snr_min_phase2)
+    if args.train_snr_max_phase2 is not None:
+        config.train_snr_max_phase2 = float(args.train_snr_max_phase2)
+    if args.validation_snr_min is not None:
+        config.validation_snr_min = float(args.validation_snr_min)
+    if args.validation_snr_max is not None:
+        config.validation_snr_max = float(args.validation_snr_max)
     if args.lms_paper_original:
         config.lms_normalized = False
         config.lms_include_self_pairs = True

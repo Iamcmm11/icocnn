@@ -15,11 +15,12 @@ if str(PACKAGE_ROOT) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import acousticTrackingDataset as at_dataset
-import acousticTrackingLearners as at_learners
-
-from ifan_edge.eval.stage3 import build_librispeech_dataset, build_scenario_caches
-from ifan_edge.features import DualFeatureIcoPreprocessor
+from ifan_edge.eval.stage3 import (
+    build_baseline_preprocessor_from_config,
+    build_ifan_preprocessor_from_config,
+    build_librispeech_dataset,
+    build_scenario_caches,
+)
 from ifan_edge.models import IFANModel
 from ifan_edge.training import IFANTrainingConfig, IFANTrainingPipeline
 
@@ -59,35 +60,8 @@ def main() -> None:
         config.trajectory_seconds,
     )
 
-    ifan_preprocessor = DualFeatureIcoPreprocessor(
-        N=at_dataset.benchmark2_array_setup.mic_pos.shape[0],
-        K=config.k,
-        r=config.r,
-        rn=at_dataset.benchmark2_array_setup.mic_pos,
-        fs=config.fs,
-        apply_vad=config.apply_vad,
-        lms_order=config.lms_order,
-        lms_step_size=config.lms_step_size,
-        lms_map_normalize=config.lms_map_normalize,
-        lms_map_mode=config.lms_map_mode,
-        lms_peak_sigma=config.lms_peak_sigma,
-        lms_update_mode=config.lms_update_mode,
-        lms_normalized=config.lms_normalized,
-        lms_include_self_pairs=config.lms_include_self_pairs,
-        lms_backend=config.lms_backend,
-        lms_block_size=config.lms_block_size,
-        lms_fft_size=config.lms_fft_size,
-    )
-    baseline_preprocessor = at_learners.TrackingFromIcoMapsPreprocessor(
-        N=at_dataset.benchmark2_array_setup.mic_pos.shape[0],
-        K=config.k,
-        r=config.r,
-        rn=at_dataset.benchmark2_array_setup.mic_pos,
-        fs=config.fs,
-        apply_vad=config.apply_vad,
-    )
-    pipeline.move_ifan_preprocessor(ifan_preprocessor, device)
-    pipeline.move_baseline_preprocessor(baseline_preprocessor, device)
+    ifan_preprocessor = build_ifan_preprocessor_from_config(config, device)
+    baseline_preprocessor = build_baseline_preprocessor_from_config(config, device)
 
     scenario_caches = build_scenario_caches(
         source_dataset=val_source,
