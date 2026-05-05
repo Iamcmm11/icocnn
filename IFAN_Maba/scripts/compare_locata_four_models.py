@@ -45,6 +45,20 @@ DEFAULT_SPECS = {
         "name": "IFAN_Maba",
         "param_count_path": "model_profile.trainable_params",
     },
+    "IFAN_80": {
+        "kind": "ifan_pair",
+        "path": "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_ifan80_best.json",
+        "model_key": "ifan",
+        "name": "IFAN_80",
+        "param_count_path": "model_profile.trainable_params",
+    },
+    "IFAN_LC": {
+        "kind": "ifan_pair",
+        "path": "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_ifan_lc_best.json",
+        "model_key": "ifan",
+        "name": "IFAN_LC",
+        "param_count_path": "model_profile.trainable_params",
+    },
 }
 
 SUMMARY_FIELDS = (
@@ -201,7 +215,7 @@ def build_model_row(model: dict[str, Any], baseline: dict[str, Any], metric_key:
 
 def build_table_rows(models: dict[str, dict[str, Any]], metric_key: str) -> list[dict[str, Any]]:
     baseline = models["baseline"]
-    ordered = ["baseline", "replace_1d_with_maba", "ablation_no_gate", "IFAN", "IFAN_Maba"]
+    ordered = ["baseline", "replace_1d_with_maba", "ablation_no_gate", "IFAN", "IFAN_Maba", "IFAN_80", "IFAN_LC"]
     return [build_model_row(models[name], baseline, metric_key) for name in ordered]
 
 
@@ -276,12 +290,14 @@ def default_output_json() -> Path:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Build the five-model LOCATA comparison tables from per-model evaluation JSON files.")
+    parser = argparse.ArgumentParser(description="Build the multi-model LOCATA comparison tables from per-model evaluation JSON files.")
     parser.add_argument("--baseline-report", default=DEFAULT_SPECS["baseline"]["path"])
     parser.add_argument("--replace1d-report", default=DEFAULT_SPECS["replace_1d_with_maba"]["path"])
     parser.add_argument("--ablation-report", default=DEFAULT_SPECS["ablation_no_gate"]["path"])
     parser.add_argument("--ifan-report", default=DEFAULT_SPECS["IFAN"]["path"])
     parser.add_argument("--ifan-maba-report", default=DEFAULT_SPECS["IFAN_Maba"]["path"])
+    parser.add_argument("--ifan80-report", default=DEFAULT_SPECS["IFAN_80"]["path"])
+    parser.add_argument("--ifan-lc-report", default=DEFAULT_SPECS["IFAN_LC"]["path"])
     parser.add_argument("--output-json", default=str(default_output_json()))
     parser.add_argument("--output-md", default=None)
     return parser
@@ -295,6 +311,8 @@ def main() -> None:
         "ablation_no_gate": {**DEFAULT_SPECS["ablation_no_gate"], "path": args.ablation_report},
         "IFAN": {**DEFAULT_SPECS["IFAN"], "path": args.ifan_report},
         "IFAN_Maba": {**DEFAULT_SPECS["IFAN_Maba"], "path": args.ifan_maba_report},
+        "IFAN_80": {**DEFAULT_SPECS["IFAN_80"], "path": args.ifan80_report},
+        "IFAN_LC": {**DEFAULT_SPECS["IFAN_LC"], "path": args.ifan_lc_report},
     }
 
     models = {name: extract_model_metrics(spec) for name, spec in specs.items()}
@@ -339,7 +357,7 @@ def main() -> None:
     output_json.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
 
     lines = [
-        "# LOCATA Four Model Compare",
+        "# LOCATA Model Compare",
         "",
         f"- subset: `{result['subset']}`",
         f"- array: `{result['array']}`",

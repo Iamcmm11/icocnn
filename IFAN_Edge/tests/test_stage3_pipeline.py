@@ -26,7 +26,7 @@ from ifan_edge.eval.stage3 import (
     resolve_stage3_scenario,
     select_model_inputs,
 )
-from ifan_edge.features import SRPLMSIcoMap
+from ifan_edge.features import SRPLMSIcoMap, SRPPHATIcoMapAdapter
 from ifan_edge.models import IFANModel, IFANModelConfig, PAPER_IFAN_PARAM_TARGET
 from ifan_edge.training import IFANTrainingConfig, IFANTrainingPipeline
 from scripts.assess_stage3_readiness import assess_readiness
@@ -46,6 +46,7 @@ def test_stage3_sources_parse() -> None:
         PROJECT_ROOT / "scripts" / "audit_stage3_protocol.py",
         PROJECT_ROOT / "scripts" / "assess_stage3_readiness.py",
         PROJECT_ROOT / "scripts" / "compare_stage3_lms_backends.py",
+        PROJECT_ROOT / "scripts" / "compare_stage3_phat_variants.py",
         PROJECT_ROOT / "scripts" / "analyze_stage3_scene.py",
         PROJECT_ROOT / "scripts" / "diagnose_stage3_lms_peak.py",
     )
@@ -162,6 +163,28 @@ def test_stage3_ifan_backward_produces_finite_nonzero_gradients() -> None:
         assert any(torch.count_nonzero(grad).item() > 0 for grad in grads)
 
 
+def test_stage3_ifan_lightweight_temporal_variant_and_channel_scaling_work() -> None:
+    baseline = IFANModel(IFANModelConfig(r=2))
+    config = IFANModelConfig(r=2, branch_channels=8, temporal_conv_variant="depthwise_separable_1d")
+    model = IFANModel(config)
+    x = torch.randn(2, model.expected_input_channels(), 6, 5, 4, 8)
+    target = torch.randn(2, 6, 3)
+
+    output = model(x)
+    loss = torch.nn.functional.mse_loss(output, target)
+    loss.backward()
+
+    assert output.shape == (2, 6, 3)
+    assert torch.isfinite(output).all()
+    assert bool(torch.isfinite(loss).item())
+    assert model.count_parameters(trainable_only=True) < baseline.count_parameters(trainable_only=True)
+    assert model.mac_proxy((1, 2, 6, 5, 4, 8))["total"] < baseline.mac_proxy((1, 2, 6, 5, 4, 8))["total"]
+    grads = [param.grad for param in model.final_block.temporal.parameters() if param.grad is not None]
+    assert grads
+    assert all(torch.isfinite(grad).all() for grad in grads)
+    assert any(torch.count_nonzero(grad).item() > 0 for grad in grads)
+
+
 def test_stage3_input_ablation_modes_zero_expected_branch() -> None:
     maps = torch.arange(2 * 2 * 3 * 5 * 4 * 8, dtype=torch.float32).reshape(2, 2, 3, 5, 4, 8)
     config = IFANModelConfig()
@@ -173,6 +196,59 @@ def test_stage3_input_ablation_modes_zero_expected_branch() -> None:
     assert torch.count_nonzero(phat_only[:, 1:2, ...]).item() == 0
     assert torch.count_nonzero(lms_only[:, 0:1, ...]).item() == 0
     assert torch.allclose(lms_only[:, 1:2, ...], maps[:, 1:2, ...])
+
+
+def test_stage3_phat_variants_match_output_contract_and_cache_metadata() -> None:
+    torch.manual_seed(0)
+    rn = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.05, 0.0, 0.0],
+            [0.0, 0.05, 0.0],
+        ],
+        dtype=np.float32,
+    )
+    mic = torch.randn(2, 1, 3, 3, 64)
+    outputs = {}
+    profiles = {}
+
+    for variant in ("paper_original", "lc_reference", "lc_edge"):
+        frontend = SRPPHATIcoMapAdapter(N=3, K=64, r=1, rn=rn, fs=16000, srp_variant=variant)
+        maps = frontend(mic)
+        profile = frontend.frontend_profile()
+        outputs[variant] = maps
+        profiles[variant] = profile
+
+        assert maps.shape == (2, 1, 3, 5, 2, 4)
+        assert maps.dtype == mic.dtype
+        assert maps.device == mic.device
+        assert torch.isfinite(maps).all()
+        assert profile["srp_variant"] == variant
+        assert profile["pair_count"] > 0
+        assert profile["cache_table_bytes"] > 0
+        assert profile["complexity_proxy"]["sample_reads_per_frame"] > 0
+
+    ref = outputs["paper_original"].reshape(2, 3, -1).float()
+    lc_ref = outputs["lc_reference"].reshape(2, 3, -1).float()
+    lc_edge = outputs["lc_edge"].reshape(2, 3, -1).float()
+    ref_cosine = torch.nn.functional.cosine_similarity(ref, lc_ref, dim=-1)
+    edge_cosine = torch.nn.functional.cosine_similarity(lc_ref, lc_edge, dim=-1)
+    ref_peak = ref.argmax(dim=-1)
+    lc_ref_peak = lc_ref.argmax(dim=-1)
+    lc_edge_peak = lc_edge.argmax(dim=-1)
+
+    assert ref_cosine.mean().item() >= 0.99
+    assert edge_cosine.mean().item() >= 0.99
+    assert ((ref_peak - lc_ref_peak).abs() <= 1).float().mean().item() >= 0.95
+    assert ((lc_ref_peak - lc_edge_peak).abs() <= 1).float().mean().item() >= 0.95
+    assert profiles["lc_edge"]["pair_count"] == 3
+    assert profiles["lc_edge"]["full_pair_count"] == 9
+    assert profiles["lc_edge"]["unique_pairs_only"] is True
+    assert profiles["lc_reference"]["pair_count"] == 9
+    assert (
+        profiles["lc_edge"]["complexity_proxy"]["sample_reads_per_frame"]
+        < profiles["lc_reference"]["complexity_proxy"]["sample_reads_per_frame"]
+    )
 
 
 class _ExactDoaModel(nn.Module):
@@ -572,6 +648,28 @@ def test_stage3_train_script_parser_accepts_frequency_block_options() -> None:
     assert args.lms_fft_size == 512
 
 
+def test_stage3_train_script_parser_accepts_phat_and_lightweight_model_overrides() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "train_stage3_ifan.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--srp-variant",
+            "lc_edge",
+            "--phat-sinc-half-width",
+            "2",
+            "--branch-channels",
+            "8",
+            "--temporal-conv-variant",
+            "depthwise_separable_1d",
+        ]
+    )
+
+    assert args.srp_variant == "lc_edge"
+    assert args.phat_sinc_half_width == 2
+    assert args.branch_channels == 8
+    assert args.temporal_conv_variant == "depthwise_separable_1d"
+
+
 def test_stage3_train_script_parser_accepts_schedule_overrides() -> None:
     module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "train_stage3_ifan.py"))
     parser = module["build_parser"]()
@@ -651,6 +749,42 @@ def test_stage3_lms_backend_compare_parser_accepts_scenario_suite_mode() -> None
     assert args.mode == "scenario_suite"
     assert args.size == 2
     assert args.batch_size == 1
+
+
+def test_stage3_phat_variant_compare_parser_accepts_variants_and_repeats() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "compare_stage3_phat_variants.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--mode",
+            "scenario",
+            "--scenario",
+            "scene_4",
+            "--size",
+            "3",
+            "--batch-size",
+            "1",
+            "--repeats",
+            "5",
+            "--lms-backend",
+            "time_reference",
+            "--phat-sinc-half-width",
+            "2",
+            "--variant",
+            "paper_original",
+            "--variant",
+            "lc_edge",
+        ]
+    )
+
+    assert args.mode == "scenario"
+    assert args.scenario == "scene_4"
+    assert args.size == 3
+    assert args.batch_size == 1
+    assert args.repeats == 5
+    assert args.lms_backend == "time_reference"
+    assert args.phat_sinc_half_width == 2
+    assert args.variant == ["paper_original", "lc_edge"]
 
 
 def test_stage3_simulated_eval_parser_accepts_multi_checkpoint_and_seeds() -> None:
@@ -984,3 +1118,7 @@ def test_stage3_smoke_training_outputs(tmp_path: Path) -> None:
     assert "scene_1" in baseline_report
     assert "scene_4" in baseline_report
     assert summary["model_topology"] == "paper_dual_mainline"
+    assert summary["srp_variant"] == "paper_original"
+    assert summary["temporal_conv_variant"] == "standard_1d"
+    assert summary["baseline_compare"]["srp_variant"] == "paper_original"
+    assert summary["frontend_profile"]["phat"]["srp_variant"] == "paper_original"

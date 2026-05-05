@@ -42,22 +42,25 @@ DEFAULT_STAGE3_LIGHTWEIGHT_READY_DELTA_DEG = 0.3
 
 def _validate_paper_mainline_model_section(model: dict[str, Any]) -> None:
     deprecated_equal_expected = {
-        "branch_channels": PAPER_IFAN_BRANCH_CHANNELS,
-        "fused_channels": PAPER_IFAN_BRANCH_CHANNELS,
-        "fusion_head_channels": PAPER_IFAN_BRANCH_CHANNELS,
         "use_residual_block": True,
         "feature_mode": "dual",
         "fusion_mode": "shared_attention_sum",
         "head_mode": "paper_temporal",
     }
     for key, expected in deprecated_equal_expected.items():
-        if key not in model:
-            continue
-        value = model[key]
-        if value != expected:
+        if key in model and model[key] != expected:
+            value = model[key]
             raise ValueError(
                 f"Stage-3 paper-mainline no longer supports model.{key}={value!r}. "
                 f"Only the paper default {expected!r} is supported."
+            )
+
+    branch_channels = int(model.get("branch_channels", PAPER_IFAN_BRANCH_CHANNELS))
+    for key in ("fused_channels", "fusion_head_channels"):
+        if key in model and int(model[key]) != branch_channels:
+            raise ValueError(
+                f"Stage-3 paper-mainline expects model.{key} to match model.branch_channels={branch_channels}, "
+                f"got {model[key]!r}."
             )
 
 
@@ -78,6 +81,7 @@ class IFANTrainingConfig:
     k: int = 4096
     step: int = 3072
     r: int = 2
+    branch_channels: int = PAPER_IFAN_BRANCH_CHANNELS
     final_head_pooling: bool = False
     smooth_vertices: bool = True
     apply_vad: bool = True
@@ -118,6 +122,7 @@ class IFANTrainingConfig:
     baseline_checkpoint_path: str = "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
     experiment_role: str = "mainline_baseline"
     srp_variant: str = "paper_original"
+    phat_sinc_half_width: int = 0
     temporal_conv_variant: str = "standard_1d"
     temporal_module: str = "conv"
     primary_benchmark_suite: str = DEFAULT_STAGE3_BENCHMARK_SUITE
@@ -158,6 +163,7 @@ class IFANTrainingConfig:
             k=int(data.get("k", cls.k)),
             step=int(data.get("step", cls.step)),
             r=int(model.get("r", cls.r)),
+            branch_channels=int(model.get("branch_channels", cls.branch_channels)),
             final_head_pooling=bool(model.get("final_head_pooling", cls.final_head_pooling)),
             smooth_vertices=bool(model.get("smooth_vertices", cls.smooth_vertices)),
             apply_vad=bool(data.get("apply_vad", cls.apply_vad)),
@@ -198,6 +204,7 @@ class IFANTrainingConfig:
             baseline_checkpoint_path=str(paths.get("baseline_checkpoint_path", cls.baseline_checkpoint_path)),
             experiment_role=str(contract.get("experiment_role", cls.experiment_role)),
             srp_variant=str(contract.get("srp_variant", cls.srp_variant)),
+            phat_sinc_half_width=int(contract.get("phat_sinc_half_width", cls.phat_sinc_half_width)),
             temporal_conv_variant=str(contract.get("temporal_conv_variant", cls.temporal_conv_variant)),
             temporal_module=str(contract.get("temporal_module", cls.temporal_module)),
             primary_benchmark_suite=str(contract.get("primary_benchmark_suite", cls.primary_benchmark_suite)),
@@ -215,8 +222,10 @@ class IFANTrainingConfig:
             r=self.r,
             phat_in_channels=1,
             aux_in_channels=1,
+            branch_channels=self.branch_channels,
             smooth_vertices=self.smooth_vertices,
             final_head_pooling=self.final_head_pooling,
+            temporal_conv_variant=self.temporal_conv_variant,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -227,8 +236,10 @@ class IFANTrainingConfig:
             "stage": self.stage_name,
             "experiment_role": self.experiment_role,
             "model_topology": "paper_dual_mainline",
+            "branch_channels": self.branch_channels,
             "feature_pair": "phat+lms",
             "srp_variant": self.srp_variant,
+            "phat_sinc_half_width": self.phat_sinc_half_width,
             "lms_backend": self.lms_backend,
             "temporal_conv_variant": self.temporal_conv_variant,
             "temporal_module": self.temporal_module,
@@ -505,6 +516,7 @@ class IFANTrainingPipeline:
                 "branch_channels": self.model_config.branch_channels,
                 "final_head_pooling": self.model_config.final_head_pooling,
                 "smooth_vertices": self.model_config.smooth_vertices,
+                "temporal_conv_variant": self.model_config.temporal_conv_variant,
             },
             "metrics": metrics,
         }
@@ -560,6 +572,8 @@ class IFANTrainingPipeline:
 
         return {
             "baseline_checkpoint_path": str(checkpoint_path),
+            "srp_variant": self.config.srp_variant,
+            "temporal_conv_variant": self.config.temporal_conv_variant,
             "scenarios": scenario_reports,
             "mean_rmsae_deg": {
                 "ifan": ifan_mean,
@@ -589,6 +603,8 @@ class IFANTrainingPipeline:
                     "branch_channels": self.model_config.branch_channels,
                     "final_head_pooling": self.model_config.final_head_pooling,
                     "input_ablation_mode": self.config.input_ablation_mode,
+                    "srp_variant": self.config.srp_variant,
+                    "temporal_conv_variant": self.config.temporal_conv_variant,
                 },
                 ensure_ascii=False,
             ),
@@ -637,6 +653,8 @@ class IFANTrainingPipeline:
             lms_backend=self.config.lms_backend,
             lms_block_size=self.config.lms_block_size,
             lms_fft_size=self.config.lms_fft_size,
+            srp_variant=self.config.srp_variant,
+            phat_sinc_half_width=self.config.phat_sinc_half_width,
         )
         baseline_preprocessor = at_learners.TrackingFromIcoMapsPreprocessor(
             N=at_dataset.benchmark2_array_setup.mic_pos.shape[0],
@@ -649,6 +667,7 @@ class IFANTrainingPipeline:
         self.move_ifan_preprocessor(ifan_preprocessor, device)
         self.move_baseline_preprocessor(baseline_preprocessor, device)
         print(json.dumps({"event": "preprocessors_ready"}, ensure_ascii=False), flush=True)
+        frontend_profile = ifan_preprocessor.frontend_profile()
 
         print(
             json.dumps(
@@ -738,10 +757,12 @@ class IFANTrainingPipeline:
                         "branch_channels": self.model_config.branch_channels,
                         "final_head_pooling": self.model_config.final_head_pooling,
                         "smooth_vertices": self.model_config.smooth_vertices,
+                        "temporal_conv_variant": self.model_config.temporal_conv_variant,
                         "input_ablation_mode": self.config.input_ablation_mode,
                     },
                     "experiment_contract": self.config.experiment_contract(),
                     "model_profile": model_profile,
+                    "frontend_profile": frontend_profile,
                     "train_split_path": str(train_split_path),
                     "validation_split_path": str(val_split_path),
                     "device": str(device),
@@ -765,6 +786,7 @@ class IFANTrainingPipeline:
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "experiment_role": self.config.experiment_role,
                     "srp_variant": self.config.srp_variant,
+                    "temporal_conv_variant": self.config.temporal_conv_variant,
                     "temporal_module": self.config.temporal_module,
                     "epochs": self.config.epochs,
                 },
@@ -907,8 +929,11 @@ class IFANTrainingPipeline:
             "branch_channels": self.model_config.branch_channels,
             "final_head_pooling": self.model_config.final_head_pooling,
             "input_ablation_mode": self.config.input_ablation_mode,
+            "srp_variant": self.config.srp_variant,
+            "temporal_conv_variant": self.config.temporal_conv_variant,
             "experiment_contract": self.config.experiment_contract(),
             "model_profile": model_profile,
+            "frontend_profile": frontend_profile,
             "best_val_rmsae_deg": best_val_rmsae,
             "final_epoch": history_rows[-1] if history_rows else {},
             "baseline_compare": baseline_compare,

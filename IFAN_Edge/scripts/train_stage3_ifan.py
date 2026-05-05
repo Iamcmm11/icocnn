@@ -63,7 +63,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cpu", action="store_true", help="Shortcut for --device cpu.")
     parser.add_argument("--output-suffix", default=None)
     parser.add_argument("--experiment-role", default=None, help="Override the experiment contract role recorded in summary metadata.")
-    parser.add_argument("--srp-variant", default=None, help="Override the recorded SRP variant tag for experiment comparison.")
+    parser.add_argument(
+        "--srp-variant",
+        choices=("paper_original", "lc_reference", "lc_edge"),
+        default=None,
+        help="Choose the PHAT SRP frontend variant.",
+    )
+    parser.add_argument("--phat-sinc-half-width", type=int, default=None, help="Half width of the sinc interpolation support used by lc_* PHAT variants.")
     parser.add_argument(
         "--temporal-conv-variant",
         choices=("standard_1d", "depthwise_separable_1d"),
@@ -77,6 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override the recorded temporal module tag for experiment comparison.",
     )
     parser.add_argument("--input-ablation-mode", choices=("none", "phat_only", "lms_only"), default=None)
+    parser.add_argument("--branch-channels", type=int, default=None, help="Override IFAN branch width for lightweight experiments.")
     parser.add_argument("--final-head-pooling", action="store_true", help="Apply the optional final pooling stage before SoftArgMax.")
     parser.add_argument("--lms-plain", action="store_true", help="Disable NLMS-style normalization in the LMS branch.")
     parser.add_argument("--lms-no-self-pairs", action="store_true", help="Exclude diagonal microphone pairs from the LMS branch.")
@@ -131,12 +138,16 @@ def main() -> None:
         config.experiment_role = str(args.experiment_role)
     if args.srp_variant is not None:
         config.srp_variant = str(args.srp_variant)
+    if args.phat_sinc_half_width is not None:
+        config.phat_sinc_half_width = int(args.phat_sinc_half_width)
     if args.temporal_conv_variant is not None:
         config.temporal_conv_variant = str(args.temporal_conv_variant)
     if args.temporal_module is not None:
         config.temporal_module = str(args.temporal_module)
     if args.input_ablation_mode is not None:
         config.input_ablation_mode = str(args.input_ablation_mode)
+    if args.branch_channels is not None:
+        config.branch_channels = int(args.branch_channels)
     if args.final_head_pooling:
         config.final_head_pooling = True
     if args.lms_plain:

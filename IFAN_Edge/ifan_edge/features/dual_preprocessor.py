@@ -38,6 +38,8 @@ class DualFeatureIcoPreprocessor(at_learners.Preprocessor):
         lms_backend: str = "time_reference",
         lms_block_size: int = 256,
         lms_fft_size: int | None = None,
+        srp_variant: str = "paper_original",
+        phat_sinc_half_width: int = 0,
     ):
         super().__init__()
         self.N = N
@@ -53,6 +55,8 @@ class DualFeatureIcoPreprocessor(at_learners.Preprocessor):
             rn=rn,
             fs=fs,
             c=c,
+            srp_variant=srp_variant,
+            sinc_half_width=phat_sinc_half_width,
         )
         self.lms = SRPLMSIcoMap(
             N=N,
@@ -73,6 +77,19 @@ class DualFeatureIcoPreprocessor(at_learners.Preprocessor):
             lms_block_size=lms_block_size,
             lms_fft_size=lms_fft_size,
         )
+
+    def frontend_profile(self) -> dict[str, object]:
+        return {
+            "phat": self.phat.frontend_profile(),
+            "lms": {
+                "backend": self.lms.lms_backend,
+                "include_self_pairs": bool(self.lms.include_self_pairs),
+                "map_mode": self.lms.map_mode,
+                "update_mode": self.lms.update_mode,
+                "block_size": int(self.lms.lms_block_size) if hasattr(self.lms, "lms_block_size") else None,
+                "fft_size": int(self.lms.lms_fft_size) if getattr(self.lms, "lms_fft_size", None) is not None else None,
+            },
+        }
 
     @staticmethod
     def split_features(maps: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:

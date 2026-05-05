@@ -20,20 +20,27 @@ class IFANModelConfig:
     r: int = 2
     phat_in_channels: int = 1
     aux_in_channels: int = 1
+    branch_channels: int = PAPER_IFAN_BRANCH_CHANNELS
     smooth_vertices: bool = True
     final_head_pooling: bool = False
-
-    @property
-    def branch_channels(self) -> int:
-        return PAPER_IFAN_BRANCH_CHANNELS
+    temporal_conv_variant: str = "standard_1d"
 
     @property
     def fused_channels(self) -> int:
-        return PAPER_IFAN_BRANCH_CHANNELS
+        return self.branch_channels
 
     @property
     def fusion_head_channels(self) -> int:
-        return PAPER_IFAN_BRANCH_CHANNELS
+        return self.branch_channels
+
+    def __post_init__(self) -> None:
+        if int(self.branch_channels) <= 0:
+            raise ValueError(f"branch_channels must be positive, got {self.branch_channels}")
+        if self.temporal_conv_variant not in {"standard_1d", "depthwise_separable_1d"}:
+            raise ValueError(
+                "temporal_conv_variant must be 'standard_1d' or 'depthwise_separable_1d', "
+                f"got {self.temporal_conv_variant!r}."
+            )
 
 
 class ResidualLearningModule(nn.Module):
@@ -94,6 +101,37 @@ class FrontendFeatureBranch(nn.Module):
         return direct, enhanced
 
 
+class DepthwiseSeparableCausConv1d(nn.Module):
+    """Causal depthwise-separable 1D convolution used in lightweight temporal blocks."""
+
+    def __init__(self, channels: int, kernel_size: int, dilation: int = 1):
+        super().__init__()
+        self.pad = (kernel_size - 1) * dilation
+        self.depthwise = nn.Conv1d(
+            channels,
+            channels,
+            kernel_size,
+            padding=self.pad,
+            dilation=dilation,
+            groups=channels,
+        )
+        self.pointwise = nn.Conv1d(channels, channels, kernel_size=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.depthwise(x)
+        if self.pad > 0:
+            x = x[:, :, :-self.pad]
+        return self.pointwise(x)
+
+
+def build_temporal_conv(variant: str, channels: int, kernel_size: int = 5, dilation: int = 1) -> nn.Module:
+    if variant == "standard_1d":
+        return at_modules.CausConv1d(channels, channels, kernel_size=kernel_size, dilation=dilation)
+    if variant == "depthwise_separable_1d":
+        return DepthwiseSeparableCausConv1d(channels, kernel_size=kernel_size, dilation=dilation)
+    raise ValueError(f"Unsupported temporal_conv_variant {variant!r}")
+
+
 class FusionTemporalBlock(nn.Module):
     """One paper-style fusion block: IcoConv -> ReLU -> Conv1d -> LNorm -> optional ReLU."""
 
@@ -105,12 +143,13 @@ class FusionTemporalBlock(nn.Module):
         *,
         smooth_vertices: bool = True,
         apply_relu: bool = True,
+        temporal_conv_variant: str = "standard_1d",
     ):
         super().__init__()
         self.out_channels = out_channels
         self.apply_relu = apply_relu
         self.conv = icoCNN.ConvIco(r, in_channels, out_channels, 6, 6, smooth_vertices=smooth_vertices)
-        self.temporal = at_modules.CausConv1d(out_channels, out_channels, kernel_size=5, dilation=1)
+        self.temporal = build_temporal_conv(temporal_conv_variant, out_channels, kernel_size=5, dilation=1)
         self.norm = icoCNN.LNormIco(out_channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -134,12 +173,19 @@ class FusionTemporalBlock(nn.Module):
 
 
 class FinalFusionBlock(nn.Module):
-    """Final paper-style block: keep 16 channels through the last temporal layer."""
+    """Final paper-style block: keep branch_channels through the last temporal layer."""
 
-    def __init__(self, r: int, channels: int, *, smooth_vertices: bool = True):
+    def __init__(
+        self,
+        r: int,
+        channels: int,
+        *,
+        smooth_vertices: bool = True,
+        temporal_conv_variant: str = "standard_1d",
+    ):
         super().__init__()
         self.conv = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
-        self.temporal = at_modules.CausConv1d(channels, channels, kernel_size=5, dilation=1)
+        self.temporal = build_temporal_conv(temporal_conv_variant, channels, kernel_size=5, dilation=1)
         self.norm = icoCNN.LNormIco(channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -211,6 +257,7 @@ class IFANModel(nn.Module):
                     out_channels=config.branch_channels,
                     smooth_vertices=config.smooth_vertices,
                     apply_relu=True,
+                    temporal_conv_variant=config.temporal_conv_variant,
                 )
                 for _ in range(PAPER_IFAN_FUSION_BLOCKS)
             ]
@@ -219,6 +266,7 @@ class IFANModel(nn.Module):
             r=self.fusion_r,
             channels=config.branch_channels,
             smooth_vertices=config.smooth_vertices,
+            temporal_conv_variant=config.temporal_conv_variant,
         )
         self.channel_readout = ChannelReadout(config.branch_channels)
 
@@ -286,9 +334,16 @@ class IFANModel(nn.Module):
         cin: int,
         cout: int,
         kernel_size: int = 5,
+        variant: str = "standard_1d",
     ) -> int:
         positions = int(charts) * int(height) * int(width) * int(regions)
-        return int(time_steps) * int(positions) * int(cin) * int(cout) * int(kernel_size)
+        if variant == "standard_1d":
+            per_step = int(cin) * int(cout) * int(kernel_size)
+        elif variant == "depthwise_separable_1d":
+            per_step = int(cin) * int(kernel_size) + int(cin) * int(cout)
+        else:
+            raise ValueError(f"Unsupported temporal conv variant {variant!r} for MAC proxy.")
+        return int(time_steps) * int(positions) * per_step
 
     def mac_proxy(self, input_shape: tuple[int, int, int, int, int, int], kernel_neighbors: int = 7) -> dict[str, int]:
         batch, channels, time_steps, charts, height, width = input_shape
@@ -324,7 +379,16 @@ class IFANModel(nn.Module):
             6,
             kernel_neighbors,
         )
-        temporal_block_1d = self._conv1d_mac_proxy(time_steps, charts, fusion_height, fusion_width, 6, branch_channels, branch_channels)
+        temporal_block_1d = self._conv1d_mac_proxy(
+            time_steps,
+            charts,
+            fusion_height,
+            fusion_width,
+            6,
+            branch_channels,
+            branch_channels,
+            variant=self.config.temporal_conv_variant,
+        )
         final_conv = temporal_block_conv
         final_1d = self._conv1d_mac_proxy(
             time_steps,
@@ -334,6 +398,7 @@ class IFANModel(nn.Module):
             6,
             branch_channels,
             branch_channels,
+            variant=self.config.temporal_conv_variant,
         )
         channel_readout = int(time_steps) * 6 * int(charts) * int(fusion_height) * int(fusion_width) * branch_channels
 

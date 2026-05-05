@@ -16,7 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 import acousticTrackingModels as at_models
 
 from ifan_edge.eval import run_engineering_check
-from ifan_edge.models import IFANModel, IFANModelConfig
+from ifan_edge.models import IFANModel, IFANModelConfig, PAPER_IFAN_BRANCH_CHANNELS
 
 
 BASELINE_PARAM_TARGET = 290_017
@@ -76,6 +76,15 @@ def paper_style_temporal_conv_mac(positions: int, cin: int, cout: int, kernel_si
     return int(positions) * int(cin) * int(cout) * int(kernel_size)
 
 
+def paper_style_depthwise_separable_temporal_conv_mac(
+    positions: int,
+    cin: int,
+    cout: int,
+    kernel_size: int = 5,
+) -> int:
+    return int(positions) * (int(cin) * int(kernel_size) + int(cin) * int(cout))
+
+
 def paper_style_totals(breakdown: dict[str, int], reference: int) -> dict[str, object]:
     mac_total = sum(breakdown.values())
     flops_total = mac_total * PAPER_STYLE_FLOPS_PER_MAC
@@ -120,6 +129,12 @@ def ifan_paper_style_summary(config: IFANModelConfig) -> dict[str, object]:
     pooled_width = max(width // 2, 1) if config.r > 1 else width
     channels = config.branch_channels
 
+    temporal_fn = (
+        paper_style_depthwise_separable_temporal_conv_mac
+        if config.temporal_conv_variant == "depthwise_separable_1d"
+        else paper_style_temporal_conv_mac
+    )
+
     breakdown = {
         "phat_stem": paper_style_convico_mac(charts=charts, height=height, width=width, cin=config.phat_in_channels, cout=channels, rin=1),
         "lms_stem": paper_style_convico_mac(charts=charts, height=height, width=width, cin=config.aux_in_channels, cout=channels, rin=1),
@@ -128,9 +143,9 @@ def ifan_paper_style_summary(config: IFANModelConfig) -> dict[str, object]:
         "shared_attention_conv1": paper_style_convico_mac(charts=charts, height=height, width=width, cin=channels, cout=channels, rin=6),
         "shared_attention_conv2": paper_style_convico_mac(charts=charts, height=height, width=width, cin=channels, cout=channels, rin=6),
         "fusion_blocks_conv": 4 * paper_style_convico_mac(charts=charts, height=pooled_height, width=pooled_width, cin=channels, cout=channels, rin=6),
-        "fusion_blocks_temporal": 4 * paper_style_temporal_conv_mac(positions=6 * charts * pooled_height * pooled_width, cin=channels, cout=channels),
+        "fusion_blocks_temporal": 4 * temporal_fn(positions=6 * charts * pooled_height * pooled_width, cin=channels, cout=channels),
         "final_head_conv": paper_style_convico_mac(charts=charts, height=pooled_height, width=pooled_width, cin=channels, cout=channels, rin=6),
-        "final_head_temporal": paper_style_temporal_conv_mac(positions=6 * charts * pooled_height * pooled_width, cin=channels, cout=channels),
+        "final_head_temporal": temporal_fn(positions=6 * charts * pooled_height * pooled_width, cin=channels, cout=channels),
         "channel_readout": 6 * charts * pooled_height * pooled_width * channels,
     }
 
@@ -183,6 +198,7 @@ def ifan_summary(config: IFANModelConfig) -> dict[str, object]:
             "branch_channels": config.branch_channels,
             "final_head_pooling": config.final_head_pooling,
             "smooth_vertices": config.smooth_vertices,
+            "temporal_conv_variant": config.temporal_conv_variant,
         },
         "engineering_input_shape": list(ENGINEERING_INPUT_SHAPE),
         "trainable_params": trainable,
@@ -254,6 +270,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Profile stage-2 IFAN and root-level icoCNN parameter baselines.")
     parser.add_argument("--model", choices=("all", "baseline", "ifan"), default="all")
     parser.add_argument("--r", type=int, default=2)
+    parser.add_argument("--branch-channels", type=int, default=PAPER_IFAN_BRANCH_CHANNELS)
+    parser.add_argument("--temporal-conv-variant", choices=("standard_1d", "depthwise_separable_1d"), default="standard_1d")
     parser.add_argument("--librispeech-path", default="datasets/LibriSpeech")
     parser.add_argument("--signal-length", type=int, default=2)
     parser.add_argument("--k", type=int, default=4096)
@@ -275,7 +293,9 @@ def main() -> None:
             r=args.r,
             phat_in_channels=1,
             aux_in_channels=1,
+            branch_channels=args.branch_channels,
             final_head_pooling=False,
+            temporal_conv_variant=args.temporal_conv_variant,
         )
         reports["ifan"] = ifan_summary(config)
         if not args.skip_engineering_check:

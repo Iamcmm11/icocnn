@@ -68,6 +68,8 @@ def build_ifan_preprocessor_from_config(config, device: torch.device | None = No
         lms_backend=config.lms_backend,
         lms_block_size=config.lms_block_size,
         lms_fft_size=config.lms_fft_size,
+        srp_variant=config.srp_variant,
+        phat_sinc_half_width=config.phat_sinc_half_width,
     )
     if device is not None:
         if device.type == "cuda":
