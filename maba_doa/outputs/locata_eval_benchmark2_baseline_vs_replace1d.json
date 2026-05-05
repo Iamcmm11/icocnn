@@ -1,0 +1,876 @@
+{
+  "kind": "maba_doa_locata_evaluation",
+  "config_path": "/home/cmm/icocnn/maba_doa/configs/local_librispeech.yaml",
+  "subset": "eval",
+  "locata_root": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval",
+  "array": "benchmark2",
+  "tasks": [
+    1,
+    3,
+    5
+  ],
+  "baseline_model": {
+    "variant": "baseline",
+    "summary_path": "/home/cmm/icocnn/maba_doa/outputs/maba_doa_r2_baseline_20260406_220454/summary.json",
+    "checkpoint_path": "/home/cmm/icocnn/maba_doa/outputs/maba_doa_r2_baseline_20260406_220454/model.bin",
+    "param_count": 290017
+  },
+  "maba_model": {
+    "variant": "replace_1d_with_maba",
+    "summary_path": "/home/cmm/icocnn/maba_doa/outputs/maba_doa_r2_replace_1d_with_maba_25ep_20260419_175206/summary.json",
+    "checkpoint_path": "/home/cmm/icocnn/maba_doa/outputs/maba_doa_r2_replace_1d_with_maba_25ep_20260419_175206/model.bin",
+    "param_count": 282529
+  },
+  "recordings": [
+    {
+      "task": 1,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording1/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 9.057378768920898,
+        "without_silences_rmsae_deg": 8.566924095153809
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 6.659326076507568,
+        "without_silences_rmsae_deg": 6.265175819396973
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -2.39805269241333,
+        "without_silences_rmsae_deg": -2.301748275756836
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording10",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording10/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 6.649089813232422,
+        "without_silences_rmsae_deg": 6.412806034088135
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 7.1082868576049805,
+        "without_silences_rmsae_deg": 7.203317642211914
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 0.4591970443725586,
+        "without_silences_rmsae_deg": 0.7905116081237793
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording11",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording11/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 2.8531715869903564,
+        "without_silences_rmsae_deg": 3.291707992553711
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 1.4011094570159912,
+        "without_silences_rmsae_deg": 1.0472917556762695
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -1.4520621299743652,
+        "without_silences_rmsae_deg": -2.2444162368774414
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording12",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording12/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 5.491569519042969,
+        "without_silences_rmsae_deg": 5.441061496734619
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 5.261972904205322,
+        "without_silences_rmsae_deg": 5.085991859436035
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.22959661483764648,
+        "without_silences_rmsae_deg": -0.355069637298584
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording13",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording13/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 5.535945415496826,
+        "without_silences_rmsae_deg": 4.50407075881958
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 4.092127323150635,
+        "without_silences_rmsae_deg": 4.545546531677246
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -1.4438180923461914,
+        "without_silences_rmsae_deg": 0.041475772857666016
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording2/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 2.8580243587493896,
+        "without_silences_rmsae_deg": 2.8647267818450928
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 2.766218662261963,
+        "without_silences_rmsae_deg": 2.7875962257385254
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.09180569648742676,
+        "without_silences_rmsae_deg": -0.07713055610656738
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording3/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 9.88196086883545,
+        "without_silences_rmsae_deg": 9.88135814666748
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 11.5691499710083,
+        "without_silences_rmsae_deg": 11.548196792602539
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 1.6871891021728516,
+        "without_silences_rmsae_deg": 1.6668386459350586
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording4/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 7.104156017303467,
+        "without_silences_rmsae_deg": 7.174039363861084
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 4.825006008148193,
+        "without_silences_rmsae_deg": 5.080765724182129
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -2.2791500091552734,
+        "without_silences_rmsae_deg": -2.093273639678955
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording5/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 5.109428405761719,
+        "without_silences_rmsae_deg": 5.174770832061768
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 5.084814548492432,
+        "without_silences_rmsae_deg": 4.950482368469238
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.02461385726928711,
+        "without_silences_rmsae_deg": -0.2242884635925293
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording6",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording6/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 5.597005367279053,
+        "without_silences_rmsae_deg": 4.499785423278809
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 5.901296615600586,
+        "without_silences_rmsae_deg": 6.971477508544922
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 0.3042912483215332,
+        "without_silences_rmsae_deg": 2.4716920852661133
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording7",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording7/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 3.4908204078674316,
+        "without_silences_rmsae_deg": 3.88010835647583
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 2.340540885925293,
+        "without_silences_rmsae_deg": 2.4250996112823486
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -1.1502795219421387,
+        "without_silences_rmsae_deg": -1.4550087451934814
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording8",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording8/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 6.889074325561523,
+        "without_silences_rmsae_deg": 6.3553786277771
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 4.895561695098877,
+        "without_silences_rmsae_deg": 4.79832649230957
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -1.9935126304626465,
+        "without_silences_rmsae_deg": -1.5570521354675293
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording9",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording9/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 10.862133026123047,
+        "without_silences_rmsae_deg": 10.48985767364502
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 6.167457103729248,
+        "without_silences_rmsae_deg": 6.220691680908203
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -4.694675922393799,
+        "without_silences_rmsae_deg": -4.269165992736816
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording1/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 10.357377052307129,
+        "without_silences_rmsae_deg": 7.581732749938965
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 7.821434497833252,
+        "without_silences_rmsae_deg": 5.749425411224365
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -2.535942554473877,
+        "without_silences_rmsae_deg": -1.8323073387145996
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording2/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 16.032163619995117,
+        "without_silences_rmsae_deg": 8.825567245483398
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 16.702905654907227,
+        "without_silences_rmsae_deg": 10.075264930725098
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 0.6707420349121094,
+        "without_silences_rmsae_deg": 1.2496976852416992
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording3/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 13.618359565734863,
+        "without_silences_rmsae_deg": 7.015718936920166
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 15.59177303314209,
+        "without_silences_rmsae_deg": 6.915746688842773
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 1.9734134674072266,
+        "without_silences_rmsae_deg": -0.09997224807739258
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording4/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 6.620870113372803,
+        "without_silences_rmsae_deg": 6.347443580627441
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 6.856794357299805,
+        "without_silences_rmsae_deg": 6.234626770019531
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": 0.23592424392700195,
+        "without_silences_rmsae_deg": -0.11281681060791016
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording5/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 7.112793445587158,
+        "without_silences_rmsae_deg": 7.178293704986572
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 7.00927734375,
+        "without_silences_rmsae_deg": 7.2550225257873535
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.1035161018371582,
+        "without_silences_rmsae_deg": 0.07672882080078125
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording1/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 20.215579986572266,
+        "without_silences_rmsae_deg": 18.08501625061035
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 15.993106842041016,
+        "without_silences_rmsae_deg": 11.107686042785645
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -4.22247314453125,
+        "without_silences_rmsae_deg": -6.977330207824707
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording2/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 10.742284774780273,
+        "without_silences_rmsae_deg": 8.9436616897583
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 9.422892570495605,
+        "without_silences_rmsae_deg": 8.03593635559082
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -1.319392204284668,
+        "without_silences_rmsae_deg": -0.9077253341674805
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording3/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 13.072758674621582,
+        "without_silences_rmsae_deg": 8.281134605407715
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 12.338689804077148,
+        "without_silences_rmsae_deg": 7.527961730957031
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.7340688705444336,
+        "without_silences_rmsae_deg": -0.7531728744506836
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording4/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 9.586647987365723,
+        "without_silences_rmsae_deg": 7.400238990783691
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 9.32597827911377,
+        "without_silences_rmsae_deg": 7.846174240112305
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.2606697082519531,
+        "without_silences_rmsae_deg": 0.4459352493286133
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording5/benchmark2",
+      "baseline": {
+        "with_silences_rmsae_deg": 8.412166595458984,
+        "without_silences_rmsae_deg": 7.348791599273682
+      },
+      "maba": {
+        "with_silences_rmsae_deg": 8.101537704467773,
+        "without_silences_rmsae_deg": 7.198975563049316
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": -0.31062889099121094,
+        "without_silences_rmsae_deg": -0.14981603622436523
+      }
+    }
+  ],
+  "task_summary": {
+    "task1": {
+      "count": 13,
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 6.259981375474196,
+          "median": 5.597005367279053,
+          "std": 2.435469828373413,
+          "min": 2.8531715869903564,
+          "max": 10.862133026123047
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 6.041276583304772,
+          "median": 5.441061496734619,
+          "std": 2.3305062593001162,
+          "min": 2.8647267818450928,
+          "max": 10.48985767364502
+        }
+      },
+      "maba": {
+        "with_silences_rmsae_deg": {
+          "mean": 5.236374469903799,
+          "median": 5.084814548492432,
+          "std": 2.445671424258928,
+          "min": 1.4011094570159912,
+          "max": 11.5691499710083
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 5.302304616341224,
+          "median": 5.080765724182129,
+          "std": 2.4951528580782543,
+          "min": 1.0472917556762695,
+          "max": 11.548196792602539
+        }
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": -1.0236069055703974,
+          "median": -0.5121908187866211,
+          "std": 0.010201595885515058,
+          "min": -1.4520621299743652,
+          "max": 0.7070169448852539
+        },
+        "without_silences_rmsae_deg": {
+          "mean": -0.7389719669635486,
+          "median": -0.36029577255249023,
+          "std": 0.16464659877813803,
+          "min": -1.8174350261688232,
+          "max": 1.0583391189575195
+        }
+      }
+    },
+    "task3": {
+      "count": 5,
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 10.748312759399415,
+          "median": 10.357377052307129,
+          "std": 3.6486124154805784,
+          "min": 6.620870113372803,
+          "max": 16.032163619995117
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 7.389751243591308,
+          "median": 7.178293704986572,
+          "std": 0.8209073286807237,
+          "min": 6.347443580627441,
+          "max": 8.825567245483398
+        }
+      },
+      "maba": {
+        "with_silences_rmsae_deg": {
+          "mean": 10.796436977386474,
+          "median": 7.821434497833252,
+          "std": 4.395352589819394,
+          "min": 6.856794357299805,
+          "max": 16.702905654907227
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 7.246017265319824,
+          "median": 6.915746688842773,
+          "std": 1.5084097594707093,
+          "min": 5.749425411224365,
+          "max": 10.075264930725098
+        }
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 0.048124217987059126,
+          "median": -2.535942554473877,
+          "std": 0.7467401743388158,
+          "min": 0.23592424392700195,
+          "max": 0.6707420349121094
+        },
+        "without_silences_rmsae_deg": {
+          "mean": -0.14373397827148438,
+          "median": -0.26254701614379883,
+          "std": 0.6875024307899856,
+          "min": -0.5980181694030762,
+          "max": 1.2496976852416992
+        }
+      }
+    },
+    "task5": {
+      "count": 5,
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 12.405887603759766,
+          "median": 10.742284774780273,
+          "std": 4.197654250142314,
+          "min": 8.412166595458984,
+          "max": 20.215579986572266
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 10.011768627166749,
+          "median": 8.281134605407715,
+          "std": 4.079823707692304,
+          "min": 7.348791599273682,
+          "max": 18.08501625061035
+        }
+      },
+      "maba": {
+        "with_silences_rmsae_deg": {
+          "mean": 11.036441040039062,
+          "median": 9.422892570495605,
+          "std": 2.8427897152410013,
+          "min": 8.101537704467773,
+          "max": 15.993106842041016
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 8.343346786499023,
+          "median": 7.846174240112305,
+          "std": 1.4112187302909558,
+          "min": 7.198975563049316,
+          "max": 11.107686042785645
+        }
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": -1.3694465637207038,
+          "median": -1.319392204284668,
+          "std": -1.3548645349013126,
+          "min": -0.31062889099121094,
+          "max": -4.22247314453125
+        },
+        "without_silences_rmsae_deg": {
+          "mean": -1.668421840667726,
+          "median": -0.43496036529541016,
+          "std": -2.6686049774013485,
+          "min": -0.14981603622436523,
+          "max": -6.977330207824707
+        }
+      }
+    }
+  },
+  "overall_summary": {
+    "count": 23,
+    "baseline": {
+      "with_silences_rmsae_deg": {
+        "mean": 8.57177216073741,
+        "median": 7.112793445587158,
+        "std": 4.1621419486041775,
+        "min": 2.8531715869903564,
+        "max": 20.215579986572266
+      },
+      "without_silences_rmsae_deg": {
+        "mean": 7.1975736929022744,
+        "median": 7.174039363861084,
+        "std": 3.052903464271491,
+        "min": 2.8647267818450928,
+        "max": 18.08501625061035
+      }
+    },
+    "maba": {
+      "with_silences_rmsae_deg": {
+        "mean": 7.705967747646829,
+        "median": 6.856794357299805,
+        "std": 4.155984404780555,
+        "min": 1.4011094570159912,
+        "max": 16.702905654907227
+      },
+      "without_silences_rmsae_deg": {
+        "mean": 6.3859469683273975,
+        "median": 6.265175819396973,
+        "std": 2.4706165158607676,
+        "min": 1.0472917556762695,
+        "max": 11.548196792602539
+      }
+    },
+    "delta_maba_minus_baseline": {
+      "with_silences_rmsae_deg": {
+        "mean": -0.8658044130905811,
+        "median": -0.2559990882873535,
+        "std": -0.006157543823622547,
+        "min": -1.4520621299743652,
+        "max": -3.512674331665039
+      },
+      "without_silences_rmsae_deg": {
+        "mean": -0.811626724574877,
+        "median": -0.9088635444641113,
+        "std": -0.5822869484107236,
+        "min": -1.8174350261688232,
+        "max": -6.5368194580078125
+      }
+    }
+  },
+  "recording_level_summary": {
+    "task_counts": {
+      "task1": 13,
+      "task3": 5,
+      "task5": 5
+    },
+    "tasks": {
+      "task1": {
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 2.8531715869903564,
+            "mean": 6.259981375474196,
+            "std": 2.435469828373413,
+            "median": 5.597005367279053,
+            "average": 6.259981375474196
+          },
+          "without_silences_rmsae_deg": {
+            "best": 2.8647267818450928,
+            "mean": 6.041276583304772,
+            "std": 2.3305062593001162,
+            "median": 5.441061496734619,
+            "average": 6.041276583304772
+          }
+        },
+        "maba": {
+          "with_silences_rmsae_deg": {
+            "best": 1.4011094570159912,
+            "mean": 5.236374469903799,
+            "std": 2.445671424258928,
+            "median": 5.084814548492432,
+            "average": 5.236374469903799
+          },
+          "without_silences_rmsae_deg": {
+            "best": 1.0472917556762695,
+            "mean": 5.302304616341224,
+            "std": 2.4951528580782543,
+            "median": 5.080765724182129,
+            "average": 5.302304616341224
+          }
+        },
+        "delta_maba_minus_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": -1.4520621299743652,
+            "mean": -1.0236069055703974,
+            "std": 0.010201595885515058,
+            "median": -0.5121908187866211,
+            "average": -1.0236069055703974
+          },
+          "without_silences_rmsae_deg": {
+            "best": -1.8174350261688232,
+            "mean": -0.7389719669635486,
+            "std": 0.16464659877813803,
+            "median": -0.36029577255249023,
+            "average": -0.7389719669635486
+          }
+        }
+      },
+      "task3": {
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 6.620870113372803,
+            "mean": 10.748312759399415,
+            "std": 3.6486124154805784,
+            "median": 10.357377052307129,
+            "average": 10.748312759399415
+          },
+          "without_silences_rmsae_deg": {
+            "best": 6.347443580627441,
+            "mean": 7.389751243591308,
+            "std": 0.8209073286807237,
+            "median": 7.178293704986572,
+            "average": 7.389751243591308
+          }
+        },
+        "maba": {
+          "with_silences_rmsae_deg": {
+            "best": 6.856794357299805,
+            "mean": 10.796436977386474,
+            "std": 4.395352589819394,
+            "median": 7.821434497833252,
+            "average": 10.796436977386474
+          },
+          "without_silences_rmsae_deg": {
+            "best": 5.749425411224365,
+            "mean": 7.246017265319824,
+            "std": 1.5084097594707093,
+            "median": 6.915746688842773,
+            "average": 7.246017265319824
+          }
+        },
+        "delta_maba_minus_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 0.23592424392700195,
+            "mean": 0.048124217987059126,
+            "std": 0.7467401743388158,
+            "median": -2.535942554473877,
+            "average": 0.048124217987059126
+          },
+          "without_silences_rmsae_deg": {
+            "best": -0.5980181694030762,
+            "mean": -0.14373397827148438,
+            "std": 0.6875024307899856,
+            "median": -0.26254701614379883,
+            "average": -0.14373397827148438
+          }
+        }
+      },
+      "task5": {
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 8.412166595458984,
+            "mean": 12.405887603759766,
+            "std": 4.197654250142314,
+            "median": 10.742284774780273,
+            "average": 12.405887603759766
+          },
+          "without_silences_rmsae_deg": {
+            "best": 7.348791599273682,
+            "mean": 10.011768627166749,
+            "std": 4.079823707692304,
+            "median": 8.281134605407715,
+            "average": 10.011768627166749
+          }
+        },
+        "maba": {
+          "with_silences_rmsae_deg": {
+            "best": 8.101537704467773,
+            "mean": 11.036441040039062,
+            "std": 2.8427897152410013,
+            "median": 9.422892570495605,
+            "average": 11.036441040039062
+          },
+          "without_silences_rmsae_deg": {
+            "best": 7.198975563049316,
+            "mean": 8.343346786499023,
+            "std": 1.4112187302909558,
+            "median": 7.846174240112305,
+            "average": 8.343346786499023
+          }
+        },
+        "delta_maba_minus_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": -0.31062889099121094,
+            "mean": -1.3694465637207038,
+            "std": -1.3548645349013126,
+            "median": -1.319392204284668,
+            "average": -1.3694465637207038
+          },
+          "without_silences_rmsae_deg": {
+            "best": -0.14981603622436523,
+            "mean": -1.668421840667726,
+            "std": -2.6686049774013485,
+            "median": -0.43496036529541016,
+            "average": -1.668421840667726
+          }
+        }
+      }
+    },
+    "recordings": {
+      "count": 23,
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "best": 2.8531715869903564,
+          "mean": 8.57177216073741,
+          "std": 4.1621419486041775,
+          "median": 7.112793445587158,
+          "average": 8.57177216073741
+        },
+        "without_silences_rmsae_deg": {
+          "best": 2.8647267818450928,
+          "mean": 7.1975736929022744,
+          "std": 3.052903464271491,
+          "median": 7.174039363861084,
+          "average": 7.1975736929022744
+        }
+      },
+      "maba": {
+        "with_silences_rmsae_deg": {
+          "best": 1.4011094570159912,
+          "mean": 7.705967747646829,
+          "std": 4.155984404780555,
+          "median": 6.856794357299805,
+          "average": 7.705967747646829
+        },
+        "without_silences_rmsae_deg": {
+          "best": 1.0472917556762695,
+          "mean": 6.3859469683273975,
+          "std": 2.4706165158607676,
+          "median": 6.265175819396973,
+          "average": 6.3859469683273975
+        }
+      },
+      "delta_maba_minus_baseline": {
+        "with_silences_rmsae_deg": {
+          "best": -1.4520621299743652,
+          "mean": -0.8658044130905811,
+          "std": -0.006157543823622547,
+          "median": -0.2559990882873535,
+          "average": -0.8658044130905811
+        },
+        "without_silences_rmsae_deg": {
+          "best": -1.8174350261688232,
+          "mean": -0.811626724574877,
+          "std": -0.5822869484107236,
+          "median": -0.9088635444641113,
+          "average": -0.811626724574877
+        }
+      }
+    }
+  },
+  "comparison": {
+    "better_model": {
+      "with_silences": "maba",
+      "without_silences": "maba"
+    },
+    "task_winners": {
+      "task1": {
+        "with_silences": "maba",
+        "without_silences": "maba"
+      },
+      "task3": {
+        "with_silences": "baseline",
+        "without_silences": "maba"
+      },
+      "task5": {
+        "with_silences": "maba",
+        "without_silences": "maba"
+      }
+    }
+  }
+}
