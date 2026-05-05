@@ -1,0 +1,616 @@
+
+import torch
+import numpy as np
+import os
+import sys
+import struct
+import acousticTrackingModels as at_models
+import acousticTrackingLearners as at_learners
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# 配置部分
+# Bind all runtime paths to the repo root so Linux server runs are deterministic.
+MODEL_PATH = os.path.join(ROOT, 'models', '1sourceTracking_icoCNN_robot_K4096_r2_model.bin')
+R_LEVEL = 2            # 模型的分辨率 r
+CHANNELS = 32          # 模型通道数 C
+SAVE_DIR = os.path.join(ROOT, 'debug_outputs') # 输出数据的保存目录
+HLS_DATA_DIR = os.path.join(ROOT, 'hls_testdata', 'layer0')  # HLS 验证数据目录
+
+# C 前端输入数据配置
+C_AUDIO_BIN = os.path.join(ROOT, 'audio_data.bin')  # C 前端生成的音频数据
+USE_C_AUDIO = True  # 是否使用 C 前端的 audio_data.bin 作为输入（True=统一输入源）
+
+# 前端处理参数（与 C 前端保持一致）
+SAMPLE_RATE = 24000
+NUM_CHANNELS = 12
+FRAME_LENGTH = 4096
+FFT_SIZE = 4096
+
+# 确保保存目录存在
+os.makedirs(SAVE_DIR, exist_ok=True)
+os.makedirs(HLS_DATA_DIR, exist_ok=True)
+
+
+def load_compatible_state_dict(model, state_dict):
+    incompatible = model.load_state_dict(state_dict, strict=False)
+    non_buffer_missing = [k for k in incompatible.missing_keys if not k.endswith('.mask')]
+    if non_buffer_missing or incompatible.unexpected_keys:
+        raise RuntimeError(
+            "Checkpoint is incompatible with current model.\n"
+            f"Unexpected keys: {list(incompatible.unexpected_keys)}\n"
+            f"Missing non-buffer keys: {non_buffer_missing}"
+        )
+    if incompatible.missing_keys:
+        print(f"Ignoring {len(incompatible.missing_keys)} missing mask buffers from legacy checkpoint.")
+
+def load_audio_data_from_c_bin(filename):
+    """
+    从 C 前端生成的 audio_data.bin 加载音频数据
+    
+    文件格式:
+        Header (16 bytes):
+            - magic: "AUD\0" (4 bytes)
+            - num_channels: int32 (4 bytes)
+            - num_samples: int32 (4 bytes)
+            - sample_rate: int32 (4 bytes)
+        Data:
+            - float32[num_channels][num_samples] (按通道顺序存储)
+    
+    返回:
+        audio_data: numpy array [num_channels, num_samples]
+        num_channels: int
+        num_samples: int
+        sample_rate: int
+    """
+    print(f"\n[C Frontend Input] Loading audio data from: {filename}")
+    
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"Cannot find C audio bin file: {filename}")
+    
+    with open(filename, 'rb') as f:
+        # 读取 Header
+        magic = f.read(4).decode('ascii').rstrip('\x00')
+        num_channels = struct.unpack('i', f.read(4))[0]
+        num_samples = struct.unpack('i', f.read(4))[0]
+        sample_rate = struct.unpack('i', f.read(4))[0]
+        
+        print(f"  Magic: {magic}, Channels: {num_channels}, Samples: {num_samples}, SampleRate: {sample_rate}")
+        
+        # 读取音频数据 [num_channels, num_samples]
+        audio_data = np.zeros((num_channels, num_samples), dtype=np.float32)
+        for ch in range(num_channels):
+            audio_data[ch] = np.frombuffer(f.read(num_samples * 4), dtype=np.float32)
+    
+    print(f"  Loaded audio shape: {audio_data.shape}")
+    return audio_data, num_channels, num_samples, sample_rate
+
+def prepare_mic_sig_batch_from_audio(audio_data, frame_length=4096, hop_length=2048):
+    """
+    将原始音频波形分帧，准备成 Preprocessor 期望的 mic_sig_batch 格式
+    
+    参数:
+        audio_data: [num_channels, num_samples] numpy array
+        frame_length: 帧长度
+        hop_length: 帧移
+    
+    返回:
+        mic_sig_batch: [num_frames, num_channels, frame_length] numpy array
+    """
+    print(f"\n[Audio Framing] Preparing mic_sig_batch...")
+    
+    num_channels, num_samples = audio_data.shape
+    num_frames = (num_samples - frame_length) // hop_length + 1
+    
+    print(f"  Frame length: {frame_length}, Hop: {hop_length}")
+    print(f"  Total frames: {num_frames}")
+    
+    # 分帧: [num_frames, num_channels, frame_length]
+    mic_sig_batch = np.zeros((num_frames, num_channels, frame_length), dtype=np.float32)
+    
+    for i in range(num_frames):
+        start = i * hop_length
+        end = start + frame_length
+        
+        if end > num_samples:
+            break
+        
+        mic_sig_batch[i] = audio_data[:, start:end]
+    
+    print(f"  mic_sig_batch shape: {mic_sig_batch.shape}")
+    return mic_sig_batch
+
+def extract_layer0_data(model):
+    """
+    提取 Layer0 (第一个 IcoConv 层) 的权重、偏置、kernel_expansion_idx、reorder_idx
+    保存为 HLS C++ testbench 可以读取的格式
+    """
+    print("\nExtracting Layer0 parameters...")
+    
+    # 获取第一个 IcoConv 层
+    from icoCNN.icoCNN import ConvIco
+    
+    layer0 = None
+    for module in model.modules():
+        if isinstance(module, ConvIco):
+            layer0 = module
+            break
+    
+    if layer0 is None:
+        print("Error: Could not find ConvIco layer in the model!")
+        return
+    
+    print(f"  Found Layer0: {layer0.__class__.__name__}")
+    
+    # 1. 提取权重 [out_channels, in_channels, Rin, num_neighbors]
+    # ConvIco 的权重是 [Cout, Cin, Rin, 7]
+    weight = layer0.weight.detach().cpu().numpy()
+    print(f"  Weight shape: {weight.shape}")
+    
+    Cout, Cin, Rin, num_neighbors = weight.shape
+    print(f"  Cout={Cout}, Cin={Cin}, Rin={Rin}, num_neighbors={num_neighbors}")
+    
+    # 2. 提取偏置 [out_channels]
+    if layer0.bias is not None:
+        bias = layer0.bias.detach().cpu().numpy()
+    else:
+        bias = np.zeros(Cout)
+    print(f"  Bias shape: {bias.shape}")
+    
+    # 3. 提取 kernel_expansion_idx [Cout, Rout, Cin, Rin, 9, 4]
+    kernel_expansion_idx = layer0.kernel_expansion_idx.cpu().numpy()
+    print(f"  Kernel expansion idx shape: {kernel_expansion_idx.shape}")
+    
+    # 4. 提取 reorder_idx [Rin, 5, H+2, W+2]
+    reorder_idx = layer0.padding.reorder_idx.cpu().numpy()
+    print(f"  Reorder idx shape: {reorder_idx.shape}")
+    
+    # 获取网格结构信息
+    H = 2**layer0.r
+    W = 2**(layer0.r + 1)
+    num_charts = 5
+    Rout = layer0.Rout
+    
+    print(f"\n  Grid structure: {num_charts} charts x {H}x{W}")
+    print(f"  Input rotations (Rin): {Rin}")
+    print(f"  Output rotations (Rout): {Rout}")
+    
+    # 5. 保存为 HLS 可读格式
+    
+    # 保存权重 [Cout, Cin, Rin, 7]
+    weight_flat = weight.flatten()
+    with open(os.path.join(HLS_DATA_DIR, 'weight.txt'), 'w') as f:
+        f.write(f"# Shape: {weight.shape}\n")
+        for val in weight_flat:
+            f.write(f"{val:.8f}\n")
+    print(f"  ✓ Saved weight.txt: {len(weight_flat)} values")
+    
+    # 保存偏置
+    with open(os.path.join(HLS_DATA_DIR, 'bias.txt'), 'w') as f:
+        f.write(f"# Shape: {bias.shape}\n")
+        for val in bias:
+            f.write(f"{val:.8f}\n")
+    print(f"  ✓ Saved bias.txt: {len(bias)} values")
+    
+    # 保存 kernel_expansion_idx (整数)
+    kernel_exp_flat = kernel_expansion_idx.flatten()
+    with open(os.path.join(HLS_DATA_DIR, 'kernel_expansion_idx.txt'), 'w') as f:
+        f.write(f"# Shape: {kernel_expansion_idx.shape}\n")
+        for val in kernel_exp_flat:
+            f.write(f"{int(val)}\n")
+    print(f"  ✓ Saved kernel_expansion_idx.txt: {len(kernel_exp_flat)} indices")
+    
+    # 保存 reorder_idx (整数)
+    reorder_flat = reorder_idx.flatten()
+    with open(os.path.join(HLS_DATA_DIR, 'reorder_idx.txt'), 'w') as f:
+        f.write(f"# Shape: {reorder_idx.shape}\n")
+        for val in reorder_flat:
+            f.write(f"{int(val)}\n")
+    print(f"  ✓ Saved reorder_idx.txt: {len(reorder_flat)} indices")
+    
+    # 同时保存 .npy 格式
+    np.save(os.path.join(HLS_DATA_DIR, 'weight.npy'), weight)
+    np.save(os.path.join(HLS_DATA_DIR, 'bias.npy'), bias)
+    np.save(os.path.join(HLS_DATA_DIR, 'kernel_expansion_idx.npy'), kernel_expansion_idx)
+    np.save(os.path.join(HLS_DATA_DIR, 'reorder_idx.npy'), reorder_idx)
+    
+    print(f"\n✓ Layer0 parameters saved to '{HLS_DATA_DIR}/'")
+    print("  You can now compile and run the HLS C++ verification!")
+    
+    # 添加配置信息
+    print(f"\n  Configuration for HLS:")
+    print(f"    Input channels (Cin): {Cin}")
+    print(f"    Input rotations (Rin): {Rin}")
+    print(f"    Output channels (Cout): {Cout}")
+    print(f"    Output rotations (Rout): {Rout}")
+    print(f"    Kernel neighbors: {num_neighbors}")
+    print(f"    Grid: {num_charts} charts x {H}x{W}")
+
+def generate_ico_neighbors(r):
+    """
+    生成 icosahedral grid 的邻居索引表
+    基于 icoCNN 中 PoolIco 的邻居定义
+    
+    对于卷积操作,每个顶点有 7 个邻居 (包括自己)
+    这对应 3x3 卷积核在 icosahedral grid 上的映射
+    
+    返回: [num_vertices, 7] 的索引数组
+    """
+    import torch
+    
+    H = 2**r  # 高度
+    W = 2**(r+1)  # 宽度
+    num_charts = 5  # icosahedral grid 有 5 个 chart
+    
+    # 从 icoCNN PoolIco 的邻居定义提取
+    # 对于每个位置 (h, w),7个邻居的相对位置为:
+    # 中心: (h, w)
+    # 6个邻居: 按照 icosahedral 网格的六边形拓扑
+    
+    # 生成每个 chart 上每个顶点的邻居
+    # 总顶点数: 5 * H * W,但有些顶点是重复的 (在边界上)
+    # 实际独立顶点数: 10*r^2 + 2
+    
+    # 先生成 padding 后的邻居索引 (padded grid)
+    # 然后映射回原始 grid
+    
+    # 这里我们使用和 PoolIco 相同的邻居模式
+    neighbors_2d = torch.zeros((H, W, 7, 2), dtype=torch.long)
+    
+    for h in range(H):
+        for w in range(W):
+            # icosahedral 六边形网格的 7 个邻居 (包括中心)
+            # 按照 PoolIco 中的定义
+            neighbors_2d[h, w, ...] = torch.tensor([
+                [h,   w  ],  # 中心
+                [h+1, w  ],  # 下
+                [h+1, w+1],  # 右下
+                [h,   w+1],  # 右
+                [h-1, w  ],  # 上
+                [h-1, w-1],  # 左上
+                [h,   w-1],  # 左
+            ])
+    
+    # 将 2D 邻居索引转换为 1D 索引
+    # 对于单个 chart: index = h * W + w
+    num_vertices_per_chart = H * W
+    
+    # 生成所有 chart 的邻居关系
+    all_neighbors = []
+    
+    for chart_idx in range(num_charts):
+        for h in range(H):
+            for w in range(W):
+                vertex_neighbors = []
+                
+                for n in range(7):
+                    nh, nw = neighbors_2d[h, w, n].tolist()
+                    
+                    # 处理边界情况 (循环边界)
+                    nh = nh % H
+                    nw = nw % W
+                    
+                    # 转换为 1D 索引 (在当前 chart 内)
+                    neighbor_1d = nh * W + nw
+                    
+                    # 加上 chart 偏移
+                    neighbor_global = chart_idx * num_vertices_per_chart + neighbor_1d
+                    vertex_neighbors.append(neighbor_global)
+                
+                all_neighbors.append(vertex_neighbors)
+    
+    # 转换为 numpy 数组
+    neighbors = np.array(all_neighbors, dtype=np.int32)
+    
+    # 注意: 这里生成的是 5*H*W = 5*4*8 = 160 个顶点
+    # 但实际上 icosahedral grid 只有 42 个独立顶点
+    # 这是因为边界上的顶点在不同 chart 之间是共享的
+    
+    # 但对于卷积计算,我们可以使用这个扩展的表示
+    # 只要输入数据也是按照 [charts, H, W] 排列的
+    
+    print(f"  Generated neighbors: {neighbors.shape} (expanded representation)")
+    print(f"  This represents {num_charts} charts x {H}x{W} = {num_charts * H * W} positions")
+    
+    return neighbors
+
+def move_layer0_io_data():
+    """
+    将 Layer0 的输入和输出数据从 debug_outputs 移动到 hls_testdata/layer0/
+    并修改为 HLS 所需的格式
+    """
+    print("\nMoving Layer0 input/output to HLS data directory...")
+    
+    import shutil
+    
+    # Layer0 的输入是整个网络的输入经过预处理后的
+    # 但 IcoTempCNN 的第一层是 icosahedral 投影，我们需要投影后的结果
+    # 这个是 Layer0_IcoConv_input.txt
+    
+    src_input = os.path.join(SAVE_DIR, 'Layer0_IcoConv_input.txt')
+    src_output = os.path.join(SAVE_DIR, 'Layer0_IcoConv_output.txt')
+    
+    dst_input = os.path.join(HLS_DATA_DIR, 'input_rearranged.txt')
+    dst_output = os.path.join(HLS_DATA_DIR, 'output_layer0.txt')
+    
+    # 检查文件是否存在
+    if os.path.exists(src_input):
+        shutil.copy(src_input, dst_input)
+        print(f"  ✓ Copied input: {src_input} -> {dst_input}")
+    else:
+        print(f"  ✗ Warning: {src_input} not found!")
+    
+    if os.path.exists(src_output):
+        shutil.copy(src_output, dst_output)
+        print(f"  ✓ Copied output: {src_output} -> {dst_output}")
+    else:
+        print(f"  ✗ Warning: {src_output} not found!")
+    
+    # 也复制 .npy 文件
+    src_input_npy = os.path.join(SAVE_DIR, 'Layer0_IcoConv_input.npy')
+    src_output_npy = os.path.join(SAVE_DIR, 'Layer0_IcoConv_output.npy')
+    
+    if os.path.exists(src_input_npy):
+        shutil.copy(src_input_npy, os.path.join(HLS_DATA_DIR, 'input_rearranged.npy'))
+    if os.path.exists(src_output_npy):
+        shutil.copy(src_output_npy, os.path.join(HLS_DATA_DIR, 'output_layer0.npy'))
+    
+    print(f"\n✓ All Layer0 data ready in '{HLS_DATA_DIR}/'")
+    print("\n=" * 60)
+    print("HLS Verification Files Summary:")
+    print("=" * 60)
+    file_list = ['input_rearranged.txt', 'weight.txt', 'bias.txt', 
+                 'kernel_expansion_idx.txt', 'reorder_idx.txt', 'output_layer0.txt']
+    for fname in file_list:
+        fpath = os.path.join(HLS_DATA_DIR, fname)
+        if os.path.exists(fpath):
+            size = os.path.getsize(fpath) / 1024
+            # 计算行数
+            with open(fpath, 'r') as f:
+                lines = len(f.readlines())
+            print(f"  ✓ {fname:30s} - {size:8.2f} KB - {lines:6d} lines")
+        else:
+            print(f"  ✗ {fname:30s} - MISSING!")
+    print("=" * 60)
+
+def save_debug_tensor(name, tensor, save_full=False, save_dir=SAVE_DIR):
+    """保存 Tensor 到文本文件和 .npy 文件，方便 HLS 对比"""
+    # 转为 numpy
+    if isinstance(tensor, torch.Tensor):
+        if tensor.is_cuda:
+            data = tensor.detach().cpu().numpy()
+        else:
+            data = tensor.detach().numpy()
+    else:
+        data = tensor  # 已经是 numpy 数组
+    
+    # 特殊处理: 目前仅对 Layer0 的输入做 reshape，输出保持原始布局，方便与 C++ 对齐
+    # 对输入: 原始形状 [B, T, C, R, Charts, H, W] -> HLS: [B, C, R, T, V]
+    original_shape = data.shape
+    if 'Layer0_IcoConv_input' in name and save_full:
+        if len(data.shape) == 7:  # [B, T, C, R, Charts, H, W]
+            B, T, C, R, Charts, H, W = data.shape
+            V = Charts * H * W
+            data_reshaped = data.transpose(0, 2, 3, 1, 4, 5, 6)  # [B, C, R, T, Charts, H, W]
+            data_reshaped = data_reshaped.reshape(B, C, R, T, V)  # [B, C, R, T, V]
+            print(f"  Reshaped {name}: {original_shape} -> {data_reshaped.shape}")
+            data = data_reshaped
+
+    # 对 Layer0_IcoConv_output 不再 reshape，保持原始 [B, T, C, R, Charts, H, W]
+    
+    # 1. 保存 .npy (用于 Python 加载对比)
+    np.save(os.path.join(save_dir, f"{name}.npy"), data)
+    
+    # 2. 保存部分数据到 .txt (用于人工查看)
+    flat_data = data.flatten()
+    with open(os.path.join(save_dir, f"{name}_sample.txt"), 'w') as f:
+        f.write(f"# Original shape: {original_shape}\n")
+        if data.shape != original_shape:
+            f.write(f"# Reshaped to: {data.shape}\n")
+        f.write(f"# Mean: {np.mean(data):.6f}, Max: {np.max(data):.6f}, Min: {np.min(data):.6f}\n")
+        f.write("First 100 values:\n")
+        for i, val in enumerate(flat_data[:100]):
+            f.write(f"{val:.6f}\n")
+    
+    # 3. 如果需要保存完整数据 (用于 HLS C++ testbench)
+    if save_full:
+        with open(os.path.join(save_dir, f"{name}.txt"), 'w') as f:
+            f.write(f"# Original shape: {original_shape}\n")
+            if data.shape != original_shape:
+                f.write(f"# Reshaped to: {data.shape} for HLS\n")
+            for val in flat_data:
+                f.write(f"{val:.8f}\n")
+        print(f"[-] Saved FULL data: {name} | Original: {original_shape} | Reshaped: {data.shape} | {len(flat_data)} values")
+    else:
+        print(f"[-] Saved sample: {name} | Shape: {data.shape}")
+
+def get_activation_hook(name, save_input=False, save_full=False):
+    """创建 Hook 函数"""
+    def hook(model, input, output):
+        # input 是一个 tuple，取第一个元素
+        # output 是输出 tensor
+        print(f"[+] Layer Forward: {name}")
+        
+        # 保存输入 (如果需要)
+        if save_input and len(input) > 0:
+            save_debug_tensor(f"{name}_input", input[0], save_full=save_full)
+        
+        # 保存输出
+        save_debug_tensor(f"{name}_output", output, save_full=save_full)
+    return hook
+
+def register_hooks(model):
+    """为模型的关键层注册 Hooks"""
+    print("\n--- Registering Hooks ---")
+    
+    # 1. 注册 IcoCNN 层的 Hook
+    # Layer0 需要保存完整的输入和输出
+    for i, layer in enumerate(model.ico_cnn):
+        layer_name = f"Layer{i}_IcoConv"
+        # Layer0 保存完整数据
+        save_full = (i == 0)
+        save_input = (i == 0)
+        layer.register_forward_hook(get_activation_hook(layer_name, save_input=save_input, save_full=save_full))
+        print(f"Registered hook for: {layer_name} (save_full={save_full})")
+
+    # 2. 注册 Temporal CNN 层的 Hook
+    for i, layer in enumerate(model.temp_cnn):
+        layer_name = f"Layer{i}_TempConv"
+        layer.register_forward_hook(get_activation_hook(layer_name))
+        print(f"Registered hook for: {layer_name}")
+
+    # 3. 注册 LayerNorm 层的 Hook
+    for i, layer in enumerate(model.layer_norm):
+        layer_name = f"Layer{i}_LayerNorm"
+        layer.register_forward_hook(get_activation_hook(layer_name))
+        print(f"Registered hook for: {layer_name}")
+
+    # 4. 注册 Pooling 层的 Hook
+    for i, layer in enumerate(model.poolings):
+        layer_name = f"Layer{i*2+1}_Pooling" # Pooling 通常发生在奇数层后
+        layer.register_forward_hook(get_activation_hook(layer_name))
+        print(f"Registered hook for: {layer_name}")
+    
+    # 5. 最后的 SoftArgMax
+    model.sam.register_forward_hook(get_activation_hook("Final_SoftArgMax"))
+    print("--- Hooks Registered ---\n")
+
+def main():
+    # 0. 固定随机种子，确保每次运行输入一致，方便 HLS 对账
+    torch.manual_seed(42)
+    np.random.seed(42)
+    print("Random Seed set to 42 for reproducibility.")
+
+    # 1. 初始化模型
+    print("Initializing Model...")
+    # 注意：如果您的模型训练时用了 smooth_vertices=True/False，这里要一致
+    net = at_models.IcoTempCNN(r=R_LEVEL, C=CHANNELS, smooth_vertices=True)
+
+    # 对 HLS golden data 生成而言，必须明确加载训练权重，不能静默退回随机初始化。
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Weights file not found: {MODEL_PATH}")
+
+    print(f"Loading weights from {MODEL_PATH}...")
+    state_dict = torch.load(MODEL_PATH, map_location='cpu')
+    load_compatible_state_dict(net, state_dict)
+    print("Weights loaded successfully.")
+
+    net.eval() # 设置为推理模式
+
+    # 2. 注册 Hooks
+    register_hooks(net)
+
+    # 3. 构造输入数据
+    # 根据配置决定使用 C 前端的 audio_data.bin 还是随机输入
+    H = 2**R_LEVEL
+    W = 2**(R_LEVEL + 1)
+    
+    # 初始化 Preprocessor (使用项目原生的 TrackingFromIcoMapsPreprocessor)
+    # 生成麦克风阵列位置 (环形阵列)
+    radius = 0.05
+    mic_positions = np.zeros((NUM_CHANNELS, 3), dtype=np.float32)
+    for i in range(NUM_CHANNELS):
+        angle = 2 * np.pi * i / NUM_CHANNELS
+        mic_positions[i, 0] = radius * np.cos(angle)
+        mic_positions[i, 1] = radius * np.sin(angle)
+        mic_positions[i, 2] = 0.0
+    
+    # 创建 Preprocessor
+    preprocessor = at_learners.TrackingFromIcoMapsPreprocessor(
+        N=NUM_CHANNELS, 
+        K=FRAME_LENGTH, 
+        r=R_LEVEL, 
+        rn=mic_positions, 
+        fs=SAMPLE_RATE,
+        apply_vad=False  # debug 阶段不用 VAD
+    )
+    print(f"\nInitialized TrackingFromIcoMapsPreprocessor (N={NUM_CHANNELS}, K={FRAME_LENGTH}, r={R_LEVEL})")
+    
+    if USE_C_AUDIO and os.path.exists(C_AUDIO_BIN):
+        print(f"\n{'='*60}")
+        print("Using C Frontend audio_data.bin as unified input source")
+        print(f"{'='*60}")
+        
+        # 3.1 加载 C 前端生成的音频数据
+        audio_data, num_channels, num_samples, sample_rate = load_audio_data_from_c_bin(C_AUDIO_BIN)
+        
+        # 3.2 记录本次使用的原始输入来源
+        meta_path = os.path.join(HLS_DATA_DIR, 'layer0_input_source.txt')
+        with open(meta_path, 'w') as f:
+            f.write('# Layer0 输入对应的原始前端音频文件\n')
+            f.write(f'{C_AUDIO_BIN}\n')
+            f.write(f'# Audio info: channels={num_channels}, samples={num_samples}, sr={sample_rate}\n')
+        print(f"Saved input source meta to: {meta_path}")
+        
+        # 3.3 准备 mic_sig_batch
+        mic_sig_batch = prepare_mic_sig_batch_from_audio(
+            audio_data, 
+            frame_length=FRAME_LENGTH, 
+            hop_length=FRAME_LENGTH // 2
+        )
+        
+        # 3.4 使用原生 Preprocessor 处理，得到 IcoTempCNN 的输入
+        print(f"\n[Preprocessor] Running data_transformation...")
+        network_input = preprocessor.data_transformation(mic_sig_batch=mic_sig_batch)
+        # network_input: [num_frames, 1, 5, H, W] - Preprocessor 把每帧当作独立样本
+        
+        print(f"  Preprocessor output shape: {network_input.shape}")
+        
+        # 重要: IcoTempCNN 期望输入是 [B, C, T, charts, H, W]
+        # 而 Preprocessor 输出是 [num_frames, 1, 5, H, W]
+        # 需要将 num_frames 移到时间维度 T
+        num_frames = network_input.shape[0]
+        network_input = network_input.unsqueeze(0)  # [1, num_frames, 1, 5, H, W]
+        network_input = network_input.transpose(1, 2)  # [1, 1, num_frames, 5, H, W]
+        # 现在是 [B=1, C=1, T=num_frames, charts=5, H, W]
+        
+        print(f"  Reshaped to IcoTempCNN input: {network_input.shape}")
+        print(f"  -> [B=1, C=1, T={num_frames}, charts=5, H={H}, W={W}]")
+        print(f"  -> This is the EXACT input format that IcoTempCNN expects!")
+        
+        dummy_input = network_input  # 使用真实前端输出
+            
+    else:
+        # 使用随机输入 (原来的方式)
+        if USE_C_AUDIO:
+            print(f"\n[WARNING] C audio bin not found at {C_AUDIO_BIN}")
+            print("Falling back to random input...")
+        
+        print(f"\n{'='*60}")
+        print("Using Random Input (NOT from C frontend)")
+        print(f"{'='*60}")
+        
+        T = 103 # 典型的帧数
+        dummy_input = torch.randn(1, 1, T, 5, H, W)
+        
+        # 记录使用的是随机输入
+        meta_path = os.path.join(HLS_DATA_DIR, 'layer0_input_source.txt')
+        with open(meta_path, 'w') as f:
+            f.write('# Layer0 输入来源\n')
+            f.write('RANDOM_INPUT (not from C frontend audio_data.bin)\n')
+        print(f"Saved input source meta to: {meta_path}")
+    
+    print(f"\nInput Shape: {dummy_input.shape}")
+    save_debug_tensor("input", dummy_input)
+
+    # 4. 执行推理
+    print("\n--- Starting Inference ---")
+    with torch.no_grad():
+        output = net(dummy_input)
+    print("--- Inference Finished ---\n")
+
+    print(f"Final Output Shape: {output.shape}")
+    # 输出通常是 (Batch, Time, 3) -> (1, 103, 3)
+    save_debug_tensor("final_output", output)
+    
+    print(f"\nAll intermediate outputs saved to '{SAVE_DIR}/'")
+    
+    # 5. 提取 Layer0 的权重和邻居索引，保存到 HLS 验证目录
+    print("\n--- Extracting Layer0 Data for HLS Verification ---")
+    extract_layer0_data(net)
+    
+    # 6. 移动 Layer0 的输入和输出到 HLS 目录
+    move_layer0_io_data()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,37 @@
+[project]
+name = "IFAN_Edge"
+stage = 1
+
+[geometry]
+array_name = "benchmark2"
+r = 2
+n_mics = 12
+fs = 16000
+
+[window]
+k = 4096
+step = 3072
+
+[lms]
+order = 64
+step_size = 0.01
+
+[[scenarios]]
+name = "scene_1"
+snr_db = 30.0
+t60_s = 0.2
+
+[[scenarios]]
+name = "scene_2"
+snr_db = 30.0
+t60_s = 0.8
+
+[[scenarios]]
+name = "scene_3"
+snr_db = 5.0
+t60_s = 0.8
+
+[[scenarios]]
+name = "scene_4"
+snr_db = 5.0
+t60_s = 1.4

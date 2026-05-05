@@ -1,0 +1,53 @@
+experiment:
+  name: maba_doa_r2
+  output_root: maba_doa/outputs
+  seed: 42
+
+device: cuda
+
+data:
+  r: 2
+  fs: 16000
+  trajectory_seconds: 20
+  train_path: datasets/LibriSpeech/LibriSpeech/train-clean-100
+  test_path: datasets/LibriSpeech/LibriSpeech/test-clean
+  use_vad: true
+  nb_points: 156
+  snr:
+    start: 30
+  window:
+    K: 4096
+    hop_ratio: 0.75
+
+model:
+  variant: maba
+  channels: 32
+  cin: 1
+  smooth_vertices: true
+  maba:
+    d_model: 64
+    state_dim: 16
+    conv_kernel: 3
+    dropout: 0.1
+    use_residual: true
+  replace_maba:
+    d_model: 32
+    state_dim: 16
+    conv_kernel: 3
+    dropout: 0.1
+    use_residual: true
+
+training:
+  epochs: 3
+  trajectories_per_batch: 5
+  trajectories_per_gpu_call: 1
+  lr: 0.0001
+  snr_schedule:
+    enable: true
+    epoch: 1
+    min: 5
+    max: 30
+
+evaluation:
+  trajectories_per_batch: 5
+  latency_repeat: 20

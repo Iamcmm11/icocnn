@@ -1,0 +1,79 @@
+[project]
+stage_name = "stage_03"
+experiment_name = "ifan_maba_stage3"
+
+[runtime]
+seed = 42
+device = "cuda"
+output_suffix = ""
+
+[paths]
+output_root = "IFAN_Maba/outputs/stage3"
+librispeech_root = "datasets/LibriSpeech"
+train_split = "train-clean-100"
+test_split = "test-clean"
+baseline_checkpoint_path = "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
+
+[data]
+trajectory_seconds = 20
+fs = 16000
+k = 4096
+step = 3072
+nb_points = 156
+apply_vad = true
+lms_order = 64
+lms_step_size = 0.01
+lms_map_normalize = true
+lms_map_mode = "tau_sample"
+lms_peak_sigma = 2.0
+lms_update_mode = "trajectory_tracking"
+lms_normalized = false
+lms_include_self_pairs = true
+lms_backend = "frequency_block"
+lms_block_size = 256
+# lms_fft_size = 512  # Optional override; defaults to the next power of two >= lms_block_size + filter_len - 1.
+
+[model]
+r = 2
+final_head_pooling = false
+smooth_vertices = true
+temporal_backend = "maba"
+
+[maba]
+d_model = 32
+state_dim = 16
+conv_kernel = 3
+dropout = 0.1
+use_residual = true
+use_gate = true
+use_state = true
+
+[training]
+epochs = 40
+phase1_epochs = 20
+batch_size_phase1 = 1
+batch_size_phase2 = 10
+micro_batch_size_phase1 = 1
+micro_batch_size_phase2 = 1
+lr_phase1 = 1e-4
+lr_phase2 = 1e-5
+train_t60_min = 0.2
+train_t60_max = 1.3
+train_snr_min_phase1 = 30.0
+train_snr_max_phase1 = 30.0
+train_snr_min_phase2 = 5.0
+train_snr_max_phase2 = 30.0
+
+[evaluation]
+validation_dataset_size = 32
+validation_batch_size = 1
+validation_snr_min = 5.0
+validation_snr_max = 30.0
+scenario_eval_size = 8
+scenario_eval_batch_size = 1
+
+[checkpoints]
+every_n_epochs = 10
+
+[notes]
+summary = "Stage-3 IFAN_Maba default: paper-original PHAT+LMS frontend, frequency-block LMS backend, no final-head pooling, and full 1D temporal replacement with MABA blocks."
