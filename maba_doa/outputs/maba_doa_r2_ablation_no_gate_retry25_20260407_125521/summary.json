@@ -1,0 +1,12 @@
+{
+  "variant": "ablation_no_gate",
+  "device": "cuda",
+  "seed": 42,
+  "param_count": 297769,
+  "maba_mac_proxy": 759728,
+  "latency_step_ms": 33.46067185002539,
+  "final_test_loss": 0.025088006630539894,
+  "final_test_rmsae_deg": 7.4873175621032715,
+  "model_path": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_retry25_20260407_125521/model.bin",
+  "output_dir": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_retry25_20260407_125521"
+}

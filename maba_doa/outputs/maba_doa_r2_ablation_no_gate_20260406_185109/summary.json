@@ -1,0 +1,12 @@
+{
+  "variant": "ablation_no_gate",
+  "device": "cpu",
+  "seed": 42,
+  "param_count": 297769,
+  "maba_mac_proxy": 759728,
+  "latency_step_ms": 167.95658280007046,
+  "final_test_loss": 0.08110050112009048,
+  "final_test_rmsae_deg": 24.445785522460938,
+  "model_path": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_20260406_185109/model.bin",
+  "output_dir": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_20260406_185109"
+}

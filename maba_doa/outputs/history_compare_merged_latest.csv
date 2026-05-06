@@ -1,0 +1,5 @@
+label,variant,run_dir,epoch,test_loss,test_rmsae_deg,epoch_time_s,lr
+baseline,baseline,G:\3DSLED\icocnn\maba_doa\outputs\maba_doa_r2_baseline_20260406_182558,1.0,0.0671648159623146,20.107959747314453,747.0742195829998,0.0001
+maba,maba,G:\3DSLED\icocnn\maba_doa\outputs\maba_doa_r2_maba_20260406_183831,1.0,0.0666888877749443,21.904850006103516,753.6311327020003,0.0001
+ablation_no_gate,ablation_no_gate,G:\3DSLED\icocnn\maba_doa\outputs\maba_doa_r2_ablation_no_gate_20260406_185109,1.0,0.08110050112009048,24.445785522460938,753.3978744279993,0.0001
+ablation_no_state,ablation_no_state,G:\3DSLED\icocnn\maba_doa\outputs\maba_doa_r2_ablation_no_state_20260406_190348,1.0,0.07042616605758667,22.48748207092285,749.147879473001,0.0001

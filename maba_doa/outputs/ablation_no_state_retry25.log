@@ -1,0 +1,12 @@
+{
+  "variant": "ablation_no_state",
+  "device": "cuda",
+  "seed": 42,
+  "param_count": 298793,
+  "maba_mac_proxy": 865200,
+  "latency_step_ms": 29.561075950005034,
+  "final_test_loss": 0.0256118793040514,
+  "final_test_rmsae_deg": 7.788504123687744,
+  "model_path": "maba_doa/outputs/maba_doa_r2_ablation_no_state_retry25_20260407_160616/model.bin",
+  "output_dir": "maba_doa/outputs/maba_doa_r2_ablation_no_state_retry25_20260407_160616"
+}

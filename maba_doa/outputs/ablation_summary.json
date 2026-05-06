@@ -1,0 +1,52 @@
+{
+  "runs": [
+    {
+      "variant": "baseline",
+      "device": "cpu",
+      "seed": 42,
+      "param_count": 290017,
+      "maba_mac_proxy": 0,
+      "latency_step_ms": 171.34910820000187,
+      "final_test_loss": 0.0671648159623146,
+      "final_test_rmsae_deg": 20.107959747314453,
+      "model_path": "maba_doa/outputs/maba_doa_r2_baseline_20260406_182558/model.bin",
+      "output_dir": "maba_doa/outputs/maba_doa_r2_baseline_20260406_182558"
+    },
+    {
+      "variant": "maba",
+      "device": "cpu",
+      "seed": 42,
+      "param_count": 298793,
+      "maba_mac_proxy": 865200,
+      "latency_step_ms": 167.0631957000296,
+      "final_test_loss": 0.0666888877749443,
+      "final_test_rmsae_deg": 21.904850006103516,
+      "model_path": "maba_doa/outputs/maba_doa_r2_maba_20260406_183831/model.bin",
+      "output_dir": "maba_doa/outputs/maba_doa_r2_maba_20260406_183831"
+    },
+    {
+      "variant": "ablation_no_gate",
+      "device": "cpu",
+      "seed": 42,
+      "param_count": 297769,
+      "maba_mac_proxy": 759728,
+      "latency_step_ms": 167.95658280007046,
+      "final_test_loss": 0.08110050112009048,
+      "final_test_rmsae_deg": 24.445785522460938,
+      "model_path": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_20260406_185109/model.bin",
+      "output_dir": "maba_doa/outputs/maba_doa_r2_ablation_no_gate_20260406_185109"
+    },
+    {
+      "variant": "ablation_no_state",
+      "device": "cpu",
+      "seed": 42,
+      "param_count": 298793,
+      "maba_mac_proxy": 865200,
+      "latency_step_ms": 167.83498020004117,
+      "final_test_loss": 0.07042616605758667,
+      "final_test_rmsae_deg": 22.48748207092285,
+      "model_path": "maba_doa/outputs/maba_doa_r2_ablation_no_state_20260406_190348/model.bin",
+      "output_dir": "maba_doa/outputs/maba_doa_r2_ablation_no_state_20260406_190348"
+    }
+  ]
+}
