@@ -13,6 +13,8 @@ if str(PACKAGE_ROOT) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import gpuRIR
+
 import acousticTrackingModels as at_models
 
 from ifan_edge.eval import run_engineering_check

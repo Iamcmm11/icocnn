@@ -18,6 +18,8 @@ if str(PACKAGE_ROOT) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import gpuRIR
+
 from ifan_edge.training import IFANTrainingConfig, IFANTrainingPipeline
 
 
