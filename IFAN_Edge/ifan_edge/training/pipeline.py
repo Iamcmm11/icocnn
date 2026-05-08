@@ -260,11 +260,21 @@ class IFANTrainingConfig:
 class IFANTrainingPipeline:
     """Stage-3 training loop, validation cache, and baseline comparison orchestration."""
 
-    def __init__(self, config: IFANTrainingConfig):
+    def __init__(
+        self,
+        config: IFANTrainingConfig,
+        *,
+        resume_checkpoint_path: str | None = None,
+        resume_output_dir: str | None = None,
+        resume_log_path: str | None = None,
+    ):
         self.config = config
         self.model_config = config.model_config()
         self.output_dir: Path | None = None
         self.checkpoint_dir: Path | None = None
+        self.resume_checkpoint_path = None if resume_checkpoint_path is None else Path(resume_checkpoint_path)
+        self.resume_output_dir = None if resume_output_dir is None else Path(resume_output_dir)
+        self.resume_log_path = None if resume_log_path is None else Path(resume_log_path)
 
     @staticmethod
     def set_seed(seed: int) -> None:
@@ -279,6 +289,13 @@ class IFANTrainingPipeline:
         return torch.device("cpu")
 
     def prepare_output_dir(self) -> Path:
+        if self.resume_output_dir is not None:
+            output_dir = self.resume_output_dir
+            checkpoint_dir = output_dir / "checkpoints"
+            checkpoint_dir.mkdir(parents=True, exist_ok=True)
+            self.output_dir = output_dir
+            self.checkpoint_dir = checkpoint_dir
+            return output_dir
         root = Path(self.config.output_root)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         suffix = f"_{self.config.output_suffix}" if self.config.output_suffix else ""
@@ -308,6 +325,82 @@ class IFANTrainingPipeline:
             "mac_proxy_breakdown": {key: int(value) for key, value in mac_proxy.items() if key != "total"},
             "mac_proxy_input_shape": list(input_shape),
         }
+
+    @staticmethod
+    def _move_optimizer_to_device(optimizer: torch.optim.Optimizer, device: torch.device) -> None:
+        for state in optimizer.state.values():
+            for key, value in state.items():
+                if torch.is_tensor(value):
+                    state[key] = value.to(device)
+
+    @staticmethod
+    def _load_epoch_history_from_log(log_path: Path) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        if not log_path.exists():
+            return rows
+        for line in log_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("event") != "epoch_complete":
+                continue
+            rows.append(
+                {
+                    "epoch": int(payload["epoch"]),
+                    "phase": int(payload["phase"]),
+                    "lr": float(payload["lr"]),
+                    "batch_size": int(payload["batch_size"]),
+                    "micro_batch_size": int(payload["micro_batch_size"]),
+                    "train_loss": float(payload["train_loss"]),
+                    "val_loss": float(payload["val_loss"]),
+                    "val_rmsae_deg": float(payload["val_rmsae_deg"]),
+                    "epoch_time_s": float(payload["epoch_time_s"]),
+                }
+            )
+        return rows
+
+    def _load_resume_state(
+        self,
+        *,
+        model: IFANModel,
+        optimizer: torch.optim.Optimizer,
+        device: torch.device,
+    ) -> tuple[int, list[dict[str, Any]], float, str]:
+        if self.resume_checkpoint_path is None:
+            return 0, [], float("inf"), ""
+        if self.checkpoint_dir is None:
+            raise RuntimeError("Checkpoint directory is not initialized.")
+        if not self.resume_checkpoint_path.exists():
+            raise FileNotFoundError(f"Resume checkpoint does not exist: {self.resume_checkpoint_path}")
+
+        checkpoint = torch.load(self.resume_checkpoint_path, map_location="cpu")
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self._move_optimizer_to_device(optimizer, device)
+        start_epoch = int(checkpoint.get("epoch", 0))
+
+        history_rows: list[dict[str, Any]] = []
+        if self.resume_log_path is not None:
+            history_rows = self._load_epoch_history_from_log(self.resume_log_path)
+            history_rows = [row for row in history_rows if int(row["epoch"]) <= start_epoch]
+
+        best_checkpoint_path = ""
+        best_val_rmsae = float("inf")
+        existing_best_path = self.checkpoint_dir / "best_rmsae.pt"
+        if existing_best_path.exists():
+            best_checkpoint_path = str(existing_best_path)
+            best_state = torch.load(existing_best_path, map_location="cpu")
+            best_metrics = best_state.get("metrics", {})
+            if "val_rmsae_deg" in best_metrics:
+                best_val_rmsae = float(best_metrics["val_rmsae_deg"])
+        elif isinstance(checkpoint.get("metrics"), dict) and "val_rmsae_deg" in checkpoint["metrics"]:
+            best_val_rmsae = float(checkpoint["metrics"]["val_rmsae_deg"])
+
+        return start_epoch, history_rows, best_val_rmsae, best_checkpoint_path
 
     @staticmethod
     def move_ifan_preprocessor(preprocessor: DualFeatureIcoPreprocessor, device: torch.device) -> None:
@@ -605,6 +698,8 @@ class IFANTrainingPipeline:
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "srp_variant": self.config.srp_variant,
                     "temporal_conv_variant": self.config.temporal_conv_variant,
+                    "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
+                    "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
                 },
                 ensure_ascii=False,
             ),
@@ -743,9 +838,15 @@ class IFANTrainingPipeline:
             flush=True,
         )
 
-        history_rows: list[dict[str, Any]] = []
-        best_val_rmsae = float("inf")
-        best_checkpoint_path = ""
+        start_epoch, history_rows, best_val_rmsae, best_checkpoint_path = self._load_resume_state(
+            model=model,
+            optimizer=optimizer,
+            device=device,
+        )
+        if start_epoch >= self.config.epochs:
+            raise ValueError(
+                f"Resume checkpoint epoch={start_epoch} is already at or beyond configured epochs={self.config.epochs}."
+            )
 
         config_path = output_dir / "resolved_config.json"
         config_path.write_text(
@@ -766,6 +867,10 @@ class IFANTrainingPipeline:
                     "train_split_path": str(train_split_path),
                     "validation_split_path": str(val_split_path),
                     "device": str(device),
+                    "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
+                    "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
+                    "resume_log_path": None if self.resume_log_path is None else str(self.resume_log_path),
+                    "resume_start_epoch": int(start_epoch),
                 },
                 indent=2,
                 ensure_ascii=False,
@@ -789,13 +894,14 @@ class IFANTrainingPipeline:
                     "temporal_conv_variant": self.config.temporal_conv_variant,
                     "temporal_module": self.config.temporal_module,
                     "epochs": self.config.epochs,
+                    "resume_start_epoch": int(start_epoch),
                 },
                 ensure_ascii=False,
             ),
             flush=True,
         )
 
-        for epoch_index in range(self.config.epochs):
+        for epoch_index in range(start_epoch, self.config.epochs):
             settings = self.phase_settings(epoch_index)
             epoch_start = time.perf_counter()
             optimizer.param_groups[0]["lr"] = float(settings["lr"])
@@ -934,6 +1040,10 @@ class IFANTrainingPipeline:
             "experiment_contract": self.config.experiment_contract(),
             "model_profile": model_profile,
             "frontend_profile": frontend_profile,
+            "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
+            "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
+            "resume_log_path": None if self.resume_log_path is None else str(self.resume_log_path),
+            "resume_start_epoch": int(start_epoch),
             "best_val_rmsae_deg": best_val_rmsae,
             "final_epoch": history_rows[-1] if history_rows else {},
             "baseline_compare": baseline_compare,

@@ -64,6 +64,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
     parser.add_argument("--cpu", action="store_true", help="Shortcut for --device cpu.")
     parser.add_argument("--output-suffix", default=None)
+    parser.add_argument("--resume-checkpoint", default=None, help="Resume stage-3 training from a saved checkpoint.")
+    parser.add_argument("--resume-output-dir", default=None, help="Reuse an existing stage-3 output directory when resuming.")
+    parser.add_argument("--resume-log", default=None, help="Existing training log used to recover epoch history for resumed runs.")
     parser.add_argument("--experiment-role", default=None, help="Override the experiment contract role recorded in summary metadata.")
     parser.add_argument(
         "--srp-variant",
@@ -208,7 +211,12 @@ def main() -> None:
     elif args.device is not None:
         config.device = args.device
 
-    summary = IFANTrainingPipeline(config).run()
+    summary = IFANTrainingPipeline(
+        config,
+        resume_checkpoint_path=args.resume_checkpoint,
+        resume_output_dir=args.resume_output_dir,
+        resume_log_path=args.resume_log,
+    ).run()
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 

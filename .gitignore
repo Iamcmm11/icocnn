@@ -4,9 +4,6 @@ hls_src/HLS/layer1/layer1_hls_prj/
 hls_src/HLS/layer2-5/layer2_5_hls_prj/
 datasets
 *.pyc
-IFAN_Edge/outputs
 __pycache__
 .qoder
-IFAN_Maba/outputs/stage3
-maba_doa/outputs
 icoCNN-master/icoCNN.egg-info
