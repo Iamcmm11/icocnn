@@ -1,4 +1,4 @@
-# IFAN IcoConv 主干轻量化与 C=8 实验计划
+# IFAN IcoConv 主干轻量化与 C=8 实验计划与结果总结
 
 ## 1. 问题定位
 
@@ -58,9 +58,9 @@ Rin = Rout = 6
 
 这比单独替换 1D temporal Conv 更贴合当前 IFAN 的真实瓶颈。
 
-## 3. C=8 宽度裁剪实验设计
+## 3. 实验设置
 
-本实验只改变 IFAN 主干宽度：
+本轮轻量化实验只改变 IFAN 主干宽度：
 
 ```text
 branch_channels: 16 -> 8
@@ -83,18 +83,19 @@ branch_channels: 16 -> 8
 
 这样可以保证实验因果归因清楚：结果差异主要来自 IcoConv 主干通道数缩减，而不是前端、时序模块或训练策略变化。
 
-## 4. 资源预期
+## 4. 资源与结构对照
 
-以 Stage-3 summary 常用的 MAC proxy 输入口径 `[1, 2, 6, 5, 4, 8]` 估算：
+以 Stage-3 常用的 `MAC proxy` 口径 `[1, 2, 6, 5, 4, 8]` 统计：
 
-| 配置 | 参数量 | MAC proxy | 参数下降 | MAC 下降 |
-|---|---:|---:|---:|---:|
-| IFAN C=16 | 125,457 | 459,532,800 | - | - |
-| IFAN C=8 | 31,561 | 115,211,520 | 74.8% | 74.9% |
+| 配置 | 输入 shape | trainable params | backend MAC proxy | 相对 `IFAN_80` backend MAC | frontend grid points |
+|---|---|---:|---:|---:|---:|
+| `IFAN_80 (C=16, r=2)` | `[1, 2, 6, 5, 4, 8]` | 125,457 | 459,532,800 | baseline | 160 |
+| `IFAN_C8_R2` | `[1, 2, 6, 5, 4, 8]` | 31,561 | 115,211,520 | 0.251x | 160 |
+| `IFAN_C8_R3` | `[1, 2, 6, 5, 8, 16]` | 31,561 | 460,846,080 | 1.003x | 640 |
 
-分项上，C=8 后主要模块的 MAC proxy 预期为：
+分项上，`C=8` 后主要模块的 `MAC proxy` 预期为：
 
-| 模块 | C=8 MAC proxy |
+| 模块 | `C=8` MAC proxy |
 |---|---:|
 | PHAT stem | 322,560 |
 | LMS stem | 322,560 |
@@ -108,134 +109,77 @@ branch_channels: 16 -> 8
 | Final head temporal | 460,800 |
 | Channel readout | 11,520 |
 
-补充说明：`profile_stage2_model.py` 的快速工程检查使用短序列 `T=3`，因此其直接打印的 `MAC proxy total = 57,605,760`；按 Stage-3 summary 的 `T=6` 口径翻倍后为 `115,211,520`。
+补充说明：
 
-## 4.1 宽度-分辨率折中假设
+- `profile_stage2_model.py` 的快速工程检查使用短序列 `T=3`，因此其直接打印的 `MAC proxy total = 57,605,760`。
+- 按 Stage-3 summary 的 `T=6` 口径翻倍后，对应 `115,211,520`。
 
-仅做 `C=8` 宽度裁剪虽然最直接，但它会同时降低参数量和空间建模容量。作为第二阶段候选方案，值得把“降低 `C` 的同时提高输入分辨率 `r`”纳入同一张资源表中，单独验证是否存在更好的精度/复杂度平衡点。
+## 5. 结果锚点
 
-这里先统一两类口径：
+当前文档统一使用以下事实来源：
 
-- `backend MAC proxy`：只统计 IFAN 主干网络，不包含 PHAT/LMS 前端。
-- `frontend grid points`：只反映 SRP 特征图候选点数量，可近似理解为前端复杂度的一级指标。
+- `IFAN_80` 的验证集、模拟四场景、参数量与 `MAC`：
+  - `IFAN_Edge/outputs/stage3/logs/long80_freqblock_paper_original_20260426_155329.log`
+  - 以上指标取自该日志中的 `stage3_complete` 事件
+- `IFAN_C8_R2`：
+  - `IFAN_Edge/outputs/stage3/ifan_stage3_long80_c8_paper_original_20260505_222115/summary.json`
+- `IFAN_C8_R3`：
+  - `IFAN_Edge/outputs/stage3/ifan_stage3_long80_c8_r3_paper_original_20260506_220735/summary.json`
+- LOCATA 上的统一平均值比较：
+  - `IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`
 
-在当前实现中，`r=3` 会让输入 chart 从 `4 x 8` 变为 `8 x 16`；同时 fusion 前仍有一次 `PoolIco`，因此 fusion head 实际工作分辨率会从 `r=1` 提升到 `r=2`。这意味着 `r=3` 不是“只把输入做大”，而是确实会把更多空间细节送入后续融合模块。
+其中，轻量化主线的平均 LOCATA 判定统一以 `locata_four_model_compare.md` 为准，用来保证 `baseline / IFAN_80 / IFAN_C8_R2 / IFAN_C8_R3` 处于同一张对比表内。
 
-按 Stage-3 summary 常用的 `T=6` 口径估算，得到下表：
+## 6. 实际结果
 
-| 配置 | 输入 shape | trainable params | backend MAC proxy | 相对 C=16,r=2 backend MAC | frontend grid points | frontend 复杂度粗估 | 预期精度风险 |
-|---|---|---:|---:|---:|---:|---:|---|
-| IFAN C=16, r=2 | `[1, 2, 6, 5, 4, 8]` | 125,457 | 459,532,800 | baseline | 160 | 1.0x | 当前主线基线 |
-| IFAN C=8, r=2 | `[1, 2, 6, 5, 4, 8]` | 31,561 | 115,211,520 | 0.251x | 160 | 1.0x | 宽度压缩，存在明显精度回退风险 |
-| IFAN C=8, r=3 | `[1, 2, 6, 5, 8, 16]` | 31,561 | 460,846,080 | 1.003x | 640 | 4.0x | 有机会补偿部分 `C` 损失，但不能预设无损 |
+### 6.1 验证集与模拟场景
 
-从表中可以直接看到：
+| 配置 | best validation RMSAE | final validation RMSAE | four-scene IFAN mean | four-scene delta vs baseline | hard-scene IFAN mean | hard-scene delta vs baseline |
+|---|---:|---:|---:|---:|---:|---:|
+| `IFAN_80` | 7.1806 | 7.3641 | 7.8608 | +0.0539 | 9.2202 | -0.2488 |
+| `IFAN_C8_R2` | 7.9372 | 7.9851 | 9.9787 | +1.5095 | 14.2679 | +2.8102 |
+| `IFAN_C8_R3` | 6.6482 | 6.6937 | 8.2471 | +0.5567 | 11.8861 | +1.5956 |
 
-- `C=8, r=3` 的 `backend MAC proxy` 与当前 `C=16, r=2` 主线几乎持平，仅高约 `0.29%`。
-- `C=8, r=3` 的参数量仍保持 `31,561`，相对主线下降 `74.8%`。
-- 但 `frontend grid points` 会从 `160` 升到 `640`，因此前端 SRP 复杂度、缓存和端到端时延不会像 backend 那样“基本持平”。
+### 6.2 LOCATA 统一对比口径
 
-因此，`C=8, r=3` 的意义不是“免费提高分辨率”，而是：
+以下平均值全部来自 `IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`。
 
-- 用几乎不增加 backend CNN 计算量的方式，换取更高的空间采样密度；
-- 检查空间分辨率提升能否补偿通道宽度裁剪带来的精度损失；
-- 为后续 `IFAN-Edge-M` 级别方案提供一个比 `C=8, r=2` 更有希望的折中点。
+| 比较项 | 参数量变化 | `MAC` 变化 | with silences average delta | without silences average delta | 当前解释 |
+|---|---:|---:|---:|---:|---|
+| `IFAN_80` vs `baseline` | `290017 -> 125457` | `n/a -> 459532800` | `-1.3310 deg` | `-0.9283 deg` | 当前最强 accuracy-oriented reference |
+| `IFAN_C8_R2` vs `baseline` | `290017 -> 31561` | `n/a -> 115211520` | `-0.7136 deg` | `-0.1221 deg` | 激进压缩后，LOCATA 平均仍优于 baseline |
+| `IFAN_C8_R2` vs `IFAN_80` | `125457 -> 31561` | `459532800 -> 115211520` | `+0.6174 deg` | `+0.8062 deg` | 约 `75%` 资源压缩换来可接受的平均精度损失 |
+| `IFAN_C8_R3` vs `IFAN_80` | `125457 -> 31561` | `459532800 -> 460846080` | `+1.3464 deg` | `+1.3132 deg` | `MAC` 基本不降，LOCATA 退化更明显 |
 
-需要特别强调：这只是资源与结构层面的合理假设，不是已验证结论。当前仓库里还没有完成 `C=8, r=3` 的训练与 LOCATA 验收，因此不能先验地把它表述成“无精度损失方案”。
+### 6.3 当前定位
 
-## 5. 对照组与评价指标
+- `IFAN_80`：当前复现主线、最佳精度主线、论文 gap 解释主线。
+- `IFAN_C8_R2`：当前主轻量化结果、主边缘结果、默认硬件映射网络候选。
+- `IFAN_C8_R3`：固定保留为失败参考，不再作为候选主线。
 
-固定 C=16 对照组：
+## 7. 当前结论
 
-```text
-IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/summary.json
-```
+### 7.1 关于 `IFAN_C8_R2`
 
-当前对照指标：
+- `IFAN_C8_R2` 不应表述成“提出新的通道裁剪算法”。
+- `IFAN_C8_R2` 可以明确表述为：
+  - 面向 `IcoConv` 主瓶颈的结构化轻量化分析；
+  - 资源-精度折中设计；
+  - 面向 FPGA/IP 映射的默认网络候选。
+- 在当前 LOCATA 统一比较口径下，`IFAN_C8_R2` 仍优于 `baseline`，因此它可以升格为 **IFAN-Edge 轻量化主线**。
 
-| 指标 | C=16 long80 |
-|---|---:|
-| best validation RMSAE | 7.1806 deg |
-| four-scenario mean RMSAE | 7.8608 deg |
-| hard-scenario mean RMSAE | 9.2202 deg |
-| trainable params | 125,457 |
-| MAC proxy | 459,532,800 |
+### 7.2 关于 `IFAN_C8_R3`
 
-C=8 训练完成后回填：
+- `IFAN_C8_R3` 在验证集与模拟场景上并非最差，但它没有形成有意义的 edge trade-off。
+- 其主要问题是：
+  - `MAC` 与 `IFAN_80` 基本持平；
+  - LOCATA 平均值明显弱于 `IFAN_C8_R2`；
+  - 在统一 LOCATA 对比口径下不再优于 baseline。
+- 因此，`IFAN_C8_R3` 只保留为失败参考，不继续扩展。
 
-| 指标 | C=8 long80 | 相对 C=16 差值 |
-|---|---:|---:|
-| best validation RMSAE | TBD | TBD |
-| four-scenario mean RMSAE | TBD | TBD |
-| hard-scenario mean RMSAE | TBD | TBD |
-| trainable params | 31,561 | -74.8% |
-| MAC proxy | 115,211,520 | -74.9% |
+## 8. 论文表述建议
 
-判定口径：
-
-- `RMSAE delta <= 0.3 deg`：可作为主轻量化方案。
-- `0.3 deg < RMSAE delta <= 1.0 deg`：可作为资源/精度折中方案。
-- `RMSAE delta > 1.0 deg`：只作为消融结果，不宜作为主方案。
-
-如果追加 `C=8, r=3` 试验，建议把它作为独立对照组加入相同判定口径，并额外记录：
-
-- SRP 前端耗时；
-- 单 batch 推理耗时；
-- 端到端总时延；
-- LOCATA Task1/3/5 是否仍保持稳定。
-
-## 6. 执行命令
-
-训练环境：
-
-```text
-/home/cmm/miniconda3/envs/icocnn/bin/python
-```
-
-已确认：
-
-```text
-torch = 2.3.1+cu121
-cuda_available = True
-```
-
-后台训练命令：
-
-```bash
-TS=$(date +%Y%m%d_%H%M%S)
-nohup /home/cmm/miniconda3/envs/icocnn/bin/python IFAN_Edge/scripts/train_stage3_ifan.py \
-  --config IFAN_Edge/configs/stage3_long_budget.toml \
-  --branch-channels 8 \
-  --output-suffix long80_c8_paper_original \
-  --experiment-role c8_width_ablation \
-  --srp-variant paper_original \
-  --temporal-conv-variant standard_1d \
-  --temporal-module conv \
-  --device cuda \
-  > IFAN_Edge/outputs/stage3/logs/long80_c8_paper_original_${TS}.log 2>&1 &
-echo $!
-```
-
-训练前快速检查命令：
-
-```bash
-/home/cmm/miniconda3/envs/icocnn/bin/python IFAN_Edge/scripts/profile_stage2_model.py \
-  --branch-channels 8 \
-  --temporal-conv-variant standard_1d
-```
-
-已完成快速检查：
-
-```text
-IFANModel C=8 trainable params = 31,561
-finite_output = True
-finite_gradients = True
-nonzero_gradient_params = 54
-```
-
-## 7. 论文表述建议
-
-不建议把该实验表述为：
+不建议写成：
 
 ```text
 提出一种新的通道裁剪算法。
@@ -244,24 +188,35 @@ nonzero_gradient_params = 54
 更合适的表述是：
 
 ```text
-针对 IFAN/icoCNN 主干中 IcoConv 计算占比高、复杂度随通道宽度近似二次增长的问题，设计并验证了一种保持二十面体拓扑和时序建模结构不变的宽度裁剪方案。实验通过 C=16 与 C=8 的严格对照，分析通道宽度对参数量、MAC、定位精度和硬件映射成本的影响。
+针对 IFAN/icoCNN 主干中 IcoConv 计算占比高、复杂度随通道宽度近似二次增长的问题，设计并验证了一种保持二十面体拓扑和时序建模结构不变的宽度裁剪方案。实验以 IFAN_80 为 accuracy-oriented reference，以 IFAN_C8_R2 为 edge-oriented reference，在 LOCATA 上分析通道宽度对参数量、MAC、真实数据定位精度和硬件映射成本的影响。
 ```
 
 该贡献属于：
 
 - 面向特定网络主瓶颈的结构化轻量化分析；
 - 面向 FPGA/IP 映射前的架构级资源压缩；
-- 后续 IcoConv 专用轻量化设计的基线实验。
+- 为后续球面 `ConvIco` 硬件映射提供默认网络候选。
 
-## 8. 第二阶段可扩展方向
+## 9. 与硬件映射的关系
 
-如果 C=8 精度损失较小，可以直接进入硬件映射评估。
+`IFAN_C8_R2` 当前成为默认硬件候选，不是因为它在所有指标上都最强，而是因为它同时满足：
 
-如果 C=8 精度损失明显，则建议按以下顺序推进：
+- 参数量和 `MAC` 相对 `IFAN_80` 均下降约 `74.8% ~ 74.9%`；
+- 在统一 LOCATA 对比口径下，相对 `baseline` 仍保持平均优势；
+- 比 `IFAN_C8_R3` 更有意义，因为它保住了 `MAC` 优势。
 
-1. `C=12` 中间宽度实验：验证是否存在更合适的资源/精度折中点。
-2. Bottleneck IcoConv：在高开销 IcoConv 中引入 `16 -> b -> 16` 的低秩通道瓶颈。
-3. Separable IcoConv：将二十面体邻域 filtering 与 channel/orientation mixing 分离。
-4. Orientation 压缩：研究 `R=6` 方向通道是否存在冗余，评估 `R=6 -> R'=3/1` 的可行性。
+因此，后续 FPGA 方向默认围绕以下网络候选展开：
 
-其中第 2~4 项比 1D temporal DWConv 更贴合当前 IFAN 的真实计算瓶颈。
+- `IFAN_80`：精度参考网络
+- `IFAN_C8_R2`：边缘实现参考网络
+
+## 10. 后续备选
+
+当前默认任务不再新增训练实验。若后续答辩反馈必须补强算法新意，再按以下顺序考虑：
+
+1. `C=12` 中间宽度实验
+2. Bottleneck IcoConv
+3. Separable IcoConv
+4. Orientation 压缩
+
+这些方向当前只保留为后续备选，不作为本轮默认执行项。
