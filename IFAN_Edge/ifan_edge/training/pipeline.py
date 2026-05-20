@@ -4,7 +4,7 @@ import csv
 import json
 import os
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -28,7 +28,8 @@ from ..eval.stage3 import (
     temporary_seed,
 )
 from ..features import DualFeatureIcoPreprocessor
-from ..models import IFANModel, IFANModelConfig, PAPER_IFAN_BRANCH_CHANNELS
+from ..models import IFANModel, IFANModelConfig, MapMABATemporalConfig, PAPER_IFAN_BRANCH_CHANNELS
+from ..pruning import SAFLitePruner
 
 DEFAULT_STAGE3_MAINLINE_ANCHOR_RUN = (
     "IFAN_Edge/outputs/stage3/ifan_stage3_full20_freqblock_paper_original_20260419_005314"
@@ -84,6 +85,11 @@ class IFANTrainingConfig:
     branch_channels: int = PAPER_IFAN_BRANCH_CHANNELS
     final_head_pooling: bool = False
     smooth_vertices: bool = True
+    map_refiner: str = "none"
+    map_refiner_position: str = "pre_softargmax"
+    map_maba: MapMABATemporalConfig = field(default_factory=MapMABATemporalConfig)
+    weak_map_refiner: str = "none"
+    weak_map_maba: MapMABATemporalConfig = field(default_factory=lambda: MapMABATemporalConfig(d_model=8, state_dim=4, dropout=0.0, use_state=False))
     apply_vad: bool = True
     lms_order: int = 64
     lms_step_size: float = 0.01
@@ -120,6 +126,11 @@ class IFANTrainingConfig:
     validation_snr_min: float = 5.0
     validation_snr_max: float = 30.0
     baseline_checkpoint_path: str = "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
+    ifan_init_checkpoint_path: str = ""
+    saf_lite_enabled: bool = False
+    saf_lite_keep_per_8: int = 4
+    saf_lite_block_size: int = 8
+    saf_lite_target_channels: int = PAPER_IFAN_BRANCH_CHANNELS
     experiment_role: str = "mainline_baseline"
     srp_variant: str = "paper_original"
     phat_sinc_half_width: int = 0
@@ -129,6 +140,37 @@ class IFANTrainingConfig:
     mainline_anchor_run: str = DEFAULT_STAGE3_MAINLINE_ANCHOR_RUN
     mainline_anchor_locata_report: str = DEFAULT_STAGE3_MAINLINE_LOCATA_REPORT
     lightweight_ready_delta_deg: float = DEFAULT_STAGE3_LIGHTWEIGHT_READY_DELTA_DEG
+
+    def __post_init__(self) -> None:
+        self.map_refiner = str(self.map_refiner)
+        if self.map_refiner not in {"none", "maba"}:
+            raise ValueError(f"Unsupported map_refiner {self.map_refiner!r}; expected 'none' or 'maba'.")
+        self.map_refiner_position = str(self.map_refiner_position)
+        if self.map_refiner_position not in {"pre_softargmax", "pre_readout"}:
+            raise ValueError(
+                f"Unsupported map_refiner_position {self.map_refiner_position!r}; "
+                "expected 'pre_softargmax' or 'pre_readout'."
+            )
+        self.weak_map_refiner = str(self.weak_map_refiner)
+        if self.weak_map_refiner not in {"none", "maba"}:
+            raise ValueError(
+                f"Unsupported weak_map_refiner {self.weak_map_refiner!r}; expected 'none' or 'maba'."
+            )
+        self.map_maba = MapMABATemporalConfig.from_mapping(self.map_maba)
+        self.weak_map_maba = MapMABATemporalConfig.from_mapping(self.weak_map_maba)
+        if self.saf_lite_enabled:
+            if self.saf_lite_block_size <= 0:
+                raise ValueError("saf_lite_block_size must be positive.")
+            if self.saf_lite_keep_per_8 <= 0 or self.saf_lite_keep_per_8 > self.saf_lite_block_size:
+                raise ValueError(
+                    "saf_lite_keep_per_8 must be in [1, saf_lite_block_size], "
+                    f"got {self.saf_lite_keep_per_8}."
+                )
+            if self.branch_channels != self.saf_lite_target_channels:
+                raise ValueError(
+                    "SAF-lite C=16 pruning expects model.branch_channels to match "
+                    f"saf_lite_target_channels={self.saf_lite_target_channels}, got {self.branch_channels}."
+                )
 
     @classmethod
     def from_toml(cls, path: str | Path) -> "IFANTrainingConfig":
@@ -140,10 +182,13 @@ class IFANTrainingConfig:
         paths = raw.get("paths", {})
         data = raw.get("data", {})
         model = raw.get("model", {})
+        map_maba = raw.get("map_maba", {})
+        weak_map_maba = raw.get("weak_map_maba", {})
         _validate_paper_mainline_model_section(model)
         training = raw.get("training", {})
         evaluation = raw.get("evaluation", {})
         checkpoints = raw.get("checkpoints", {})
+        pruning = raw.get("pruning", {})
         contract = raw.get("contract", {})
         gates = raw.get("gates", {})
 
@@ -166,6 +211,31 @@ class IFANTrainingConfig:
             branch_channels=int(model.get("branch_channels", cls.branch_channels)),
             final_head_pooling=bool(model.get("final_head_pooling", cls.final_head_pooling)),
             smooth_vertices=bool(model.get("smooth_vertices", cls.smooth_vertices)),
+            map_refiner=str(model.get("map_refiner", cls.map_refiner)),
+            map_refiner_position=str(model.get("map_refiner_position", cls.map_refiner_position)),
+            map_maba=MapMABATemporalConfig.from_mapping(
+                {
+                    "d_model": map_maba.get("d_model", MapMABATemporalConfig.d_model),
+                    "state_dim": map_maba.get("state_dim", MapMABATemporalConfig.state_dim),
+                    "conv_kernel": map_maba.get("conv_kernel", MapMABATemporalConfig.conv_kernel),
+                    "dropout": map_maba.get("dropout", MapMABATemporalConfig.dropout),
+                    "use_residual": map_maba.get("use_residual", MapMABATemporalConfig.use_residual),
+                    "use_gate": map_maba.get("use_gate", MapMABATemporalConfig.use_gate),
+                    "use_state": map_maba.get("use_state", MapMABATemporalConfig.use_state),
+                }
+            ),
+            weak_map_refiner=str(model.get("weak_map_refiner", cls.weak_map_refiner)),
+            weak_map_maba=MapMABATemporalConfig.from_mapping(
+                {
+                    "d_model": weak_map_maba.get("d_model", 8),
+                    "state_dim": weak_map_maba.get("state_dim", 4),
+                    "conv_kernel": weak_map_maba.get("conv_kernel", MapMABATemporalConfig.conv_kernel),
+                    "dropout": weak_map_maba.get("dropout", 0.0),
+                    "use_residual": weak_map_maba.get("use_residual", MapMABATemporalConfig.use_residual),
+                    "use_gate": weak_map_maba.get("use_gate", MapMABATemporalConfig.use_gate),
+                    "use_state": weak_map_maba.get("use_state", False),
+                }
+            ),
             apply_vad=bool(data.get("apply_vad", cls.apply_vad)),
             lms_order=int(data.get("lms_order", cls.lms_order)),
             lms_step_size=float(data.get("lms_step_size", cls.lms_step_size)),
@@ -202,6 +272,11 @@ class IFANTrainingConfig:
             validation_snr_min=float(evaluation.get("validation_snr_min", cls.validation_snr_min)),
             validation_snr_max=float(evaluation.get("validation_snr_max", cls.validation_snr_max)),
             baseline_checkpoint_path=str(paths.get("baseline_checkpoint_path", cls.baseline_checkpoint_path)),
+            ifan_init_checkpoint_path=str(paths.get("ifan_init_checkpoint_path", cls.ifan_init_checkpoint_path)),
+            saf_lite_enabled=bool(pruning.get("saf_lite_enabled", cls.saf_lite_enabled)),
+            saf_lite_keep_per_8=int(pruning.get("saf_lite_keep_per_8", cls.saf_lite_keep_per_8)),
+            saf_lite_block_size=int(pruning.get("saf_lite_block_size", cls.saf_lite_block_size)),
+            saf_lite_target_channels=int(pruning.get("saf_lite_target_channels", cls.saf_lite_target_channels)),
             experiment_role=str(contract.get("experiment_role", cls.experiment_role)),
             srp_variant=str(contract.get("srp_variant", cls.srp_variant)),
             phat_sinc_half_width=int(contract.get("phat_sinc_half_width", cls.phat_sinc_half_width)),
@@ -218,6 +293,11 @@ class IFANTrainingConfig:
         )
 
     def model_config(self) -> IFANModelConfig:
+        charts = 5
+        fusion_r = self.r - 1 if self.r > 1 else self.r
+        output_r = fusion_r - 1 if self.final_head_pooling else fusion_r
+        spatial_h = 2**output_r
+        spatial_w = 2 ** (output_r + 1)
         return IFANModelConfig(
             r=self.r,
             phat_in_channels=1,
@@ -226,6 +306,11 @@ class IFANTrainingConfig:
             smooth_vertices=self.smooth_vertices,
             final_head_pooling=self.final_head_pooling,
             temporal_conv_variant=self.temporal_conv_variant,
+            map_refiner=self.map_refiner,
+            map_refiner_position=self.map_refiner_position,
+            map_maba=self.map_maba.with_grid(charts=charts, height=spatial_h, width=spatial_w),
+            weak_map_refiner=self.weak_map_refiner,
+            weak_map_maba=self.weak_map_maba.with_grid(charts=charts, height=spatial_h, width=spatial_w),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -239,6 +324,9 @@ class IFANTrainingConfig:
             "branch_channels": self.branch_channels,
             "feature_pair": "phat+lms",
             "srp_variant": self.srp_variant,
+            "map_refiner": self.map_refiner,
+            "map_refiner_position": self.map_refiner_position,
+            "weak_map_refiner": self.weak_map_refiner,
             "phat_sinc_half_width": self.phat_sinc_half_width,
             "lms_backend": self.lms_backend,
             "temporal_conv_variant": self.temporal_conv_variant,
@@ -248,6 +336,13 @@ class IFANTrainingConfig:
                 "run_dir": self.mainline_anchor_run,
                 "locata_report": self.mainline_anchor_locata_report,
                 "baseline_checkpoint_path": self.baseline_checkpoint_path,
+            },
+            "pruning": {
+                "saf_lite_enabled": self.saf_lite_enabled,
+                "ifan_init_checkpoint_path": self.ifan_init_checkpoint_path,
+                "keep_per_8": self.saf_lite_keep_per_8,
+                "block_size": self.saf_lite_block_size,
+                "target_channels": self.saf_lite_target_channels,
             },
             "lightweight_gate": {
                 "ready_delta_deg": self.lightweight_ready_delta_deg,
@@ -275,6 +370,7 @@ class IFANTrainingPipeline:
         self.resume_checkpoint_path = None if resume_checkpoint_path is None else Path(resume_checkpoint_path)
         self.resume_output_dir = None if resume_output_dir is None else Path(resume_output_dir)
         self.resume_log_path = None if resume_log_path is None else Path(resume_log_path)
+        self.saf_lite_pruner: SAFLitePruner | None = None
 
     @staticmethod
     def set_seed(seed: int) -> None:
@@ -332,6 +428,28 @@ class IFANTrainingPipeline:
             for key, value in state.items():
                 if torch.is_tensor(value):
                     state[key] = value.to(device)
+
+    @staticmethod
+    def _load_ifan_init_checkpoint(model: IFANModel, checkpoint_path: str | Path) -> dict[str, Any]:
+        path = Path(checkpoint_path)
+        if not path.exists():
+            raise FileNotFoundError(f"IFAN init checkpoint does not exist: {path}")
+        checkpoint = torch.load(path, map_location="cpu")
+        state_dict = checkpoint.get("model_state_dict", checkpoint)
+        incompatible = model.load_state_dict(state_dict, strict=False)
+        missing = list(incompatible.missing_keys)
+        unexpected = list(incompatible.unexpected_keys)
+        if missing or unexpected:
+            raise RuntimeError(
+                "IFAN init checkpoint is incompatible with the current model.\n"
+                f"Unexpected keys: {unexpected}\n"
+                f"Missing keys: {missing}"
+            )
+        return {
+            "path": str(path),
+            "epoch": checkpoint.get("epoch") if isinstance(checkpoint, dict) else None,
+            "metrics": checkpoint.get("metrics", {}) if isinstance(checkpoint, dict) else {},
+        }
 
     @staticmethod
     def _load_epoch_history_from_log(log_path: Path) -> list[dict[str, Any]]:
@@ -401,6 +519,18 @@ class IFANTrainingPipeline:
             best_val_rmsae = float(checkpoint["metrics"]["val_rmsae_deg"])
 
         return start_epoch, history_rows, best_val_rmsae, best_checkpoint_path
+
+    def _load_saf_lite_pruner_from_checkpoint(self, checkpoint_path: Path) -> SAFLitePruner | None:
+        checkpoint = torch.load(checkpoint_path, map_location="cpu")
+        pruning = checkpoint.get("pruning", {}) if isinstance(checkpoint, dict) else {}
+        if pruning.get("method") != "saf_lite" or not isinstance(pruning.get("masks"), dict):
+            return None
+        return SAFLitePruner(
+            masks={name: mask.detach().cpu() for name, mask in pruning["masks"].items()},
+            keep_per_block=int(pruning.get("keep_per_8", self.config.saf_lite_keep_per_8)),
+            block_size=int(pruning.get("block_size", self.config.saf_lite_block_size)),
+            target_channels=int(pruning.get("target_channels", self.config.saf_lite_target_channels)),
+        )
 
     @staticmethod
     def move_ifan_preprocessor(preprocessor: DualFeatureIcoPreprocessor, device: torch.device) -> None:
@@ -580,7 +710,10 @@ class IFANTrainingPipeline:
                     )
                     last_progress_emit = now
 
-            optimizer.step()
+            if self.saf_lite_pruner is None:
+                optimizer.step()
+            else:
+                self.saf_lite_pruner.optimizer_step(model, optimizer)
             optimizer.zero_grad(set_to_none=True)
 
         if sample_count == 0:
@@ -604,15 +737,30 @@ class IFANTrainingPipeline:
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "training_config": self.config.to_dict(),
-            "model_config": {
-                "r": self.model_config.r,
-                "branch_channels": self.model_config.branch_channels,
-                "final_head_pooling": self.model_config.final_head_pooling,
-                "smooth_vertices": self.model_config.smooth_vertices,
-                "temporal_conv_variant": self.model_config.temporal_conv_variant,
-            },
+	            "model_config": {
+	                "r": self.model_config.r,
+	                "branch_channels": self.model_config.branch_channels,
+	                "final_head_pooling": self.model_config.final_head_pooling,
+	                "smooth_vertices": self.model_config.smooth_vertices,
+	                "temporal_conv_variant": self.model_config.temporal_conv_variant,
+	                "map_refiner": self.model_config.map_refiner,
+	                "map_refiner_position": self.model_config.map_refiner_position,
+	                "map_maba": asdict(self.model_config.map_maba),
+	                "weak_map_refiner": self.model_config.weak_map_refiner,
+	                "weak_map_maba": asdict(self.model_config.weak_map_maba),
+	            },
             "metrics": metrics,
         }
+        if self.saf_lite_pruner is not None:
+            self.saf_lite_pruner.apply(model)
+            payload["pruning"] = {
+                "method": "saf_lite",
+                "keep_per_8": self.saf_lite_pruner.keep_per_block,
+                "block_size": self.saf_lite_pruner.block_size,
+                "target_channels": self.saf_lite_pruner.target_channels,
+                "mask_names": sorted(self.saf_lite_pruner.masks),
+                "masks": {name: mask.detach().cpu() for name, mask in self.saf_lite_pruner.masks.items()},
+            }
         torch.save(payload, path)
         return str(path)
 
@@ -698,6 +846,7 @@ class IFANTrainingPipeline:
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "srp_variant": self.config.srp_variant,
                     "temporal_conv_variant": self.config.temporal_conv_variant,
+                    "map_refiner": self.config.map_refiner,
                     "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
                     "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
                 },
@@ -824,19 +973,22 @@ class IFANTrainingPipeline:
 
         model = IFANModel(self.model_config).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.config.lr_phase1)
-        model_profile = self.build_model_profile(model)
-        print(
-            json.dumps(
-                {
-                    "event": "optimizer_ready",
-                    "initial_lr": self.config.lr_phase1,
-                    "trainable_params": model.count_parameters(trainable_only=True),
-                    "mac_proxy_total": model_profile["mac_proxy_total"],
-                },
-                ensure_ascii=False,
-            ),
-            flush=True,
-        )
+        ifan_init_checkpoint_info: dict[str, Any] | None = None
+
+        if self.resume_checkpoint_path is None and self.config.ifan_init_checkpoint_path:
+            ifan_init_checkpoint_info = self._load_ifan_init_checkpoint(model, self.config.ifan_init_checkpoint_path)
+            model.to(device)
+            print(
+                json.dumps(
+                    {
+                        "event": "ifan_init_checkpoint_loaded",
+                        "path": ifan_init_checkpoint_info["path"],
+                        "epoch": ifan_init_checkpoint_info["epoch"],
+                    },
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
 
         start_epoch, history_rows, best_val_rmsae, best_checkpoint_path = self._load_resume_state(
             model=model,
@@ -848,25 +1000,102 @@ class IFANTrainingPipeline:
                 f"Resume checkpoint epoch={start_epoch} is already at or beyond configured epochs={self.config.epochs}."
             )
 
+        pruning_artifacts: dict[str, str] | None = None
+        pruning_summary: dict[str, Any] | None = None
+        if self.config.saf_lite_enabled:
+            self.saf_lite_pruner = (
+                self._load_saf_lite_pruner_from_checkpoint(self.resume_checkpoint_path)
+                if self.resume_checkpoint_path is not None
+                else None
+            )
+            if self.saf_lite_pruner is None:
+                self.saf_lite_pruner = SAFLitePruner.from_model(
+                    model,
+                    keep_per_block=self.config.saf_lite_keep_per_8,
+                    block_size=self.config.saf_lite_block_size,
+                    target_channels=self.config.saf_lite_target_channels,
+                )
+            self.saf_lite_pruner.apply(model)
+            self.saf_lite_pruner.register_gradient_hooks(model)
+            pruning_artifacts = self.saf_lite_pruner.save_artifacts(
+                model,
+                output_dir,
+                time_steps=6,
+                charts=5,
+            )
+            pruning_summary = self.saf_lite_pruner.summary(model, time_steps=6, charts=5)
+            print(
+                json.dumps(
+                    {
+                        "event": "saf_lite_pruning_applied",
+                        "keep_per_8": self.config.saf_lite_keep_per_8,
+                        "block_size": self.config.saf_lite_block_size,
+                        "pruned_layer_count": pruning_summary["pruned_layer_count"],
+                        "effective_ico_conv_mac_proxy": pruning_summary["effective_ico_conv_mac_proxy"],
+                        "dense_ico_conv_mac_proxy": pruning_summary["dense_ico_conv_mac_proxy"],
+                        "mask_path": pruning_artifacts["mask_path"],
+                        "summary_path": pruning_artifacts["summary_path"],
+                    },
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
+
+        model_profile = self.build_model_profile(model)
+        if pruning_summary is not None:
+            model_profile["saf_lite_pruning"] = {
+                "enabled": True,
+                "keep_per_8": self.config.saf_lite_keep_per_8,
+                "block_size": self.config.saf_lite_block_size,
+                "pruned_layer_count": pruning_summary["pruned_layer_count"],
+                "dense_ico_conv_mac_proxy": pruning_summary["dense_ico_conv_mac_proxy"],
+                "effective_ico_conv_mac_proxy": pruning_summary["effective_ico_conv_mac_proxy"],
+                "ico_conv_mac_keep_ratio": pruning_summary["ico_conv_mac_keep_ratio"],
+                "theoretical_pruned_ico_conv_compression": pruning_summary[
+                    "theoretical_pruned_ico_conv_compression"
+                ],
+            }
+        print(
+            json.dumps(
+                {
+                    "event": "optimizer_ready",
+                    "initial_lr": self.config.lr_phase1,
+                    "trainable_params": model.count_parameters(trainable_only=True),
+                    "mac_proxy_total": model_profile["mac_proxy_total"],
+                    "saf_lite_enabled": self.config.saf_lite_enabled,
+                },
+                ensure_ascii=False,
+            ),
+            flush=True,
+        )
+
         config_path = output_dir / "resolved_config.json"
         config_path.write_text(
             json.dumps(
                 {
                     "training_config": self.config.to_dict(),
-                    "model_config": {
-                        "r": self.model_config.r,
-                        "branch_channels": self.model_config.branch_channels,
-                        "final_head_pooling": self.model_config.final_head_pooling,
-                        "smooth_vertices": self.model_config.smooth_vertices,
-                        "temporal_conv_variant": self.model_config.temporal_conv_variant,
-                        "input_ablation_mode": self.config.input_ablation_mode,
-                    },
+	                    "model_config": {
+	                        "r": self.model_config.r,
+	                        "branch_channels": self.model_config.branch_channels,
+	                        "final_head_pooling": self.model_config.final_head_pooling,
+	                        "smooth_vertices": self.model_config.smooth_vertices,
+	                        "temporal_conv_variant": self.model_config.temporal_conv_variant,
+	                        "map_refiner": self.model_config.map_refiner,
+	                        "map_refiner_position": self.model_config.map_refiner_position,
+	                        "map_maba": asdict(self.model_config.map_maba),
+	                        "weak_map_refiner": self.model_config.weak_map_refiner,
+	                        "weak_map_maba": asdict(self.model_config.weak_map_maba),
+	                        "input_ablation_mode": self.config.input_ablation_mode,
+	                    },
                     "experiment_contract": self.config.experiment_contract(),
                     "model_profile": model_profile,
                     "frontend_profile": frontend_profile,
+                    "pruning_artifacts": pruning_artifacts,
+                    "pruning_summary": pruning_summary,
                     "train_split_path": str(train_split_path),
                     "validation_split_path": str(val_split_path),
                     "device": str(device),
+                    "ifan_init_checkpoint": ifan_init_checkpoint_info,
                     "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
                     "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
                     "resume_log_path": None if self.resume_log_path is None else str(self.resume_log_path),
@@ -891,8 +1120,13 @@ class IFANTrainingPipeline:
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "experiment_role": self.config.experiment_role,
                     "srp_variant": self.config.srp_variant,
-                    "temporal_conv_variant": self.config.temporal_conv_variant,
-                    "temporal_module": self.config.temporal_module,
+	                    "temporal_conv_variant": self.config.temporal_conv_variant,
+	                    "temporal_module": self.config.temporal_module,
+	                    "map_refiner": self.config.map_refiner,
+	                    "map_refiner_position": self.config.map_refiner_position,
+	                    "weak_map_refiner": self.config.weak_map_refiner,
+	                    "saf_lite_enabled": self.config.saf_lite_enabled,
+                    "saf_lite_keep_per_8": self.config.saf_lite_keep_per_8 if self.config.saf_lite_enabled else None,
                     "epochs": self.config.epochs,
                     "resume_start_epoch": int(start_epoch),
                 },
@@ -995,6 +1229,8 @@ class IFANTrainingPipeline:
             best_state = torch.load(best_checkpoint_path, map_location="cpu")
             model.load_state_dict(best_state["model_state_dict"])
             model.to(device)
+            if self.saf_lite_pruner is not None:
+                self.saf_lite_pruner.apply(model)
 
         baseline_compare = self.compare_against_baseline(
             model=model,
@@ -1035,11 +1271,17 @@ class IFANTrainingPipeline:
             "branch_channels": self.model_config.branch_channels,
             "final_head_pooling": self.model_config.final_head_pooling,
             "input_ablation_mode": self.config.input_ablation_mode,
-            "srp_variant": self.config.srp_variant,
-            "temporal_conv_variant": self.config.temporal_conv_variant,
-            "experiment_contract": self.config.experiment_contract(),
+	            "srp_variant": self.config.srp_variant,
+	            "temporal_conv_variant": self.config.temporal_conv_variant,
+	            "map_refiner": self.config.map_refiner,
+	            "map_refiner_position": self.config.map_refiner_position,
+	            "weak_map_refiner": self.config.weak_map_refiner,
+	            "experiment_contract": self.config.experiment_contract(),
             "model_profile": model_profile,
             "frontend_profile": frontend_profile,
+            "pruning_artifacts": pruning_artifacts,
+            "pruning_summary": pruning_summary,
+            "ifan_init_checkpoint": ifan_init_checkpoint_info,
             "resume_checkpoint_path": None if self.resume_checkpoint_path is None else str(self.resume_checkpoint_path),
             "resume_output_dir": None if self.resume_output_dir is None else str(self.resume_output_dir),
             "resume_log_path": None if self.resume_log_path is None else str(self.resume_log_path),

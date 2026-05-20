@@ -638,8 +638,25 @@ class LibriSpeechDataset(Dataset):
 		s = np.array([])
 		utt_paths = list(chapter.values())
 		n = np.random.randint(0,len(chapter))
+		consecutive_failures = 0
 		while s.shape[0] < self.T * self.fs:
-			utterance, fs = soundfile.read(utt_paths[n])
+			path = utt_paths[n]
+			try:
+				utterance, fs = soundfile.read(path)
+				consecutive_failures = 0
+			except (soundfile.LibsndfileError, RuntimeError, OSError) as exc:
+				consecutive_failures += 1
+				warnings.warn(
+					"Skipping unreadable LibriSpeech utterance '{}': {}".format(path, exc),
+					RuntimeWarning,
+				)
+				n += 1
+				if n >= len(chapter): n=0
+				if consecutive_failures >= len(utt_paths):
+					raise RuntimeError(
+						"All utterances in chapter are unreadable; cannot sample speech segment."
+					) from exc
+				continue
 			assert fs == self.fs
 			s = np.concatenate([s, utterance])
 			n += 1
@@ -1176,4 +1193,3 @@ def animate_trajectory(theta, phi, srp_maps, fps, DOA=None, DOA_est=None, DOA_sr
 	# plt.show()
 	# plt.close(fig)
 	if file_name is not None: anim.save(file_name, fps=fps, writer='imagemagick')#, extra_args=['-vcodec', 'libx264'])
-

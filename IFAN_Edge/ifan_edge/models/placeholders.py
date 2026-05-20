@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
@@ -8,6 +8,7 @@ import torch.nn as nn
 from einops import rearrange
 
 from ..bridges import at_modules, icoCNN
+from .map_maba import FeatureMABATemporalRefiner, MABATemporalRefiner, MapMABATemporalConfig
 
 
 PAPER_IFAN_BRANCH_CHANNELS = 16
@@ -24,6 +25,11 @@ class IFANModelConfig:
     smooth_vertices: bool = True
     final_head_pooling: bool = False
     temporal_conv_variant: str = "standard_1d"
+    map_refiner: str = "none"
+    map_refiner_position: str = "pre_softargmax"
+    map_maba: MapMABATemporalConfig = field(default_factory=MapMABATemporalConfig)
+    weak_map_refiner: str = "none"
+    weak_map_maba: MapMABATemporalConfig = field(default_factory=lambda: MapMABATemporalConfig(d_model=8, state_dim=4, dropout=0.0, use_state=False))
 
     @property
     def fused_channels(self) -> int:
@@ -41,6 +47,17 @@ class IFANModelConfig:
                 "temporal_conv_variant must be 'standard_1d' or 'depthwise_separable_1d', "
                 f"got {self.temporal_conv_variant!r}."
             )
+        if self.map_refiner not in {"none", "maba"}:
+            raise ValueError(f"map_refiner must be 'none' or 'maba', got {self.map_refiner!r}.")
+        if self.map_refiner_position not in {"pre_softargmax", "pre_readout"}:
+            raise ValueError(
+                "map_refiner_position must be 'pre_softargmax' or 'pre_readout', "
+                f"got {self.map_refiner_position!r}."
+            )
+        if self.weak_map_refiner not in {"none", "maba"}:
+            raise ValueError(f"weak_map_refiner must be 'none' or 'maba', got {self.weak_map_refiner!r}.")
+        self.map_maba = MapMABATemporalConfig.from_mapping(self.map_maba)
+        self.weak_map_maba = MapMABATemporalConfig.from_mapping(self.weak_map_maba)
 
 
 class ResidualLearningModule(nn.Module):
@@ -282,6 +299,49 @@ class IFANModel(nn.Module):
         ico_grid = torch.from_numpy(icoCNN.icosahedral_grid_coordinates(output_r)).float()
         ico_grid = ico_grid.permute(3, 0, 1, 2).contiguous()
         self.sam = at_modules.SoftArgMax(ico_grid.shape[1:], indexes=ico_grid, include_exp=True)
+        _, output_height, output_width = tuple(ico_grid.shape[1:])
+        self.feature_refiner = None
+        self.map_refiner = None
+        if config.map_refiner == "maba":
+            resolved_map_maba = config.map_maba.with_grid(charts=5, height=output_height, width=output_width)
+            if config.map_refiner_position == "pre_softargmax":
+                self.map_refiner = MABATemporalRefiner(
+                    charts=resolved_map_maba.charts,
+                    height=resolved_map_maba.height,
+                    width=resolved_map_maba.width,
+                    d_model=resolved_map_maba.d_model,
+                    state_dim=resolved_map_maba.state_dim,
+                    conv_kernel=resolved_map_maba.conv_kernel,
+                    dropout=resolved_map_maba.dropout,
+                    use_residual=resolved_map_maba.use_residual,
+                    use_gate=resolved_map_maba.use_gate,
+                    use_state=resolved_map_maba.use_state,
+                )
+            else:
+                self.feature_refiner = FeatureMABATemporalRefiner(
+                    channels=config.branch_channels,
+                    d_model=resolved_map_maba.d_model,
+                    state_dim=resolved_map_maba.state_dim,
+                    conv_kernel=resolved_map_maba.conv_kernel,
+                    dropout=resolved_map_maba.dropout,
+                    use_residual=resolved_map_maba.use_residual,
+                    use_gate=resolved_map_maba.use_gate,
+                    use_state=resolved_map_maba.use_state,
+                )
+        if config.weak_map_refiner == "maba":
+            resolved_weak_map_maba = config.weak_map_maba.with_grid(charts=5, height=output_height, width=output_width)
+            self.map_refiner = MABATemporalRefiner(
+                charts=resolved_weak_map_maba.charts,
+                height=resolved_weak_map_maba.height,
+                width=resolved_weak_map_maba.width,
+                d_model=resolved_weak_map_maba.d_model,
+                state_dim=resolved_weak_map_maba.state_dim,
+                conv_kernel=resolved_weak_map_maba.conv_kernel,
+                dropout=resolved_weak_map_maba.dropout,
+                use_residual=resolved_weak_map_maba.use_residual,
+                use_gate=resolved_weak_map_maba.use_gate,
+                use_state=resolved_weak_map_maba.use_state,
+            )
 
     @staticmethod
     def _count_params(module: Optional[nn.Module]) -> int:
@@ -306,6 +366,8 @@ class IFANModel(nn.Module):
             "fusion_blocks": sum(self._count_params(block) for block in self.fusion_blocks),
             "final_head": self._count_params(self.final_block),
             "channel_readout": self._count_params(self.channel_readout),
+            "feature_refiner": self._count_params(self.feature_refiner),
+            "map_refiner": self._count_params(self.map_refiner),
         }
         breakdown["total"] = sum(breakdown.values())
         return breakdown
@@ -414,7 +476,18 @@ class IFANModel(nn.Module):
             "final_head_conv": final_conv,
             "final_head_temporal": final_1d,
             "channel_readout": channel_readout,
+            "map_refiner": 0,
         }
+        if self.feature_refiner is not None:
+            breakdown["feature_refiner"] = self.feature_refiner.mac_proxy(
+                time_steps=time_steps,
+                regions=6,
+                charts=charts,
+                height=fusion_height,
+                width=fusion_width,
+            )
+        if self.map_refiner is not None:
+            breakdown["map_refiner"] = self.map_refiner.mac_proxy(time_steps)
         breakdown["total"] = sum(breakdown.values())
         return breakdown
 
@@ -479,6 +552,10 @@ class IFANModel(nn.Module):
         logits = self.final_block(fused)
         if debug is not None:
             debug["final_head_logits"] = logits
+        if self.feature_refiner is not None:
+            logits = self.feature_refiner(logits)
+        if debug is not None:
+            debug["pre_readout_refined_logits"] = logits
         logits = self.channel_readout(logits)
         if debug is not None:
             debug["channel_readout_logits"] = logits
@@ -490,11 +567,18 @@ class IFANModel(nn.Module):
 
         logits = logits.squeeze(2)
         logits = logits.max(dim=2).values
+        if self.map_refiner is not None and self.config.map_refiner_position == "pre_softargmax":
+            logits = self.map_refiner(logits)
+        if debug is not None:
+            debug["map_refined_logits"] = logits
         logits = self.clean_vertices(logits)
         coords = self.sam(logits)
         if debug is not None:
             debug["attention"] = attention
             debug["softargmax_input"] = logits
+            debug["map_refiner"] = self.config.map_refiner
+            debug["map_refiner_position"] = self.config.map_refiner_position
+            debug["weak_map_refiner"] = self.config.weak_map_refiner
 
         if return_debug:
             return coords, debug

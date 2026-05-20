@@ -1,0 +1,2286 @@
+{
+  "training_config": {
+    "stage_name": "stage_03",
+    "experiment_name": "ifan_stage3",
+    "output_root": "IFAN_Edge/outputs/stage3",
+    "output_suffix": "c16_saf_lite_2of8_phase1",
+    "input_ablation_mode": "none",
+    "seed": 42,
+    "device": "cuda",
+    "librispeech_path": "datasets/LibriSpeech",
+    "train_split": "train-clean-100",
+    "test_split": "test-clean",
+    "trajectory_seconds": 20,
+    "fs": 16000,
+    "k": 4096,
+    "step": 3072,
+    "r": 2,
+    "branch_channels": 16,
+    "final_head_pooling": false,
+    "smooth_vertices": true,
+    "map_refiner": "none",
+    "map_maba": {
+      "charts": 5,
+      "height": 4,
+      "width": 8,
+      "d_model": 16,
+      "state_dim": 8,
+      "conv_kernel": 3,
+      "dropout": 0.1,
+      "use_residual": true,
+      "use_gate": true,
+      "use_state": true
+    },
+    "apply_vad": true,
+    "lms_order": 64,
+    "lms_step_size": 0.01,
+    "lms_map_normalize": true,
+    "lms_map_mode": "tau_sample",
+    "lms_peak_sigma": 2.0,
+    "lms_update_mode": "trajectory_tracking",
+    "lms_normalized": false,
+    "lms_include_self_pairs": true,
+    "lms_backend": "frequency_block",
+    "lms_block_size": 256,
+    "lms_fft_size": null,
+    "nb_points": 156,
+    "epochs": 20,
+    "phase1_epochs": 0,
+    "batch_size_phase1": 1,
+    "batch_size_phase2": 10,
+    "micro_batch_size_phase1": 1,
+    "micro_batch_size_phase2": 1,
+    "lr_phase1": 1e-05,
+    "lr_phase2": 1e-05,
+    "train_dataset_size": null,
+    "validation_dataset_size": 32,
+    "validation_batch_size": 1,
+    "scenario_eval_size": 8,
+    "scenario_eval_batch_size": 1,
+    "checkpoint_every": 10,
+    "train_t60_min": 0.2,
+    "train_t60_max": 1.3,
+    "train_snr_min_phase1": 5.0,
+    "train_snr_max_phase1": 30.0,
+    "train_snr_min_phase2": 5.0,
+    "train_snr_max_phase2": 30.0,
+    "validation_snr_min": 5.0,
+    "validation_snr_max": 30.0,
+    "baseline_checkpoint_path": "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin",
+    "ifan_init_checkpoint_path": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/checkpoints/best_rmsae.pt",
+    "saf_lite_enabled": true,
+    "saf_lite_keep_per_8": 2,
+    "saf_lite_block_size": 8,
+    "saf_lite_target_channels": 16,
+    "experiment_role": "c16_saf_lite_2of8_phase1",
+    "srp_variant": "paper_original",
+    "phat_sinc_half_width": 0,
+    "temporal_conv_variant": "standard_1d",
+    "temporal_module": "conv",
+    "primary_benchmark_suite": "simulated_4scene+hard_scenes+locata_eval_benchmark2_task1_3_5",
+    "mainline_anchor_run": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330",
+    "mainline_anchor_locata_report": "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_ifan80_best.json",
+    "lightweight_ready_delta_deg": 0.3
+  },
+  "model_config": {
+    "r": 2,
+    "branch_channels": 16,
+    "final_head_pooling": false,
+    "smooth_vertices": true,
+    "temporal_conv_variant": "standard_1d",
+    "map_refiner": "none",
+    "map_maba": {
+      "charts": 5,
+      "height": 2,
+      "width": 4,
+      "d_model": 16,
+      "state_dim": 8,
+      "conv_kernel": 3,
+      "dropout": 0.1,
+      "use_residual": true,
+      "use_gate": true,
+      "use_state": true
+    },
+    "input_ablation_mode": "none"
+  },
+  "experiment_contract": {
+    "stage": "stage_03",
+    "experiment_role": "c16_saf_lite_2of8_phase1",
+    "model_topology": "paper_dual_mainline",
+    "branch_channels": 16,
+    "feature_pair": "phat+lms",
+    "srp_variant": "paper_original",
+    "map_refiner": "none",
+    "phat_sinc_half_width": 0,
+    "lms_backend": "frequency_block",
+    "temporal_conv_variant": "standard_1d",
+    "temporal_module": "conv",
+    "primary_benchmark_suite": "simulated_4scene+hard_scenes+locata_eval_benchmark2_task1_3_5",
+    "baseline_anchor": {
+      "run_dir": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330",
+      "locata_report": "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_ifan80_best.json",
+      "baseline_checkpoint_path": "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
+    },
+    "pruning": {
+      "saf_lite_enabled": true,
+      "ifan_init_checkpoint_path": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/checkpoints/best_rmsae.pt",
+      "keep_per_8": 2,
+      "block_size": 8,
+      "target_channels": 16
+    },
+    "lightweight_gate": {
+      "ready_delta_deg": 0.3,
+      "requires_locata_overall_win": true,
+      "requires_task3_task5_no_material_regression": true
+    }
+  },
+  "model_profile": {
+    "trainable_params": 125457,
+    "total_params": 125457,
+    "parameter_breakdown": {
+      "phat_stem": 128,
+      "lms_stem": 128,
+      "phat_residual": 21568,
+      "lms_residual": 21568,
+      "shared_attention": 21568,
+      "fusion_blocks": 48384,
+      "final_head": 12096,
+      "channel_readout": 17,
+      "map_refiner": 0,
+      "total": 125457
+    },
+    "mac_proxy_total": 459532800,
+    "mac_proxy_breakdown": {
+      "phat_stem": 645120,
+      "lms_stem": 645120,
+      "phat_residual": 123863040,
+      "lms_residual": 123863040,
+      "shared_attention_conv1": 61931520,
+      "shared_attention_conv2": 61931520,
+      "fusion_block_conv": 61931520,
+      "fusion_block_temporal": 7372800,
+      "final_head_conv": 15482880,
+      "final_head_temporal": 1843200,
+      "channel_readout": 23040,
+      "map_refiner": 0
+    },
+    "mac_proxy_input_shape": [
+      1,
+      2,
+      6,
+      5,
+      4,
+      8
+    ],
+    "saf_lite_pruning": {
+      "enabled": true,
+      "keep_per_8": 2,
+      "block_size": 8,
+      "pruned_layer_count": 11,
+      "dense_ico_conv_mac_proxy": 449003520,
+      "effective_ico_conv_mac_proxy": 112250880,
+      "ico_conv_mac_keep_ratio": 0.25,
+      "theoretical_pruned_ico_conv_compression": 4.0
+    }
+  },
+  "frontend_profile": {
+    "phat": {
+      "srp_variant": "paper_original",
+      "pair_count": 144,
+      "full_pair_count": 144,
+      "diagonal_pair_count": 12,
+      "interpolation_taps": 1,
+      "grid_shape": [
+        5,
+        4,
+        8
+      ],
+      "unique_pairs_only": false,
+      "symmetric_pair_factor": 1.0,
+      "cache_table_bytes": 184320,
+      "cache_tables": {
+        "tau0": {
+          "shape": [
+            12,
+            12,
+            5,
+            4,
+            8
+          ],
+          "dtype": "torch.int64",
+          "bytes": 184320
+        }
+      },
+      "complexity_proxy": {
+        "grid_points": 160,
+        "sample_reads_per_grid_point": 144,
+        "weight_multiplies_per_grid_point": 0,
+        "pair_reduction_adds_per_grid_point": 0,
+        "grid_accumulation_adds_per_grid_point": 143,
+        "symmetry_multiplies_per_grid_point": 0,
+        "total_arithmetic_ops_per_grid_point": 143,
+        "sample_reads_per_frame": 23040,
+        "weight_multiplies_per_frame": 0,
+        "pair_reduction_adds_per_frame": 0,
+        "grid_accumulation_adds_per_frame": 22880,
+        "symmetry_multiplies_per_frame": 0,
+        "total_arithmetic_ops_per_frame": 22880
+      }
+    },
+    "lms": {
+      "backend": "frequency_block",
+      "include_self_pairs": true,
+      "map_mode": "tau_sample",
+      "update_mode": "trajectory_tracking",
+      "block_size": 256,
+      "fft_size": 512
+    }
+  },
+  "pruning_artifacts": {
+    "mask_path": "IFAN_Edge/outputs/stage3/ifan_stage3_c16_saf_lite_2of8_phase1_20260518_125858/pruning/mask.pt",
+    "summary_path": "IFAN_Edge/outputs/stage3/ifan_stage3_c16_saf_lite_2of8_phase1_20260518_125858/pruning/pruning_summary.json"
+  },
+  "pruning_summary": {
+    "method": "saf_lite",
+    "target": "icoCNN.ConvIco.weight",
+    "target_channels": 16,
+    "block_size": 8,
+    "keep_per_block": 2,
+    "sparsity_per_block": 0.75,
+    "pruned_layer_count": 11,
+    "layers": [
+      {
+        "name": "phat_branch.residual.conv1",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              8,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              5
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              3,
+              5
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              9,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              5
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              10,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              12,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              8,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "phat_branch.residual.conv2",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              3,
+              4
+            ],
+            [
+              8,
+              10
+            ]
+          ],
+          [
+            [
+              3,
+              6
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              2,
+              7
+            ],
+            [
+              8,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              4,
+              6
+            ],
+            [
+              8,
+              10
+            ]
+          ],
+          [
+            [
+              4,
+              6
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              12,
+              14
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              9,
+              10
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "aux_branch.residual.conv1",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              9,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              5
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              7
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              5
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ],
+            [
+              10,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              10,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              12,
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "aux_branch.residual.conv2",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              4,
+              6
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              10,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              6
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              2,
+              5
+            ],
+            [
+              8,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              7
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              3,
+              4
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              3,
+              4
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              12,
+              13
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "shared_attention.conv1",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              0,
+              6
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              9,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              13,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              5,
+              6
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              12,
+              15
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "shared_attention.conv2",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 2,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 61931520,
+        "effective_mac_proxy": 15482880,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              4,
+              6
+            ],
+            [
+              13,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              8,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              12,
+              14
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              8,
+              10
+            ]
+          ],
+          [
+            [
+              3,
+              4
+            ],
+            [
+              11,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              13,
+              15
+            ]
+          ],
+          [
+            [
+              4,
+              6
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              7
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              12,
+              13
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "fusion_blocks.0.conv",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 1,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 15482880,
+        "effective_mac_proxy": 3870720,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              4,
+              7
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              3,
+              5
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              5,
+              6
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              7
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              2,
+              7
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              10,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              7
+            ],
+            [
+              8,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              10,
+              11
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              9,
+              15
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "fusion_blocks.1.conv",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 1,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 15482880,
+        "effective_mac_proxy": 3870720,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              3,
+              7
+            ],
+            [
+              10,
+              13
+            ]
+          ],
+          [
+            [
+              3,
+              6
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              13,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              13,
+              14
+            ]
+          ],
+          [
+            [
+              4,
+              6
+            ],
+            [
+              10,
+              11
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              13,
+              14
+            ]
+          ],
+          [
+            [
+              5,
+              7
+            ],
+            [
+              11,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              4
+            ],
+            [
+              9,
+              11
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "fusion_blocks.2.conv",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 1,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 15482880,
+        "effective_mac_proxy": 3870720,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              2,
+              4
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              7
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              3,
+              5
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              8,
+              14
+            ]
+          ],
+          [
+            [
+              4,
+              7
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              11,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              5
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              10,
+              13
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "fusion_blocks.3.conv",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 1,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 15482880,
+        "effective_mac_proxy": 3870720,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              0,
+              2
+            ],
+            [
+              11,
+              15
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              8,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              5
+            ],
+            [
+              9,
+              13
+            ]
+          ],
+          [
+            [
+              1,
+              7
+            ],
+            [
+              10,
+              15
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          [
+            [
+              5,
+              6
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              2,
+              6
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              5
+            ],
+            [
+              13,
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "final_block.conv",
+        "shape": [
+          16,
+          16,
+          6,
+          7
+        ],
+        "r": 1,
+        "Cin": 16,
+        "Cout": 16,
+        "Rin": 6,
+        "Rout": 6,
+        "retained_weights": 2688,
+        "total_weights": 10752,
+        "weight_keep_ratio": 0.25,
+        "dense_mac_proxy": 15482880,
+        "effective_mac_proxy": 3870720,
+        "mac_keep_ratio": 0.25,
+        "retained_input_indices_by_output_and_block": [
+          [
+            [
+              2,
+              7
+            ],
+            [
+              12,
+              13
+            ]
+          ],
+          [
+            [
+              6,
+              7
+            ],
+            [
+              14,
+              15
+            ]
+          ],
+          [
+            [
+              1,
+              7
+            ],
+            [
+              10,
+              12
+            ]
+          ],
+          [
+            [
+              1,
+              4
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              7
+            ],
+            [
+              9,
+              11
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              8,
+              9
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ],
+            [
+              10,
+              14
+            ]
+          ],
+          [
+            [
+              5,
+              7
+            ],
+            [
+              11,
+              14
+            ]
+          ],
+          [
+            [
+              2,
+              4
+            ],
+            [
+              9,
+              14
+            ]
+          ],
+          [
+            [
+              0,
+              6
+            ],
+            [
+              12,
+              14
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              8,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              10,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              9,
+              10
+            ]
+          ],
+          [
+            [
+              1,
+              6
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          [
+            [
+              5,
+              6
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ],
+            [
+              12,
+              13
+            ]
+          ]
+        ]
+      }
+    ],
+    "pruned_weight_total": 118272,
+    "retained_weight_total": 29568,
+    "pruned_weight_keep_ratio": 0.25,
+    "pruned_weight_sparsity": 0.75,
+    "dense_ico_conv_mac_proxy": 449003520,
+    "effective_ico_conv_mac_proxy": 112250880,
+    "ico_conv_mac_keep_ratio": 0.25,
+    "theoretical_pruned_ico_conv_compression": 4.0
+  },
+  "train_split_path": "/home/cmm/icocnn/datasets/LibriSpeech/train-clean-100",
+  "validation_split_path": "/home/cmm/icocnn/datasets/LibriSpeech/test-clean",
+  "device": "cuda",
+  "ifan_init_checkpoint": {
+    "path": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/checkpoints/best_rmsae.pt",
+    "epoch": 68,
+    "metrics": {
+      "epoch": 68,
+      "phase": 2,
+      "lr": 1e-05,
+      "batch_size": 10,
+      "micro_batch_size": 1,
+      "train_loss": 0.024931446400781473,
+      "val_loss": 0.024465096241328865,
+      "val_rmsae_deg": 7.1805625557899475,
+      "epoch_time_s": 577.5468243319992
+    }
+  },
+  "resume_checkpoint_path": null,
+  "resume_output_dir": null,
+  "resume_log_path": null,
+  "resume_start_epoch": 0
+}

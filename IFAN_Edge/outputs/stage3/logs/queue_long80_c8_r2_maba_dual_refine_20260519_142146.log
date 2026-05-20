@@ -1,0 +1,2 @@
+[2026-05-19T14:21:46+08:00] waiting_for_pid=305156
+[2026-05-19T19:16:47+08:00] wait_complete starting_training log=/home/cmm/icocnn/IFAN_Edge/outputs/stage3/logs/long80_c8_r2_maba_dual_refine_20260519_142146.log

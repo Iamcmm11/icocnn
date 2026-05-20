@@ -6,6 +6,28 @@
 - available recordings: `task1=13, task3=5, task5=5, total=23`
 - MAC: stage-3 `model_profile.mac_proxy_total`
 
+## Simulated Four-Scene Compare
+
+- source: each run's `baseline_compare.json`
+- metric: RMSAE deg; Delta is vs the original baseline checkpoint
+- scenarios: `scene_1=30dB/T60=0.2s`, `scene_2=30dB/T60=0.8s`, `scene_3=5dB/T60=0.8s`, `scene_4=5dB/T60=1.4s`
+- hard mean: average of `scene_3` and `scene_4`
+
+| Model | Params | MAC | Scene1 | Delta | Scene2 | Delta | Scene3 | Delta | Scene4 | Delta | Mean | Delta | Hard Mean | Delta |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| IFAN_C8_R2 | 31561 | 115211520 | 5.2905 | -0.0893 | 6.0883 | +0.5069 | 10.5562 | +1.3803 | 17.9796 | +4.2401 | 9.9787 | +1.5095 | 14.2679 | +2.8102 |
+| IFAN_C8_R2_map_maba | 33409 | 115221840 | 5.7687 | +0.3890 | 6.1328 | +0.5514 | 9.7947 | +0.6188 | 17.9463 | +4.2068 | 9.9106 | +1.4415 | 13.8705 | +2.4128 |
+| ifan_c8_r2_maba_pre_readout_best | 32353 | 116213760 | 5.1647 | -0.2150 | 5.6017 | +0.0203 | 9.4865 | +0.3106 | 13.9095 | +0.1700 | 8.5406 | +0.0715 | 11.6980 | +0.2403 |
+| ifan_c8_r2_maba_dual_refine_best | 33201 | 116218344 | 5.1004 | -0.2793 | 5.5467 | -0.0347 | 9.4702 | +0.2942 | 14.6532 | +0.9137 | 8.6926 | +0.2235 | 12.0617 | +0.6040 |
+
+### Why `pre_readout` helps scene_4
+
+`ifan_c8_r2_maba_pre_readout_best` adds a `FeatureMABATemporalRefiner` at `map_refiner_position = "pre_readout"`. In code, this means the refiner runs after `final_block` and before `channel_readout`: it sees tensors shaped like `(B, T, C, R, charts, H, W)`, so it can still refine the 8 feature channels and all 6 icosahedral regions before they are collapsed into a single score map. By contrast, `IFAN_C8_R2_map_maba` uses `MABATemporalRefiner` after `channel_readout`, after `squeeze` and `max(dim=2)`, so it only sees the final scalar map `(B, T, charts, H, W)` after channel and region information has already been discarded.
+
+The actual MABA block is a causal temporal refiner: channel/map projection, depthwise temporal convolution, layer norm/dropout, and a gated state update when `use_state = true`, followed by a residual delta. For scene_4 (`5dB/T60=1.4s`), the input is both noisy and highly reverberant, so the final scalar map is more likely to contain unstable peaks. Refining before readout preserves weak multi-channel and multi-region evidence long enough for the temporal state to suppress frame-level spikes before the hard region max and SoftArgMax. This matches the result: scene_4 RMSAE drops from `17.9796` (`IFAN_C8_R2`) and `17.9463` (`map_maba`) to `13.9095`, almost back to the baseline (`+0.1700 deg` delta).
+
+`dual_refine` keeps the same strong pre-readout refiner but adds a second weak pre-SoftArgMax map refiner. Its scene_1/2/3 numbers are slightly better than `pre_readout_best`, but scene_4 worsens to `14.6532`. The code path suggests the extra scalar-map refiner can re-shape already-collapsed heatmaps; in the hardest reverberant case that likely over-smooths or shifts the peak after the useful feature-level correction has already happened. So the practical conclusion is that `pre_readout_best` works mainly because it refines temporal evidence before the lossy `channel_readout -> region max -> SoftArgMax` steps, while the map-level refiners operate too late for scene_4.
+
 ## With Silences
 
 | Model | Params | MAC | Task1 Best | Delta | Task1 Mean | Delta | Task3 Best | Delta | Task3 Mean | Delta | Task5 Best | Delta | Task5 Mean | Delta | Std | Delta | Median | Delta | Average | Delta |
@@ -17,6 +39,9 @@
 | IFAN_Maba | 133297 | - | 1.6563 | -1.1969 | 4.9583 | -1.3017 | 5.9741 | -0.6467 | 9.9412 | -0.8072 | 6.9318 | -1.4803 | 11.7462 | -0.6597 | 4.5717 | +0.4096 | 6.9318 | -0.1810 | 7.5172 | -1.0546 |
 | IFAN_80 | 125457 | 459532800 | 2.1520 | -0.7012 | **5.0969** | **-1.1631** | 6.2791 | -0.3418 | **9.0160** | **-1.7323** | 7.5993 | -0.8129 | **11.0393** | **-1.3666** | 3.8459 | -0.3163 | 6.4419 | -0.6709 | 7.2407 | -1.3310 |
 | IFAN_C8_R2 | 31561 | 115211520 | 2.5956 | -0.2575 | **5.4455** | **-0.8144** | 5.5883 | -1.0326 | **10.1375** | **-0.6108** | 7.6773 | -0.7349 | **11.8516** | **-0.5543** | 4.1779 | +0.0157 | 6.5339 | -0.5789 | 7.8581 | -0.7136 |
+| IFAN_C8_R2_map_maba | 33409 | 115221840 | 2.5737 | -0.2795 | 4.8651 | -1.3949 | 5.9471 | -0.6738 | 9.9524 | -0.7959 | 7.9195 | -0.4927 | 13.0768 | +0.6709 | 5.0212 | +0.8591 | 6.8274 | -0.2854 | 7.7562 | -0.8156 |
+| ifan_c8_r2_maba_pre_readout_best | 32353 | 116213760 | 1.9856 | -0.8676 | 5.5415 | -0.7185 | 6.3290 | -0.2919 | 10.2378 | -0.5105 | 7.6434 | -0.7688 | 11.2159 | -1.1900 | 3.7426 | -0.4195 | 6.5392 | -0.5736 | 7.7960 | -0.7758 |
+| ifan_c8_r2_maba_dual_refine_best | 33201 | 116218344 | 2.6629 | -0.1903 | 5.2623 | -0.9977 | 5.6569 | -0.9640 | 10.2160 | -0.5323 | 7.5583 | -0.8539 | 11.5660 | -0.8399 | 4.1180 | -0.0441 | 6.1003 | -1.0125 | 7.7096 | -0.8622 |
 | IFAN_C8_R3 (failed ref) | 31561 | 460846080 | 2.6951 | -0.1581 | 6.0880 | -0.1720 | 8.0931 | +1.4722 | 11.0955 | +0.3472 | 7.8560 | -0.5562 | 12.5763 | +0.1704 | 4.4462 | +0.2840 | 8.0931 | +0.9803 | 8.5871 | +0.0153 |
 | IFAN_LC | 125457 | - | 1.9897 | -0.8635 | 5.2566 | -1.0034 | 7.4871 | +0.8662 | 10.0523 | -0.6960 | 6.0849 | -2.3273 | 12.5251 | +0.1193 | 5.0923 | +0.9302 | 7.4871 | +0.3743 | 7.8793 | -0.6925 |
 
@@ -31,6 +56,9 @@
 | IFAN_Maba | 133297 | - | 1.8093 | -1.0554 | 5.0586 | -0.9827 | 6.5756 | +0.2282 | 8.7502 | +1.3605 | 6.1915 | -1.1572 | 8.9852 | -1.0266 | 3.4925 | +0.4396 | 6.5756 | -0.5984 | 6.7147 | -0.4829 |
 | IFAN_80 | 125457 | 459532800 | 2.1320 | -0.7328 | **5.1058** | **-0.9355** | 6.0259 | -0.3215 | **7.1407** | **-0.2490** | 6.4700 | -0.8788 | **8.4228** | **-1.5890** | 2.6491 | -0.4038 | 6.4700 | -0.7040 | 6.2693 | -0.9283 |
 | IFAN_C8_R2 | 31561 | 115211520 | 2.5505 | -0.3143 | **5.4777** | **-0.5636** | 5.6990 | -0.6484 | **8.3455** | **+0.9557** | 6.8928 | -0.4560 | **9.9599** | **-0.0519** | 3.3424 | +0.2895 | 6.8928 | -0.2812 | 7.0755 | -0.1221 |
+| IFAN_C8_R2_map_maba | 33409 | 115221840 | 2.4981 | -0.3666 | 4.7522 | -1.2891 | 5.5641 | -0.7833 | 8.0200 | +0.6302 | 7.0664 | -0.2824 | 11.1730 | +1.1612 | 4.5380 | +1.4851 | 6.8303 | -0.3437 | 6.8584 | -0.3392 |
+| ifan_c8_r2_maba_pre_readout_best | 32353 | 116213760 | 2.2507 | -0.6140 | 5.6588 | -0.3825 | 6.4300 | +0.0826 | 8.5392 | +1.1494 | 6.4051 | -0.9437 | 8.5478 | -1.4640 | 2.5667 | -0.4862 | 6.9061 | -0.2679 | 6.9130 | -0.2846 |
+| ifan_c8_r2_maba_dual_refine_best | 33201 | 116218344 | 2.4380 | -0.4267 | 5.3078 | -0.7335 | 5.4420 | -0.9054 | 8.3030 | +0.9132 | 6.6369 | -0.7119 | 9.1205 | -0.8913 | 2.8180 | -0.2349 | 6.3248 | -0.8492 | 6.7878 | -0.4098 |
 | IFAN_C8_R3 (failed ref) | 31561 | 460846080 | 2.7248 | -0.1400 | 5.8945 | -0.1468 | 7.6250 | +1.2776 | 9.0824 | +1.6927 | 6.5326 | -0.8162 | 10.4713 | +0.4595 | 3.8183 | +0.7654 | 6.8692 | -0.3048 | 7.5825 | +0.3849 |
 | IFAN_LC | 125457 | - | 1.6380 | -1.2268 | 5.4251 | -0.6161 | 7.1086 | +0.7612 | 8.5196 | +1.1298 | 5.4433 | -1.9055 | 10.8190 | +0.8072 | 4.9584 | +1.9055 | 7.0689 | -0.1051 | 7.2704 | +0.0728 |
 

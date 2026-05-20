@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import gpuRIR
 import numpy as np
 import torch
 
@@ -18,7 +19,6 @@ if str(PACKAGE_ROOT) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import gpuRIR
 from acousticTrackingDataset import LocataDataset, Windowing
 from utils import cart2sph
 
@@ -139,6 +139,27 @@ def load_config_from_checkpoint(checkpoint_path: str | Path, config_path: str | 
     else:
         config = IFANTrainingConfig(**checkpoint["training_config"])
     return checkpoint, config
+
+
+def remap_legacy_map_refiner_keys(
+    state_dict: dict[str, torch.Tensor],
+    *,
+    model_config,
+) -> dict[str, torch.Tensor]:
+    """Map older pre_readout checkpoints onto the current feature_refiner naming."""
+    if getattr(model_config, "map_refiner_position", "pre_softargmax") != "pre_readout":
+        return state_dict
+    has_feature_keys = any(key.startswith("feature_refiner.") for key in state_dict.keys())
+    has_map_keys = any(key.startswith("map_refiner.") for key in state_dict.keys())
+    if has_feature_keys or not has_map_keys:
+        return state_dict
+    remapped = {}
+    for key, value in state_dict.items():
+        if key.startswith("map_refiner."):
+            remapped[key.replace("map_refiner.", "feature_refiner.", 1)] = value
+        else:
+            remapped[key] = value
+    return remapped
 
 
 def normalize_tasks(values: list[int]) -> tuple[int, ...]:
@@ -459,7 +480,11 @@ def main() -> None:
     )
 
     ifan_model = IFANModel(pipeline.model_config)
-    ifan_model.load_state_dict(checkpoint["model_state_dict"])
+    model_state_dict = remap_legacy_map_refiner_keys(
+        checkpoint["model_state_dict"],
+        model_config=pipeline.model_config,
+    )
+    ifan_model.load_state_dict(model_state_dict)
     ifan_model.to(device)
     ifan_model.eval()
     baseline_model = load_baseline_model_from_config(config, device)

@@ -1,0 +1,865 @@
+{
+  "kind": "stage3_locata_evaluation",
+  "checkpoint": "/home/cmm/icocnn/IFAN_Edge/outputs/stage3/ifan_stage3_c16_saf_lite_4of8_phase1_20260518_014757/checkpoints/best_rmsae.pt",
+  "subset": "eval",
+  "subset_path": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval",
+  "array": "benchmark2",
+  "tasks": [
+    1,
+    3,
+    5
+  ],
+  "recording_filter": null,
+  "device": "cuda",
+  "config": {
+    "fs": 16000,
+    "k": 4096,
+    "step": 3072,
+    "apply_vad": true,
+    "input_ablation_mode": "none",
+    "lms_backend": "frequency_block",
+    "lms_map_mode": "tau_sample",
+    "lms_update_mode": "trajectory_tracking",
+    "final_head_pooling": false
+  },
+  "experiment_contract": {
+    "stage": "stage_03",
+    "experiment_role": "c16_saf_lite_4of8_phase1",
+    "model_topology": "paper_dual_mainline",
+    "branch_channels": 16,
+    "feature_pair": "phat+lms",
+    "srp_variant": "paper_original",
+    "map_refiner": "none",
+    "phat_sinc_half_width": 0,
+    "lms_backend": "frequency_block",
+    "temporal_conv_variant": "standard_1d",
+    "temporal_module": "conv",
+    "primary_benchmark_suite": "simulated_4scene+hard_scenes+locata_eval_benchmark2_task1_3_5",
+    "baseline_anchor": {
+      "run_dir": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330",
+      "locata_report": "IFAN_Edge/outputs/stage3/analysis/locata_eval_benchmark2_ifan80_best.json",
+      "baseline_checkpoint_path": "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin"
+    },
+    "pruning": {
+      "saf_lite_enabled": true,
+      "ifan_init_checkpoint_path": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/checkpoints/best_rmsae.pt",
+      "keep_per_8": 4,
+      "block_size": 8,
+      "target_channels": 16
+    },
+    "lightweight_gate": {
+      "ready_delta_deg": 0.3,
+      "requires_locata_overall_win": true,
+      "requires_task3_task5_no_material_regression": true
+    }
+  },
+  "model_profile": {
+    "trainable_params": 125457,
+    "total_params": 125457,
+    "parameter_breakdown": {
+      "phat_stem": 128,
+      "lms_stem": 128,
+      "phat_residual": 21568,
+      "lms_residual": 21568,
+      "shared_attention": 21568,
+      "fusion_blocks": 48384,
+      "final_head": 12096,
+      "channel_readout": 17,
+      "map_refiner": 0,
+      "total": 125457
+    },
+    "mac_proxy_total": 459532800,
+    "mac_proxy_breakdown": {
+      "phat_stem": 645120,
+      "lms_stem": 645120,
+      "phat_residual": 123863040,
+      "lms_residual": 123863040,
+      "shared_attention_conv1": 61931520,
+      "shared_attention_conv2": 61931520,
+      "fusion_block_conv": 61931520,
+      "fusion_block_temporal": 7372800,
+      "final_head_conv": 15482880,
+      "final_head_temporal": 1843200,
+      "channel_readout": 23040,
+      "map_refiner": 0
+    },
+    "mac_proxy_input_shape": [
+      1,
+      2,
+      6,
+      5,
+      4,
+      8
+    ]
+  },
+  "per_recording": [
+    {
+      "task": 1,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording1/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 5.746113300323486,
+        "without_silences_rmsae_deg": 6.026737689971924
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 7.17406702041626,
+        "without_silences_rmsae_deg": 7.64301061630249
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording10",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording10/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 3.434950590133667,
+        "without_silences_rmsae_deg": 3.2387924194335938
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 3.7383358478546143,
+        "without_silences_rmsae_deg": 3.7542333602905273
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording11",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording11/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 4.128621578216553,
+        "without_silences_rmsae_deg": 4.154414653778076
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 4.186971187591553,
+        "without_silences_rmsae_deg": 4.317432403564453
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording12",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording12/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 5.3597002029418945,
+        "without_silences_rmsae_deg": 5.188131809234619
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 4.084789276123047,
+        "without_silences_rmsae_deg": 4.054018497467041
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording13",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording13/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 5.181248188018799,
+        "without_silences_rmsae_deg": 3.152695655822754
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 4.753474712371826,
+        "without_silences_rmsae_deg": 4.909778118133545
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording2/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 3.233086585998535,
+        "without_silences_rmsae_deg": 3.2327864170074463
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 3.3329873085021973,
+        "without_silences_rmsae_deg": 3.345278024673462
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording3/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 11.212451934814453,
+        "without_silences_rmsae_deg": 10.60693359375
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 12.036233901977539,
+        "without_silences_rmsae_deg": 11.86136245727539
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording4/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 5.091479301452637,
+        "without_silences_rmsae_deg": 4.926700115203857
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 6.364450454711914,
+        "without_silences_rmsae_deg": 6.785604953765869
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording5/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 4.954481601715088,
+        "without_silences_rmsae_deg": 5.094267845153809
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 5.365145683288574,
+        "without_silences_rmsae_deg": 5.54568338394165
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording6",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording6/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 3.1075658798217773,
+        "without_silences_rmsae_deg": 2.686583995819092
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 4.208853721618652,
+        "without_silences_rmsae_deg": 4.560542106628418
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording7",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording7/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 4.226890563964844,
+        "without_silences_rmsae_deg": 4.3900275230407715
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 5.468408584594727,
+        "without_silences_rmsae_deg": 6.133423328399658
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording8",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording8/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 9.018916130065918,
+        "without_silences_rmsae_deg": 8.563863754272461
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 7.312209606170654,
+        "without_silences_rmsae_deg": 7.266247272491455
+      }
+    },
+    {
+      "task": 1,
+      "recording": "recording9",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task1/recording9/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 10.31881046295166,
+        "without_silences_rmsae_deg": 10.380342483520508
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 9.001163482666016,
+        "without_silences_rmsae_deg": 9.42443561553955
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording1/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 11.155625343322754,
+        "without_silences_rmsae_deg": 7.134234428405762
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 5.551535129547119,
+        "without_silences_rmsae_deg": 5.492105007171631
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording2/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 16.158187866210938,
+        "without_silences_rmsae_deg": 8.388248443603516
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 16.18596839904785,
+        "without_silences_rmsae_deg": 9.880027770996094
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording3/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 8.492015838623047,
+        "without_silences_rmsae_deg": 9.023075103759766
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 10.598840713500977,
+        "without_silences_rmsae_deg": 11.563639640808105
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording4/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 7.440485000610352,
+        "without_silences_rmsae_deg": 6.902985572814941
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 6.805443286895752,
+        "without_silences_rmsae_deg": 6.395792484283447
+      }
+    },
+    {
+      "task": 3,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task3/recording5/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 6.44806432723999,
+        "without_silences_rmsae_deg": 6.397276401519775
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 6.315830707550049,
+        "without_silences_rmsae_deg": 6.646236896514893
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording1",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording1/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 19.650903701782227,
+        "without_silences_rmsae_deg": 14.971867561340332
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 15.805804252624512,
+        "without_silences_rmsae_deg": 12.850113868713379
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording2",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording2/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 10.901124954223633,
+        "without_silences_rmsae_deg": 9.22108268737793
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 9.855154991149902,
+        "without_silences_rmsae_deg": 8.420624732971191
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording3",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording3/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 13.68436336517334,
+        "without_silences_rmsae_deg": 7.388634204864502
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 13.060744285583496,
+        "without_silences_rmsae_deg": 8.440567016601562
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording4",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording4/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 9.985295295715332,
+        "without_silences_rmsae_deg": 8.053563117980957
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 9.53000545501709,
+        "without_silences_rmsae_deg": 7.649975776672363
+      }
+    },
+    {
+      "task": 5,
+      "recording": "recording5",
+      "array": "benchmark2",
+      "directory": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval/task5/recording5/benchmark2",
+      "ifan": {
+        "with_silences_rmsae_deg": 8.769855499267578,
+        "without_silences_rmsae_deg": 7.504856109619141
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": 7.252926826477051,
+        "without_silences_rmsae_deg": 6.821040153503418
+      }
+    }
+  ],
+  "per_task": {
+    "task1": {
+      "count": 13,
+      "ifan": {
+        "with_silences_rmsae_deg": {
+          "mean": 5.770332024647639,
+          "median": 5.091479301452637,
+          "std": 2.58040949022292,
+          "min": 3.1075658798217773,
+          "max": 11.212451934814453
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 5.5109444581545315,
+          "median": 4.926700115203857,
+          "std": 2.585065486635664,
+          "min": 2.686583995819092,
+          "max": 10.60693359375
+        }
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 5.925160829837505,
+          "median": 5.365145683288574,
+          "std": 2.373479894888359,
+          "min": 3.3329873085021973,
+          "max": 12.036233901977539
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 6.123157702959501,
+          "median": 5.54568338394165,
+          "std": 2.369662603518436,
+          "min": 3.345278024673462,
+          "max": 11.86136245727539
+        }
+      },
+      "delta_vs_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": -0.15482880518986608,
+          "median": -0.2736663818359375,
+          "std": 0.2069295953345609,
+          "min": -0.22542142868041992,
+          "max": -0.8237819671630859
+        },
+        "without_silences_rmsae_deg": {
+          "mean": -0.6122132448049697,
+          "median": -0.618983268737793,
+          "std": 0.21540288311722788,
+          "min": -0.6586940288543701,
+          "max": -1.2544288635253906
+        }
+      }
+    },
+    "task3": {
+      "count": 5,
+      "ifan": {
+        "with_silences_rmsae_deg": {
+          "mean": 9.938875675201416,
+          "median": 8.492015838623047,
+          "std": 3.483717758394227,
+          "min": 6.44806432723999,
+          "max": 16.158187866210938
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 7.569163990020752,
+          "median": 7.134234428405762,
+          "std": 0.9788804621561179,
+          "min": 6.397276401519775,
+          "max": 9.023075103759766
+        }
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 9.09152364730835,
+          "median": 6.805443286895752,
+          "std": 3.951336596380757,
+          "min": 5.551535129547119,
+          "max": 16.18596839904785
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 7.995560359954834,
+          "median": 6.646236896514893,
+          "std": 2.3207596577900746,
+          "min": 5.492105007171631,
+          "max": 11.563639640808105
+        }
+      },
+      "delta_vs_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 0.8473520278930664,
+          "median": 1.686572551727295,
+          "std": -0.46761883798653026,
+          "min": 0.8965291976928711,
+          "max": -0.027780532836914062
+        },
+        "without_silences_rmsae_deg": {
+          "mean": -0.42639636993408203,
+          "median": 0.48799753189086914,
+          "std": -1.3418791956339566,
+          "min": 0.9051713943481445,
+          "max": -2.54056453704834
+        }
+      }
+    },
+    "task5": {
+      "count": 5,
+      "ifan": {
+        "with_silences_rmsae_deg": {
+          "mean": 12.598308563232422,
+          "median": 10.901124954223633,
+          "std": 3.880307632727217,
+          "min": 8.769855499267578,
+          "max": 19.650903701782227
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 9.428000736236573,
+          "median": 8.053563117980957,
+          "std": 2.8468879262827937,
+          "min": 7.388634204864502,
+          "max": 14.971867561340332
+        }
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 11.10092716217041,
+          "median": 9.855154991149902,
+          "std": 2.9934462243071565,
+          "min": 7.252926826477051,
+          "max": 15.805804252624512
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 8.836464309692383,
+          "median": 8.420624732971191,
+          "std": 2.0932620271342874,
+          "min": 6.821040153503418,
+          "max": 12.850113868713379
+        }
+      },
+      "delta_vs_baseline": {
+        "with_silences_rmsae_deg": {
+          "mean": 1.497381401062011,
+          "median": 1.0459699630737305,
+          "std": 0.8868614084200606,
+          "min": 1.5169286727905273,
+          "max": 3.845099449157715
+        },
+        "without_silences_rmsae_deg": {
+          "mean": 0.5915364265441898,
+          "median": -0.3670616149902344,
+          "std": 0.7536258991485063,
+          "min": 0.567594051361084,
+          "max": 2.121753692626953
+        }
+      }
+    }
+  },
+  "overall": {
+    "count": 23,
+    "ifan": {
+      "with_silences_rmsae_deg": {
+        "mean": 8.160879891851675,
+        "median": 7.440485000610352,
+        "std": 4.227639972608371,
+        "min": 3.1075658798217773,
+        "max": 19.650903701782227
+      },
+      "without_silences_rmsae_deg": {
+        "mean": 6.809917460317197,
+        "median": 6.902985572814941,
+        "std": 2.883819880551379,
+        "min": 2.686583995819092,
+        "max": 14.971867561340332
+      }
+    },
+    "baseline": {
+      "with_silences_rmsae_deg": {
+        "mean": 7.738667166751364,
+        "median": 6.805443286895752,
+        "std": 3.6387571172307585,
+        "min": 3.3329873085021973,
+        "max": 16.18596839904785
+      },
+      "without_silences_rmsae_deg": {
+        "mean": 7.120051021161287,
+        "median": 6.785604953765869,
+        "std": 2.581873058419312,
+        "min": 3.345278024673462,
+        "max": 12.850113868713379
+      }
+    },
+    "delta_vs_baseline": {
+      "with_silences_rmsae_deg": {
+        "mean": 0.4222127251003105,
+        "median": 0.6350417137145996,
+        "std": 0.5888828553776122,
+        "min": -0.22542142868041992,
+        "max": 3.464935302734375
+      },
+      "without_silences_rmsae_deg": {
+        "mean": -0.31013356084408983,
+        "median": 0.11738061904907227,
+        "std": 0.3019468221320669,
+        "min": -0.6586940288543701,
+        "max": 2.121753692626953
+      }
+    }
+  },
+  "recording_level_summary": {
+    "task_counts": {
+      "task1": 13,
+      "task3": 5,
+      "task5": 5
+    },
+    "tasks": {
+      "task1": {
+        "ifan": {
+          "with_silences_rmsae_deg": {
+            "best": 3.1075658798217773,
+            "mean": 5.770332024647639,
+            "std": 2.58040949022292,
+            "median": 5.091479301452637,
+            "average": 5.770332024647639
+          },
+          "without_silences_rmsae_deg": {
+            "best": 2.686583995819092,
+            "mean": 5.5109444581545315,
+            "std": 2.585065486635664,
+            "median": 4.926700115203857,
+            "average": 5.5109444581545315
+          }
+        },
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 3.3329873085021973,
+            "mean": 5.925160829837505,
+            "std": 2.373479894888359,
+            "median": 5.365145683288574,
+            "average": 5.925160829837505
+          },
+          "without_silences_rmsae_deg": {
+            "best": 3.345278024673462,
+            "mean": 6.123157702959501,
+            "std": 2.369662603518436,
+            "median": 5.54568338394165,
+            "average": 6.123157702959501
+          }
+        },
+        "delta_vs_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": -0.22542142868041992,
+            "mean": -0.15482880518986608,
+            "std": 0.2069295953345609,
+            "median": -0.2736663818359375,
+            "average": -0.15482880518986608
+          },
+          "without_silences_rmsae_deg": {
+            "best": -0.6586940288543701,
+            "mean": -0.6122132448049697,
+            "std": 0.21540288311722788,
+            "median": -0.618983268737793,
+            "average": -0.6122132448049697
+          }
+        }
+      },
+      "task3": {
+        "ifan": {
+          "with_silences_rmsae_deg": {
+            "best": 6.44806432723999,
+            "mean": 9.938875675201416,
+            "std": 3.483717758394227,
+            "median": 8.492015838623047,
+            "average": 9.938875675201416
+          },
+          "without_silences_rmsae_deg": {
+            "best": 6.397276401519775,
+            "mean": 7.569163990020752,
+            "std": 0.9788804621561179,
+            "median": 7.134234428405762,
+            "average": 7.569163990020752
+          }
+        },
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 5.551535129547119,
+            "mean": 9.09152364730835,
+            "std": 3.951336596380757,
+            "median": 6.805443286895752,
+            "average": 9.09152364730835
+          },
+          "without_silences_rmsae_deg": {
+            "best": 5.492105007171631,
+            "mean": 7.995560359954834,
+            "std": 2.3207596577900746,
+            "median": 6.646236896514893,
+            "average": 7.995560359954834
+          }
+        },
+        "delta_vs_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 0.8965291976928711,
+            "mean": 0.8473520278930664,
+            "std": -0.46761883798653026,
+            "median": 1.686572551727295,
+            "average": 0.8473520278930664
+          },
+          "without_silences_rmsae_deg": {
+            "best": 0.9051713943481445,
+            "mean": -0.42639636993408203,
+            "std": -1.3418791956339566,
+            "median": 0.48799753189086914,
+            "average": -0.42639636993408203
+          }
+        }
+      },
+      "task5": {
+        "ifan": {
+          "with_silences_rmsae_deg": {
+            "best": 8.769855499267578,
+            "mean": 12.598308563232422,
+            "std": 3.880307632727217,
+            "median": 10.901124954223633,
+            "average": 12.598308563232422
+          },
+          "without_silences_rmsae_deg": {
+            "best": 7.388634204864502,
+            "mean": 9.428000736236573,
+            "std": 2.8468879262827937,
+            "median": 8.053563117980957,
+            "average": 9.428000736236573
+          }
+        },
+        "baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 7.252926826477051,
+            "mean": 11.10092716217041,
+            "std": 2.9934462243071565,
+            "median": 9.855154991149902,
+            "average": 11.10092716217041
+          },
+          "without_silences_rmsae_deg": {
+            "best": 6.821040153503418,
+            "mean": 8.836464309692383,
+            "std": 2.0932620271342874,
+            "median": 8.420624732971191,
+            "average": 8.836464309692383
+          }
+        },
+        "delta_vs_baseline": {
+          "with_silences_rmsae_deg": {
+            "best": 1.5169286727905273,
+            "mean": 1.497381401062011,
+            "std": 0.8868614084200606,
+            "median": 1.0459699630737305,
+            "average": 1.497381401062011
+          },
+          "without_silences_rmsae_deg": {
+            "best": 0.567594051361084,
+            "mean": 0.5915364265441898,
+            "std": 0.7536258991485063,
+            "median": -0.3670616149902344,
+            "average": 0.5915364265441898
+          }
+        }
+      }
+    },
+    "recordings": {
+      "count": 23,
+      "ifan": {
+        "with_silences_rmsae_deg": {
+          "best": 3.1075658798217773,
+          "mean": 8.160879891851675,
+          "std": 4.227639972608371,
+          "median": 7.440485000610352,
+          "average": 8.160879891851675
+        },
+        "without_silences_rmsae_deg": {
+          "best": 2.686583995819092,
+          "mean": 6.809917460317197,
+          "std": 2.883819880551379,
+          "median": 6.902985572814941,
+          "average": 6.809917460317197
+        }
+      },
+      "baseline": {
+        "with_silences_rmsae_deg": {
+          "best": 3.3329873085021973,
+          "mean": 7.738667166751364,
+          "std": 3.6387571172307585,
+          "median": 6.805443286895752,
+          "average": 7.738667166751364
+        },
+        "without_silences_rmsae_deg": {
+          "best": 3.345278024673462,
+          "mean": 7.120051021161287,
+          "std": 2.581873058419312,
+          "median": 6.785604953765869,
+          "average": 7.120051021161287
+        }
+      },
+      "delta_vs_baseline": {
+        "with_silences_rmsae_deg": {
+          "best": -0.22542142868041992,
+          "mean": 0.4222127251003105,
+          "std": 0.5888828553776122,
+          "median": 0.6350417137145996,
+          "average": 0.4222127251003105
+        },
+        "without_silences_rmsae_deg": {
+          "best": -0.6586940288543701,
+          "mean": -0.31013356084408983,
+          "std": 0.3019468221320669,
+          "median": 0.11738061904907227,
+          "average": -0.31013356084408983
+        }
+      }
+    }
+  },
+  "paper_reference": {
+    "paper": "IFAN: An Icosahedral Feature Attention Network for Sound Source Localization (IEEE TIM 2024)",
+    "subset": "eval",
+    "array": "benchmark2",
+    "tasks": [
+      1,
+      3,
+      5
+    ],
+    "tables": {
+      "with_silences": {
+        "table": "Table III",
+        "reported_ifan_rmsae_deg": {
+          "task1": null,
+          "task3": null,
+          "task5": null
+        },
+        "note": "Fill manually from the paper table; values are intentionally not hard-coded."
+      },
+      "without_silences": {
+        "table": "Table IV",
+        "reported_ifan_rmsae_deg": {
+          "task1": null,
+          "task3": null,
+          "task5": null
+        },
+        "note": "Fill manually from the paper table; values are intentionally not hard-coded."
+      }
+    }
+  }
+}

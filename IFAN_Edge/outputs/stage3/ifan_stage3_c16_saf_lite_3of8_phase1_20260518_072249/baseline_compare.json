@@ -1,0 +1,73 @@
+{
+  "baseline_checkpoint_path": "models/1sourceTracking_icoCNN_robot_K4096_r2_model.bin",
+  "srp_variant": "paper_original",
+  "temporal_conv_variant": "standard_1d",
+  "scenarios": [
+    {
+      "name": "scene_1",
+      "snr_db": 30.0,
+      "t60_s": 0.2,
+      "ifan": {
+        "loss": 0.02531041530892253,
+        "rmsae_deg": 6.517720401287079
+      },
+      "baseline": {
+        "loss": 0.024156471947208047,
+        "rmsae_deg": 5.379767119884491
+      },
+      "rmsae_delta_deg": 1.137953281402588
+    },
+    {
+      "name": "scene_2",
+      "snr_db": 30.0,
+      "t60_s": 0.8,
+      "ifan": {
+        "loss": 0.026207104790955782,
+        "rmsae_deg": 7.333137273788452
+      },
+      "baseline": {
+        "loss": 0.024084981996566057,
+        "rmsae_deg": 5.581421196460724
+      },
+      "rmsae_delta_deg": 1.7517160773277283
+    },
+    {
+      "name": "scene_3",
+      "snr_db": 5.0,
+      "t60_s": 0.8,
+      "ifan": {
+        "loss": 0.03179255058057606,
+        "rmsae_deg": 11.65708065032959
+      },
+      "baseline": {
+        "loss": 0.02756644692271948,
+        "rmsae_deg": 9.1759073138237
+      },
+      "rmsae_delta_deg": 2.48117333650589
+    },
+    {
+      "name": "scene_4",
+      "snr_db": 5.0,
+      "t60_s": 1.4,
+      "ifan": {
+        "loss": 0.05865905084647238,
+        "rmsae_deg": 20.226922869682312
+      },
+      "baseline": {
+        "loss": 0.0412790235131979,
+        "rmsae_deg": 13.73950582742691
+      },
+      "rmsae_delta_deg": 6.487417042255402
+    }
+  ],
+  "mean_rmsae_deg": {
+    "ifan": 11.433715298771858,
+    "baseline": 8.469150364398956,
+    "delta": 2.964564934372902
+  },
+  "hard_scenarios_mean_rmsae_deg": {
+    "ifan": 15.942001760005951,
+    "baseline": 11.457706570625305,
+    "delta": 4.484295189380646
+  }
+}

@@ -27,7 +27,8 @@ from ifan_edge.eval.stage3 import (
     select_model_inputs,
 )
 from ifan_edge.features import SRPLMSIcoMap, SRPPHATIcoMapAdapter
-from ifan_edge.models import IFANModel, IFANModelConfig, PAPER_IFAN_PARAM_TARGET
+from ifan_edge.models import IFANModel, IFANModelConfig, MapMABATemporalConfig, PAPER_IFAN_PARAM_TARGET
+from ifan_edge.pruning import SAFLitePruner, iter_saf_lite_targets
 from ifan_edge.training import IFANTrainingConfig, IFANTrainingPipeline
 from scripts.assess_stage3_readiness import assess_readiness
 from scripts.audit_stage3_protocol import build_protocol_rows
@@ -37,6 +38,7 @@ from utils import sph2cart
 def test_stage3_sources_parse() -> None:
     targets = (
         PROJECT_ROOT / "ifan_edge" / "eval" / "stage3.py",
+        PROJECT_ROOT / "ifan_edge" / "pruning" / "saf_lite.py",
         PROJECT_ROOT / "ifan_edge" / "training" / "pipeline.py",
         PROJECT_ROOT / "scripts" / "train_stage3_ifan.py",
         PROJECT_ROOT / "scripts" / "compare_stage3_baseline.py",
@@ -183,6 +185,80 @@ def test_stage3_ifan_lightweight_temporal_variant_and_channel_scaling_work() -> 
     assert grads
     assert all(torch.isfinite(grad).all() for grad in grads)
     assert any(torch.count_nonzero(grad).item() > 0 for grad in grads)
+
+
+def test_stage3_saf_lite_prunes_only_c16_convico_blocks_and_keeps_fixed_zero_weights() -> None:
+    torch.manual_seed(0)
+    model = IFANModel(IFANModelConfig(r=2, branch_channels=16))
+    target_names = [name for name, _module in iter_saf_lite_targets(model, target_channels=16, block_size=8)]
+
+    pruner = SAFLitePruner.from_model(model, keep_per_block=3, block_size=8, target_channels=16)
+    pruner.apply(model)
+    pruner.register_gradient_hooks(model)
+
+    assert pruner.masks
+    assert all("stem" not in name for name in pruner.masks)
+    assert sorted(pruner.masks) == sorted(target_names)
+    for name, mask in pruner.masks.items():
+        assert mask.shape == dict(model.named_modules())[name].weight.shape
+        channel_mask = mask[:, :, 0, 0]
+        for co in range(channel_mask.shape[0]):
+            for block_start in range(0, channel_mask.shape[1], 8):
+                assert int(channel_mask[co, block_start : block_start + 8].sum().item()) == 3
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    x = torch.randn(1, model.expected_input_channels(), 6, 5, 4, 8)
+    loss = model(x).square().mean()
+    loss.backward()
+    pruner.optimizer_step(model, optimizer)
+
+    for name, mask in pruner.masks.items():
+        weight = dict(model.named_modules())[name].weight.detach().cpu()
+        assert torch.count_nonzero(weight[mask == 0]).item() == 0
+        if dict(model.named_modules())[name].weight.grad is not None:
+            grad = dict(model.named_modules())[name].weight.grad.detach().cpu()
+            assert torch.count_nonzero(grad[mask == 0]).item() == 0
+
+
+def test_stage3_saf_lite_checkpoint_reload_preserves_masked_zeros(tmp_path: Path) -> None:
+    model = IFANModel(IFANModelConfig(r=2, branch_channels=16))
+    pruner = SAFLitePruner.from_model(model, keep_per_block=4, block_size=8, target_channels=16)
+    pruner.apply(model)
+    state_path = tmp_path / "pruned.pt"
+    torch.save(model.state_dict(), state_path)
+
+    reloaded = IFANModel(IFANModelConfig(r=2, branch_channels=16))
+    reloaded.load_state_dict(torch.load(state_path, map_location="cpu"))
+
+    for name, mask in pruner.masks.items():
+        weight = dict(reloaded.named_modules())[name].weight.detach().cpu()
+        assert torch.count_nonzero(weight[mask == 0]).item() == 0
+
+    summary = pruner.summary(model, time_steps=6, charts=5)
+    assert summary["pruned_layer_count"] == len(pruner.masks)
+    assert summary["ico_conv_mac_keep_ratio"] == pytest.approx(0.5)
+
+
+def test_stage3_ifan_map_maba_refiner_preserves_output_contract_and_adds_mac() -> None:
+    baseline = IFANModel(IFANModelConfig(r=2, branch_channels=8))
+    config = IFANModelConfig(
+        r=2,
+        branch_channels=8,
+        map_refiner="maba",
+        map_maba=MapMABATemporalConfig(d_model=16, state_dim=8, conv_kernel=3),
+    )
+    model = IFANModel(config)
+    x = torch.randn(2, model.expected_input_channels(), 6, 5, 4, 8)
+
+    coords, debug = model(x, return_debug=True)
+
+    assert coords.shape == (2, 6, 3)
+    assert debug["map_refiner"] == "maba"
+    assert debug["map_refined_logits"].shape == (2, 6, 5, 2, 4)
+    assert model.map_refiner is not None
+    assert model.parameter_breakdown()["map_refiner"] > 0
+    assert model.mac_proxy((1, 2, 6, 5, 4, 8))["map_refiner"] > 0
+    assert model.mac_proxy((1, 2, 6, 5, 4, 8))["total"] > baseline.mac_proxy((1, 2, 6, 5, 4, 8))["total"]
 
 
 def test_stage3_input_ablation_modes_zero_expected_branch() -> None:
@@ -668,6 +744,51 @@ def test_stage3_train_script_parser_accepts_phat_and_lightweight_model_overrides
     assert args.phat_sinc_half_width == 2
     assert args.branch_channels == 8
     assert args.temporal_conv_variant == "depthwise_separable_1d"
+
+
+def test_stage3_train_script_parser_accepts_saf_lite_options() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "train_stage3_ifan.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--ifan-init-checkpoint",
+            "IFAN_Edge/outputs/stage3/checkpoints/best_rmsae.pt",
+            "--saf-lite",
+            "--saf-lite-keep-per-8",
+            "3",
+        ]
+    )
+
+    assert args.ifan_init_checkpoint == "IFAN_Edge/outputs/stage3/checkpoints/best_rmsae.pt"
+    assert args.saf_lite is True
+    assert args.saf_lite_keep_per_8 == 3
+
+
+def test_stage3_train_script_parser_accepts_map_maba_options() -> None:
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / "train_stage3_ifan.py"))
+    parser = module["build_parser"]()
+    args = parser.parse_args(
+        [
+            "--map-refiner",
+            "maba",
+            "--map-maba-d-model",
+            "16",
+            "--map-maba-state-dim",
+            "8",
+            "--map-maba-conv-kernel",
+            "3",
+            "--map-maba-dropout",
+            "0.0",
+            "--map-maba-no-gate",
+        ]
+    )
+
+    assert args.map_refiner == "maba"
+    assert args.map_maba_d_model == 16
+    assert args.map_maba_state_dim == 8
+    assert args.map_maba_conv_kernel == 3
+    assert args.map_maba_dropout == pytest.approx(0.0)
+    assert args.map_maba_no_gate is True
 
 
 def test_stage3_train_script_parser_accepts_schedule_overrides() -> None:

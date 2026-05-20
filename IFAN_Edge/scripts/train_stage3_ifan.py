@@ -67,6 +67,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume-checkpoint", default=None, help="Resume stage-3 training from a saved checkpoint.")
     parser.add_argument("--resume-output-dir", default=None, help="Reuse an existing stage-3 output directory when resuming.")
     parser.add_argument("--resume-log", default=None, help="Existing training log used to recover epoch history for resumed runs.")
+    parser.add_argument("--ifan-init-checkpoint", default=None, help="Initialize IFAN weights from a stage-3 checkpoint without resuming optimizer/epoch state.")
+    parser.add_argument("--saf-lite", action="store_true", help="Enable fixed SAF-lite structured pruning for C=16 ConvIco layers.")
+    parser.add_argument("--saf-lite-keep-per-8", type=int, default=None, help="Retained input channels per 8-channel block for SAF-lite.")
     parser.add_argument("--experiment-role", default=None, help="Override the experiment contract role recorded in summary metadata.")
     parser.add_argument(
         "--srp-variant",
@@ -90,6 +93,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input-ablation-mode", choices=("none", "phat_only", "lms_only"), default=None)
     parser.add_argument("--branch-channels", type=int, default=None, help="Override IFAN branch width for lightweight experiments.")
     parser.add_argument("--final-head-pooling", action="store_true", help="Apply the optional final pooling stage before SoftArgMax.")
+    parser.add_argument("--map-refiner", choices=("none", "maba"), default=None, help="Optional map-level temporal refiner inserted before SoftArgMax.")
+    parser.add_argument("--map-refiner-position", choices=("pre_softargmax", "pre_readout"), default=None, help="Insertion point for the optional MABA refiner.")
+    parser.add_argument("--map-maba-d-model", type=int, default=None, help="Hidden size for the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-state-dim", type=int, default=None, help="State size for the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-conv-kernel", type=int, default=None, help="Depthwise temporal kernel for the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-dropout", type=float, default=None, help="Dropout for the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-no-residual", action="store_true", help="Disable residual add in the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-no-gate", action="store_true", help="Disable dynamic gating in the optional map-level MABA refiner.")
+    parser.add_argument("--map-maba-no-state", action="store_true", help="Disable recurrent state updates in the optional map-level MABA refiner.")
+    parser.add_argument("--weak-map-refiner", choices=("none", "maba"), default=None, help="Optional second lightweight refiner applied before SoftArgMax.")
+    parser.add_argument("--weak-map-maba-d-model", type=int, default=None, help="Hidden size for the weak second refiner.")
+    parser.add_argument("--weak-map-maba-state-dim", type=int, default=None, help="State size for the weak second refiner.")
+    parser.add_argument("--weak-map-maba-conv-kernel", type=int, default=None, help="Depthwise temporal kernel for the weak second refiner.")
+    parser.add_argument("--weak-map-maba-dropout", type=float, default=None, help="Dropout for the weak second refiner.")
+    parser.add_argument("--weak-map-maba-no-residual", action="store_true", help="Disable residual add in the weak second refiner.")
+    parser.add_argument("--weak-map-maba-no-gate", action="store_true", help="Disable dynamic gating in the weak second refiner.")
+    parser.add_argument("--weak-map-maba-no-state", action="store_true", help="Disable recurrent state updates in the weak second refiner.")
     parser.add_argument("--lms-plain", action="store_true", help="Disable NLMS-style normalization in the LMS branch.")
     parser.add_argument("--lms-no-self-pairs", action="store_true", help="Exclude diagonal microphone pairs from the LMS branch.")
     parser.add_argument("--lms-no-map-normalize", action="store_true", help="Disable per-map normalization in the LMS branch output.")
@@ -139,6 +159,12 @@ def main() -> None:
         config.trajectory_seconds = int(args.trajectory_seconds)
     if args.output_suffix is not None:
         config.output_suffix = str(args.output_suffix)
+    if args.ifan_init_checkpoint is not None:
+        config.ifan_init_checkpoint_path = str(args.ifan_init_checkpoint)
+    if args.saf_lite:
+        config.saf_lite_enabled = True
+    if args.saf_lite_keep_per_8 is not None:
+        config.saf_lite_keep_per_8 = int(args.saf_lite_keep_per_8)
     if args.experiment_role is not None:
         config.experiment_role = str(args.experiment_role)
     if args.srp_variant is not None:
@@ -155,6 +181,40 @@ def main() -> None:
         config.branch_channels = int(args.branch_channels)
     if args.final_head_pooling:
         config.final_head_pooling = True
+    if args.map_refiner is not None:
+        config.map_refiner = str(args.map_refiner)
+    if args.map_refiner_position is not None:
+        config.map_refiner_position = str(args.map_refiner_position)
+    if args.map_maba_d_model is not None:
+        config.map_maba.d_model = int(args.map_maba_d_model)
+    if args.map_maba_state_dim is not None:
+        config.map_maba.state_dim = int(args.map_maba_state_dim)
+    if args.map_maba_conv_kernel is not None:
+        config.map_maba.conv_kernel = int(args.map_maba_conv_kernel)
+    if args.map_maba_dropout is not None:
+        config.map_maba.dropout = float(args.map_maba_dropout)
+    if args.map_maba_no_residual:
+        config.map_maba.use_residual = False
+    if args.map_maba_no_gate:
+        config.map_maba.use_gate = False
+    if args.map_maba_no_state:
+        config.map_maba.use_state = False
+    if args.weak_map_refiner is not None:
+        config.weak_map_refiner = str(args.weak_map_refiner)
+    if args.weak_map_maba_d_model is not None:
+        config.weak_map_maba.d_model = int(args.weak_map_maba_d_model)
+    if args.weak_map_maba_state_dim is not None:
+        config.weak_map_maba.state_dim = int(args.weak_map_maba_state_dim)
+    if args.weak_map_maba_conv_kernel is not None:
+        config.weak_map_maba.conv_kernel = int(args.weak_map_maba_conv_kernel)
+    if args.weak_map_maba_dropout is not None:
+        config.weak_map_maba.dropout = float(args.weak_map_maba_dropout)
+    if args.weak_map_maba_no_residual:
+        config.weak_map_maba.use_residual = False
+    if args.weak_map_maba_no_gate:
+        config.weak_map_maba.use_gate = False
+    if args.weak_map_maba_no_state:
+        config.weak_map_maba.use_state = False
     if args.lms_plain:
         config.lms_normalized = False
     if args.lms_no_self_pairs:
@@ -211,6 +271,7 @@ def main() -> None:
     elif args.device is not None:
         config.device = args.device
 
+    config.__post_init__()
     summary = IFANTrainingPipeline(
         config,
         resume_checkpoint_path=args.resume_checkpoint,
