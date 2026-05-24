@@ -6,6 +6,7 @@ This directory is the organized HLS simulation/verification workspace for multi-
 
 - `layer0/`: Layer0 HLS source, C simulation testbench, debug testbench, bat/tcl scripts.
 - `layer1/`: Layer1 HLS source, C simulation testbench, debug testbench, build script.
+- `stage1_ifan_c8_r2/`: IFAN_C8_R2_MABA pre-readout 第一阶段主干 HLS 顶层、可复用功能块和 smoke test。
 - `common/`: shared helper headers (currently `utils.hpp`).
 
 ## Why split by layer
@@ -51,6 +52,21 @@ cd hls_src/HLS/layer2-5
 make clean && make test_ico_conv_layer2_5 test_ico_conv_layer2_5_debug
 ./test_ico_conv_layer2_5 2
 ./test_ico_conv_layer2_5_debug 2
+```
+
+### IFAN_C8_R2_MABA 第一阶段主干顶层
+
+```bash
+cd hls_src/HLS/stage1_ifan_c8_r2
+make clean && make run
+```
+
+Windows:
+
+```bat
+cd hls_src\HLS\stage1_ifan_c8_r2
+build.bat
+test_ifan_stage1.exe
 ```
 
 ### Layer1 Vitis HLS
