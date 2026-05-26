@@ -13,7 +13,7 @@ from .map_maba import FeatureMABATemporalRefiner, MABATemporalRefiner, MapMABATe
 
 PAPER_IFAN_BRANCH_CHANNELS = 16
 PAPER_IFAN_FUSION_BLOCKS = 4
-PAPER_IFAN_PARAM_TARGET = 125_457
+PAPER_IFAN_PARAM_TARGET = 125_425
 
 
 @dataclass
@@ -67,14 +67,13 @@ class ResidualLearningModule(nn.Module):
         super().__init__()
         self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
         self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
-        self.norm = icoCNN.LNormIco(channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
         x = torch.relu(self.conv1(x))
+        x = x + residual
         x = self.conv2(x)
-        x = self.norm(x)
-        return torch.relu(x + residual)
+        return x + residual
 
 
 class FeatureAttentionWeightModule(nn.Module):

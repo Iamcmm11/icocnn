@@ -235,8 +235,6 @@ def collect_weights(model) -> dict[str, np.ndarray]:
     norm_beta = np.zeros((16, 8), dtype=np.float32)
 
     norm_slots = [
-        model.phat_branch.residual.norm,
-        model.aux_branch.residual.norm,
         model.shared_attention.norm,
         *[block.norm for block in model.fusion_blocks],
         model.final_block.norm,
