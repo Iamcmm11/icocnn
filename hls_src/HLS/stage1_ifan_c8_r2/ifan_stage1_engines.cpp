@@ -45,6 +45,235 @@ static inline int decode_src_w(int reorder_val, int height, int width) {
     return rem_chart % width;
 }
 
+static inline data_t vertex_north_r2(
+    input_t input[1][1][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    sum += static_cast<acc_t>(input[0][0][ch][1][0]);
+    sum += static_cast<acc_t>(input[0][0][ch][1][1]);
+    sum += static_cast<acc_t>(input[0][0][ch][0][1]);
+    sum += static_cast<acc_t>(input[0][0][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2]);
+    sum += static_cast<acc_t>(input[0][0][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2 - 1]);
+    return to_data_t(sum / static_cast<acc_t>(5));
+}
+
+static inline data_t vertex_south_r2(
+    input_t input[1][1][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    sum += static_cast<acc_t>(input[0][0][ch][1][IFAN_H_R2]);
+    sum += static_cast<acc_t>(input[0][0][ch][1][IFAN_H_R2 + 1]);
+    sum += static_cast<acc_t>(input[0][0][ch][0][IFAN_H_R2 + 1]);
+    sum += static_cast<acc_t>(input[0][0][prev_ch][IFAN_H_R2 - 1][IFAN_W_R2 - 1]);
+    sum += static_cast<acc_t>(input[0][0][ch][0][IFAN_H_R2 - 1]);
+    return to_data_t(sum / static_cast<acc_t>(5));
+}
+
+static inline data_t vertex_north_r2_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int ci,
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][0]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][1]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2 - 1]);
+    }
+    return to_data_t(sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+}
+
+static inline data_t vertex_south_r2_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int ci,
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][IFAN_H_R2]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][IFAN_H_R2 + 1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_H_R2 + 1]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R2 - 1][IFAN_W_R2 - 1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_H_R2 - 1]);
+    }
+    return to_data_t(sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+}
+
+static inline data_t vertex_north_r1_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1],
+    int ci,
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][0]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][1]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R1 - 1][IFAN_H_R1]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R1 - 1][IFAN_H_R1 - 1]);
+    }
+    return to_data_t(sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+}
+
+static inline data_t vertex_south_r1_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1],
+    int ci,
+    int ch
+) {
+    const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+    acc_t sum = 0;
+    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][IFAN_H_R1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][1][IFAN_H_R1 + 1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_H_R1 + 1]);
+        sum += static_cast<acc_t>(input[ci][ri][prev_ch][IFAN_H_R1 - 1][IFAN_W_R1 - 1]);
+        sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_H_R1 - 1]);
+    }
+    return to_data_t(sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+}
+
+static inline void smooth_poles_r2_stem(
+    input_t input[1][1][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    data_t north[IFAN_CHARTS],
+    data_t south[IFAN_CHARTS],
+    data_t &north_pole,
+    data_t &south_pole
+) {
+    acc_t north_pole_sum = 0;
+    acc_t south_pole_sum = 0;
+    for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+        north[ch] = vertex_north_r2(input, ch);
+        south[ch] = vertex_south_r2(input, ch);
+        north_pole_sum += static_cast<acc_t>(input[0][0][ch][IFAN_H_R2 - 1][0]);
+        south_pole_sum += static_cast<acc_t>(input[0][0][ch][0][IFAN_W_R2 - 1]);
+    }
+    north_pole = to_data_t(north_pole_sum / static_cast<acc_t>(IFAN_CHARTS));
+    south_pole = to_data_t(south_pole_sum / static_cast<acc_t>(IFAN_CHARTS));
+}
+
+static inline void smooth_poles_r2_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int ci,
+    data_t north[IFAN_CHARTS],
+    data_t south[IFAN_CHARTS],
+    data_t &north_pole,
+    data_t &south_pole
+) {
+    acc_t north_pole_sum = 0;
+    acc_t south_pole_sum = 0;
+    for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+        north[ch] = vertex_north_r2_main(input, ci, ch);
+        south[ch] = vertex_south_r2_main(input, ci, ch);
+        for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+            north_pole_sum += static_cast<acc_t>(input[ci][ri][ch][IFAN_H_R2 - 1][0]);
+            south_pole_sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_W_R2 - 1]);
+        }
+    }
+    north_pole = to_data_t(north_pole_sum / static_cast<acc_t>(IFAN_R_FULL * IFAN_CHARTS));
+    south_pole = to_data_t(south_pole_sum / static_cast<acc_t>(IFAN_R_FULL * IFAN_CHARTS));
+}
+
+static inline void smooth_poles_r1_main(
+    input_t input[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1],
+    int ci,
+    data_t north[IFAN_CHARTS],
+    data_t south[IFAN_CHARTS],
+    data_t &north_pole,
+    data_t &south_pole
+) {
+    acc_t north_pole_sum = 0;
+    acc_t south_pole_sum = 0;
+    for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+        north[ch] = vertex_north_r1_main(input, ci, ch);
+        south[ch] = vertex_south_r1_main(input, ci, ch);
+        for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+            north_pole_sum += static_cast<acc_t>(input[ci][ri][ch][IFAN_H_R1 - 1][0]);
+            south_pole_sum += static_cast<acc_t>(input[ci][ri][ch][0][IFAN_W_R1 - 1]);
+        }
+    }
+    north_pole = to_data_t(north_pole_sum / static_cast<acc_t>(IFAN_R_FULL * IFAN_CHARTS));
+    south_pole = to_data_t(south_pole_sum / static_cast<acc_t>(IFAN_R_FULL * IFAN_CHARTS));
+}
+
+static void smooth_output_r2_frame(
+    data_t x[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
+) {
+    for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+        data_t north[IFAN_CHARTS];
+        data_t south[IFAN_CHARTS];
+        for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+            const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+            acc_t north_sum = 0;
+            acc_t south_sum = 0;
+            for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+                north_sum += static_cast<acc_t>(x[co][ro][ch][1][0]);
+                north_sum += static_cast<acc_t>(x[co][ro][ch][1][1]);
+                north_sum += static_cast<acc_t>(x[co][ro][ch][0][1]);
+                north_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2]);
+                north_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R2 - 1][IFAN_H_R2 - 1]);
+
+                south_sum += static_cast<acc_t>(x[co][ro][ch][1][IFAN_H_R2]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][1][IFAN_H_R2 + 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][0][IFAN_H_R2 + 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R2 - 1][IFAN_W_R2 - 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][0][IFAN_H_R2 - 1]);
+            }
+            north[ch] = to_data_t(north_sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+            south[ch] = to_data_t(south_sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+        }
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+                x[co][ro][ch][0][0] = north[ch];
+                x[co][ro][ch][0][IFAN_H_R2] = south[ch];
+            }
+        }
+    }
+}
+
+static void smooth_output_r1_frame(
+    data_t x[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1]
+) {
+    for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+        data_t north[IFAN_CHARTS];
+        data_t south[IFAN_CHARTS];
+        for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+            const int prev_ch = (ch - 1 + IFAN_CHARTS) % IFAN_CHARTS;
+            acc_t north_sum = 0;
+            acc_t south_sum = 0;
+            for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+                north_sum += static_cast<acc_t>(x[co][ro][ch][1][0]);
+                north_sum += static_cast<acc_t>(x[co][ro][ch][1][1]);
+                north_sum += static_cast<acc_t>(x[co][ro][ch][0][1]);
+                north_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R1 - 1][IFAN_H_R1]);
+                north_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R1 - 1][IFAN_H_R1 - 1]);
+
+                south_sum += static_cast<acc_t>(x[co][ro][ch][1][IFAN_H_R1]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][1][IFAN_H_R1 + 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][0][IFAN_H_R1 + 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][prev_ch][IFAN_H_R1 - 1][IFAN_W_R1 - 1]);
+                south_sum += static_cast<acc_t>(x[co][ro][ch][0][IFAN_H_R1 - 1]);
+            }
+            north[ch] = to_data_t(north_sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+            south[ch] = to_data_t(south_sum / static_cast<acc_t>(IFAN_R_FULL * 5));
+        }
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+                x[co][ro][ch][0][0] = north[ch];
+                x[co][ro][ch][0][IFAN_H_R1] = south[ch];
+            }
+        }
+    }
+}
+
 void relu_feature_r2(
     data_t x[IFAN_STAGE1_T][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
 ) {
@@ -152,6 +381,12 @@ static void pad_r2_stem_frame(
     const int reorder_idx[1][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2],
     input_t padded[1][1][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2]
 ) {
+    data_t north[IFAN_CHARTS];
+    data_t south[IFAN_CHARTS];
+    data_t north_pole = 0.0f;
+    data_t south_pole = 0.0f;
+    smooth_poles_r2_stem(input, north, south, north_pole, south_pole);
+
     for (int ch = 0; ch < IFAN_CHARTS; ch++) {
         for (int h = 0; h < IFAN_H_R2 + 2; h++) {
             for (int w = 0; w < IFAN_W_R2 + 2; w++) {
@@ -160,9 +395,20 @@ static void pad_r2_stem_frame(
                 const int src_ch = decode_src_chart(rv, IFAN_H_R2, IFAN_W_R2);
                 const int src_h = decode_src_h(rv, IFAN_H_R2, IFAN_W_R2);
                 const int src_w = decode_src_w(rv, IFAN_H_R2, IFAN_W_R2);
-                padded[0][0][ch][h][w] = input[0][0][src_ch][src_h][src_w];
+                input_t val = input[0][0][src_ch][src_h][src_w];
+                if (src_h == 0 && src_w == 0) {
+                    val = to_input_t(north[src_ch]);
+                } else if (src_h == 0 && src_w == IFAN_H_R2) {
+                    val = to_input_t(south[src_ch]);
+                }
+                padded[0][0][ch][h][w] = val;
             }
         }
+    }
+
+    for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+        padded[0][0][ch][IFAN_H_R2 + 1][1] = to_input_t(north_pole);
+        padded[0][0][ch][1][IFAN_W_R2 + 1] = to_input_t(south_pole);
     }
 }
 
@@ -172,6 +418,12 @@ static void pad_r2_main_frame(
     input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2]
 ) {
     for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+        data_t north[IFAN_CHARTS];
+        data_t south[IFAN_CHARTS];
+        data_t north_pole = 0.0f;
+        data_t south_pole = 0.0f;
+        smooth_poles_r2_main(input, ci, north, south, north_pole, south_pole);
+
         for (int ri = 0; ri < IFAN_R_FULL; ri++) {
             for (int ch = 0; ch < IFAN_CHARTS; ch++) {
                 for (int h = 0; h < IFAN_H_R2 + 2; h++) {
@@ -182,9 +434,22 @@ static void pad_r2_main_frame(
                         const int src_ch = decode_src_chart(rv, IFAN_H_R2, IFAN_W_R2);
                         const int src_h = decode_src_h(rv, IFAN_H_R2, IFAN_W_R2);
                         const int src_w = decode_src_w(rv, IFAN_H_R2, IFAN_W_R2);
-                        padded[ci][ri][ch][h][w] = input[ci][src_ri][src_ch][src_h][src_w];
+                        input_t val = input[ci][src_ri][src_ch][src_h][src_w];
+                        if (src_h == 0 && src_w == 0) {
+                            val = to_input_t(north[src_ch]);
+                        } else if (src_h == 0 && src_w == IFAN_H_R2) {
+                            val = to_input_t(south[src_ch]);
+                        }
+                        padded[ci][ri][ch][h][w] = val;
                     }
                 }
+            }
+        }
+
+        for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+            for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+                padded[ci][ri][ch][IFAN_H_R2 + 1][1] = to_input_t(north_pole);
+                padded[ci][ri][ch][1][IFAN_W_R2 + 1] = to_input_t(south_pole);
             }
         }
     }
@@ -196,6 +461,12 @@ static void pad_r1_main_frame(
     input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1 + 2][IFAN_W_R1 + 2]
 ) {
     for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+        data_t north[IFAN_CHARTS];
+        data_t south[IFAN_CHARTS];
+        data_t north_pole = 0.0f;
+        data_t south_pole = 0.0f;
+        smooth_poles_r1_main(input, ci, north, south, north_pole, south_pole);
+
         for (int ri = 0; ri < IFAN_R_FULL; ri++) {
             for (int ch = 0; ch < IFAN_CHARTS; ch++) {
                 for (int h = 0; h < IFAN_H_R1 + 2; h++) {
@@ -206,9 +477,22 @@ static void pad_r1_main_frame(
                         const int src_ch = decode_src_chart(rv, IFAN_H_R1, IFAN_W_R1);
                         const int src_h = decode_src_h(rv, IFAN_H_R1, IFAN_W_R1);
                         const int src_w = decode_src_w(rv, IFAN_H_R1, IFAN_W_R1);
-                        padded[ci][ri][ch][h][w] = input[ci][src_ri][src_ch][src_h][src_w];
+                        input_t val = input[ci][src_ri][src_ch][src_h][src_w];
+                        if (src_h == 0 && src_w == 0) {
+                            val = to_input_t(north[src_ch]);
+                        } else if (src_h == 0 && src_w == IFAN_H_R1) {
+                            val = to_input_t(south[src_ch]);
+                        }
+                        padded[ci][ri][ch][h][w] = val;
                     }
                 }
+            }
+        }
+
+        for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+            for (int ch = 0; ch < IFAN_CHARTS; ch++) {
+                padded[ci][ri][ch][IFAN_H_R1 + 1][1] = to_input_t(north_pole);
+                padded[ci][ri][ch][1][IFAN_W_R1 + 1] = to_input_t(south_pole);
             }
         }
     }
@@ -251,10 +535,13 @@ void ico_conv_r2_stem_engine(
                                 for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
 #pragma HLS UNROLL
                                     const int k = kh * IFAN_KERNEL_W + kw;
+                                    const int idx_co = kernel_idx[co][ro][0][0][k][0];
+                                    const int idx_ci = kernel_idx[co][ro][0][0][k][1];
+                                    const int idx_ri = kernel_idx[co][ro][0][0][k][2];
                                     const int idx_w = kernel_idx[co][ro][0][0][k][3];
                                     if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
                                         sum += static_cast<acc_t>(padded[0][0][ch][h + kh][w + kw]) *
-                                               static_cast<acc_t>(to_weight_t(weight[co][0][0][idx_w]));
+                                               static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
                                     }
                                 }
                             }
@@ -264,6 +551,7 @@ void ico_conv_r2_stem_engine(
                 }
             }
         }
+        smooth_output_r2_frame(output[t]);
     }
 }
 
@@ -309,12 +597,13 @@ void ico_conv_r2_main_engine(
                                     for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
                                         for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
                                             const int k = kh * IFAN_KERNEL_W + kw;
+                                            const int idx_co = kernel_idx[co][ro][ci][ri][k][0];
                                             const int idx_ci = kernel_idx[co][ro][ci][ri][k][1];
                                             const int idx_ri = kernel_idx[co][ro][ci][ri][k][2];
                                             const int idx_w = kernel_idx[co][ro][ci][ri][k][3];
                                             if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
-                                                sum += static_cast<acc_t>(padded[idx_ci][idx_ri][ch][h + kh][w + kw]) *
-                                                       static_cast<acc_t>(to_weight_t(weight[co][idx_ci][idx_ri][idx_w]));
+                                                sum += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
+                                                       static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
                                             }
                                         }
                                     }
@@ -326,6 +615,7 @@ void ico_conv_r2_main_engine(
                 }
             }
         }
+        smooth_output_r2_frame(output[t]);
     }
 }
 
@@ -371,12 +661,13 @@ void ico_conv_r1_main_engine(
                                     for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
                                         for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
                                             const int k = kh * IFAN_KERNEL_W + kw;
+                                            const int idx_co = kernel_idx[co][ro][ci][ri][k][0];
                                             const int idx_ci = kernel_idx[co][ro][ci][ri][k][1];
                                             const int idx_ri = kernel_idx[co][ro][ci][ri][k][2];
                                             const int idx_w = kernel_idx[co][ro][ci][ri][k][3];
                                             if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
-                                                sum += static_cast<acc_t>(padded[idx_ci][idx_ri][ch][h + kh][w + kw]) *
-                                                       static_cast<acc_t>(to_weight_t(weight[co][idx_ci][idx_ri][idx_w]));
+                                                sum += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
+                                                       static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
                                             }
                                         }
                                     }
@@ -388,6 +679,7 @@ void ico_conv_r1_main_engine(
                 }
             }
         }
+        smooth_output_r1_frame(output[t]);
     }
 }
 
@@ -438,6 +730,7 @@ void pool_ico_r2_to_r1_engine(
                 }
             }
         }
+        smooth_output_r1_frame(output[t]);
     }
 }
 
