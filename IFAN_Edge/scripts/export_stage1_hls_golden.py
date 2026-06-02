@@ -126,6 +126,7 @@ def load_model(checkpoint_path: Path, root: Path):
     if state is None:
         raise RuntimeError("Checkpoint does not contain model_state_dict.")
     state = dict(state)
+    model_state_keys = set(model.state_dict().keys())
     load_notes: list[str] = []
     if config.map_refiner == "maba" and config.map_refiner_position == "pre_readout":
         legacy_prefix = "map_refiner."
@@ -138,6 +139,20 @@ def load_model(checkpoint_path: Path, root: Path):
             load_notes.append(
                 "Remapped legacy map_refiner.* checkpoint keys to feature_refiner.* for pre_readout MABA."
             )
+    legacy_branch_norm_keys = [
+        "phat_branch.residual.norm.weight",
+        "phat_branch.residual.norm.bias",
+        "aux_branch.residual.norm.weight",
+        "aux_branch.residual.norm.bias",
+    ]
+    stale_branch_norm_keys = [key for key in legacy_branch_norm_keys if key in state and key not in model_state_keys]
+    if stale_branch_norm_keys:
+        for key in stale_branch_norm_keys:
+            state.pop(key, None)
+        load_notes.append(
+            "Dropped stale frontend residual norm checkpoint keys no longer present in IFANModel: "
+            + ", ".join(stale_branch_norm_keys)
+        )
     model.load_state_dict(state, strict=True)
     model.eval()
     checkpoint["_stage1_export_load_notes"] = load_notes

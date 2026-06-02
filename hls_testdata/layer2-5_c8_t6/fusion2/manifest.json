@@ -1,0 +1,140 @@
+{
+  "dataset": "fusion2",
+  "kind": "layer2-5_real_convico_golden",
+  "layout": {
+    "input_rearranged": "[T=6, C=8, R=6, charts=5, H=2, W=4]",
+    "weight": "[Cout=8, Cin=8, Rin=6, K=7]",
+    "bias": "[Cout=8]",
+    "kernel_expansion_idx": "[Cout=8, Rout=6, Cin=8, Rin=6, K3x3=9, fields=4]",
+    "reorder_idx": "[R=6, charts=5, H+2=4, W+2=6]",
+    "output": "[T=6, C=8, R=6, charts=5, H=2, W=4]"
+  },
+  "source": {
+    "stage1_bundle": "hls_testdata/stage1_ifan_c8_r2/scene_1_t6",
+    "input_node": "debug['fusion_head_blocks'][1]",
+    "conv_output_node": "model.fusion_blocks[2].conv(input_node)",
+    "next_stage_node": "debug['fusion_head_blocks'][2]",
+    "full_block_replay_max_abs_diff": 0.0
+  },
+  "files": {
+    "input_rearranged": {
+      "npy": "input_rearranged.npy",
+      "txt": "input_rearranged.txt"
+    },
+    "weight": {
+      "npy": "weight.npy",
+      "txt": "weight.txt"
+    },
+    "bias": {
+      "npy": "bias.npy",
+      "txt": "bias.txt"
+    },
+    "kernel_expansion_idx": {
+      "npy": "kernel_expansion_idx.npy",
+      "txt": "kernel_expansion_idx.txt"
+    },
+    "reorder_idx": {
+      "npy": "reorder_idx.npy",
+      "txt": "reorder_idx.txt"
+    },
+    "output": {
+      "npy": "output.npy",
+      "txt": "output.txt"
+    }
+  },
+  "stats": {
+    "input_rearranged": {
+      "shape": [
+        6,
+        8,
+        6,
+        5,
+        2,
+        4
+      ],
+      "dtype": "float32",
+      "size": 11520,
+      "finite": true,
+      "min": 0.0,
+      "max": 2.810871124267578,
+      "mean": 0.426005284176871,
+      "std": 0.4898467671881291
+    },
+    "weight": {
+      "shape": [
+        8,
+        8,
+        6,
+        7
+      ],
+      "dtype": "float32",
+      "size": 2688,
+      "finite": true,
+      "min": -0.22027485072612762,
+      "max": 0.21732112765312195,
+      "mean": 0.0014712735736051876,
+      "std": 0.0683828825076621
+    },
+    "bias": {
+      "shape": [
+        8
+      ],
+      "dtype": "float32",
+      "size": 8,
+      "finite": true,
+      "min": -0.007552185095846653,
+      "max": 0.011083285324275494,
+      "mean": 0.0018587130325613543,
+      "std": 0.004966177304511534
+    },
+    "kernel_expansion_idx": {
+      "shape": [
+        8,
+        6,
+        8,
+        6,
+        9,
+        4
+      ],
+      "dtype": "int64",
+      "size": 82944,
+      "finite": true,
+      "min": -1.0,
+      "max": 7.0,
+      "mean": 2.9027777777777777,
+      "std": 2.280105517917867
+    },
+    "reorder_idx": {
+      "shape": [
+        6,
+        5,
+        4,
+        6
+      ],
+      "dtype": "int64",
+      "size": 720,
+      "finite": true,
+      "min": 0.0,
+      "max": 239.0,
+      "mean": 94.75,
+      "std": 78.50030962430091
+    },
+    "output": {
+      "shape": [
+        6,
+        8,
+        6,
+        5,
+        2,
+        4
+      ],
+      "dtype": "float32",
+      "size": 11520,
+      "finite": true,
+      "min": -0.8938001990318298,
+      "max": 1.9516676664352417,
+      "mean": 0.39048771484370565,
+      "std": 0.3716295369403005
+    }
+  }
+}
