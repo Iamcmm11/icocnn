@@ -31,6 +31,12 @@
 #define IFAN_KERNEL_W 3
 #define IFAN_TEMPORAL_KERNEL 5
 
+#ifndef IFAN_OC_PAR_FACTOR
+#define IFAN_OC_PAR_FACTOR 2
+#endif
+
+#define IFAN_OC_TILE IFAN_OC_PAR_FACTOR
+
 #ifndef IFAN_STAGE1_INPUT_W
 #define IFAN_STAGE1_INPUT_W 16
 #endif

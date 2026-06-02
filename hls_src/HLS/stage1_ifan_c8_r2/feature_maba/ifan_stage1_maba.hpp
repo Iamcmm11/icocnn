@@ -1,7 +1,7 @@
 #ifndef IFAN_STAGE1_MABA_HPP
 #define IFAN_STAGE1_MABA_HPP
 
-#include "ifan_stage1.hpp"
+#include "../full_stage1_legacy/ifan_stage1.hpp"
 
 #define IFAN_MABA_POSITIONS (IFAN_R_FULL * IFAN_CHARTS * IFAN_H_R1 * IFAN_W_R1)
 #define IFAN_MABA_CHANNELS IFAN_BRANCH_CHANNELS

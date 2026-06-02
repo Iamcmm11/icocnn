@@ -24,12 +24,14 @@ DEFAULT_CHECKPOINT = Path(
 )
 DEFAULT_INPUT = Path("IFAN_Edge/outputs/stage1_features/scene_1/dual_maps.npy")
 DEFAULT_OUTPUT_DIR = Path("hls_testdata/stage1_ifan_c8_r2/scene_1_t6")
+DEFAULT_LAYER2_5_OUTPUT_DIR = Path("hls_testdata/layer2-5_c8_t6")
 
 STAGE1_INPUT_SHAPE = (2, 6, 5, 4, 8)
 STAGE1_GOLDEN_SHAPE = (6, 8, 6, 5, 2, 4)
 FEATURE_MABA_POSITION_SHAPE = (240, 6, 8)
 FEATURE_MABA_LATENT_SHAPE = (240, 6, 16)
 FEATURE_MABA_STATE_SHAPE = (240, 6, 8)
+LAYER2_5_DATASET_NAMES = ("fusion0", "fusion1", "fusion2", "fusion3", "final")
 
 
 def repo_root() -> Path:
@@ -633,11 +635,202 @@ def save_array_group(group_dir: Path, arrays: dict[str, np.ndarray]) -> dict[str
     return result
 
 
+def max_abs_diff(lhs: np.ndarray, rhs: np.ndarray) -> float:
+    if lhs.shape != rhs.shape:
+        raise RuntimeError(f"Cannot compare arrays with different shapes: {lhs.shape} vs {rhs.shape}")
+    if lhs.size == 0:
+        return 0.0
+    return float(np.max(np.abs(lhs.astype(np.float64) - rhs.astype(np.float64))))
+
+
+def collect_layer2_5_convico_datasets(
+    model,
+    debug: dict[str, Any],
+    weights: dict[str, np.ndarray],
+    geometry: dict[str, np.ndarray],
+) -> tuple[dict[str, dict[str, np.ndarray]], dict[str, Any]]:
+    fusion_feature = debug.get("fusion_feature")
+    fusion_head_blocks = debug.get("fusion_head_blocks")
+    final_head_logits = debug.get("final_head_logits")
+
+    if not torch.is_tensor(fusion_feature):
+        raise RuntimeError("Model debug output does not contain fusion_feature tensor.")
+    if not isinstance(fusion_head_blocks, list) or len(fusion_head_blocks) != len(model.fusion_blocks):
+        raise RuntimeError(
+            "Model debug output does not contain the expected fusion_head_blocks list for layer2-5 export."
+        )
+    if not torch.is_tensor(final_head_logits):
+        raise RuntimeError("Model debug output does not contain final_head_logits tensor.")
+    if "kernel_idx_main" not in geometry or "reorder_r1" not in geometry:
+        raise RuntimeError("Missing kernel_idx_main or reorder_r1 geometry required for layer2-5 export.")
+
+    kernel_idx_main = np.ascontiguousarray(geometry["kernel_idx_main"].astype(np.int64, copy=False))
+    reorder_r1 = np.ascontiguousarray(geometry["reorder_r1"].astype(np.int64, copy=False))
+    datasets: dict[str, dict[str, np.ndarray]] = {}
+    manifest: dict[str, Any] = {}
+
+    current = fusion_feature
+    with torch.no_grad():
+        for index, block in enumerate(model.fusion_blocks):
+            dataset_name = f"fusion{index}"
+            conv_output = block.conv(current)
+            full_output = block(current)
+            debug_output = fusion_head_blocks[index]
+            if not torch.is_tensor(debug_output):
+                raise RuntimeError(f"fusion_head_blocks[{index}] is not a tensor.")
+
+            input_array = tensor_to_numpy(current, drop_batch=True)
+            output_array = tensor_to_numpy(conv_output, drop_batch=True)
+            full_output_array = tensor_to_numpy(full_output, drop_batch=True)
+            debug_output_array = tensor_to_numpy(debug_output, drop_batch=True)
+            replay_max_diff = max_abs_diff(full_output_array, debug_output_array)
+            if replay_max_diff > 1e-6:
+                raise RuntimeError(
+                    f"Replay mismatch for {dataset_name}: max_diff={replay_max_diff} exceeds tolerance."
+                )
+
+            datasets[dataset_name] = {
+                "input_rearranged": input_array,
+                "weight": np.ascontiguousarray(weights["fusion_w"][index].astype(np.float32, copy=False)),
+                "bias": np.ascontiguousarray(weights["fusion_b"][index].astype(np.float32, copy=False)),
+                "kernel_expansion_idx": kernel_idx_main,
+                "reorder_idx": reorder_r1,
+                "output": output_array,
+            }
+            manifest[dataset_name] = {
+                "input_node": "debug['fusion_feature']" if index == 0 else f"debug['fusion_head_blocks'][{index - 1}]",
+                "conv_output_node": f"model.fusion_blocks[{index}].conv(input_node)",
+                "next_stage_node": f"debug['fusion_head_blocks'][{index}]",
+                "full_block_replay_max_abs_diff": replay_max_diff,
+            }
+            current = debug_output
+
+        final_conv_output = model.final_block.conv(current)
+        final_full_output = model.final_block(current)
+        final_full_array = tensor_to_numpy(final_full_output, drop_batch=True)
+        final_debug_array = tensor_to_numpy(final_head_logits, drop_batch=True)
+        final_replay_max_diff = max_abs_diff(final_full_array, final_debug_array)
+        if final_replay_max_diff > 1e-6:
+            raise RuntimeError(
+                f"Replay mismatch for final block: max_diff={final_replay_max_diff} exceeds tolerance."
+            )
+
+    datasets["final"] = {
+        "input_rearranged": tensor_to_numpy(current, drop_batch=True),
+        "weight": np.ascontiguousarray(weights["final_w"].astype(np.float32, copy=False)),
+        "bias": np.ascontiguousarray(weights["final_b"].astype(np.float32, copy=False)),
+        "kernel_expansion_idx": kernel_idx_main,
+        "reorder_idx": reorder_r1,
+        "output": tensor_to_numpy(final_conv_output, drop_batch=True),
+    }
+    manifest["final"] = {
+        "input_node": "debug['fusion_head_blocks'][3]",
+        "conv_output_node": "model.final_block.conv(input_node)",
+        "next_stage_node": "debug['final_head_logits']",
+        "full_block_replay_max_abs_diff": final_replay_max_diff,
+    }
+    return datasets, manifest
+
+
+def validate_layer2_5_convico_datasets(datasets: dict[str, dict[str, np.ndarray]]) -> None:
+    expected_shapes = {
+        "input_rearranged": STAGE1_GOLDEN_SHAPE,
+        "weight": (8, 8, 6, 7),
+        "bias": (8,),
+        "kernel_expansion_idx": (8, 6, 8, 6, 9, 4),
+        "reorder_idx": (6, 5, 4, 6),
+        "output": STAGE1_GOLDEN_SHAPE,
+    }
+    for dataset_name in LAYER2_5_DATASET_NAMES:
+        if dataset_name not in datasets:
+            raise RuntimeError(f"Missing layer2-5 dataset {dataset_name}.")
+        payload = datasets[dataset_name]
+        for field, shape in expected_shapes.items():
+            if field not in payload or tuple(payload[field].shape) != shape:
+                got = None if field not in payload else tuple(payload[field].shape)
+                raise RuntimeError(f"{dataset_name}.{field} shape mismatch: {got} != {shape}")
+            if payload[field].dtype.kind in "fc" and not np.isfinite(payload[field]).all():
+                raise RuntimeError(f"{dataset_name}.{field} contains non-finite values.")
+
+
+def save_layer2_5_convico_datasets(
+    output_dir: Path,
+    datasets: dict[str, dict[str, np.ndarray]],
+    dataset_manifest: dict[str, Any],
+    *,
+    root: Path,
+    stage1_output_dir: Path,
+) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    root_manifest: dict[str, Any] = {
+        "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "source_stage1_bundle": relpath(stage1_output_dir, root),
+        "datasets": {},
+        "notes": [
+            "Each subdirectory mirrors the file contract expected by hls_src/HLS/layer2-5/test_ico_conv_layer2_5.cpp.",
+            "output.txt is the raw ConvIco output before the per-block ReLU/temporal Conv1d/LNorm path.",
+            "input_rearranged.txt is the exact tensor consumed by each fusion/final ConvIco block inside IFAN C8 R2.",
+        ],
+    }
+
+    for dataset_name in LAYER2_5_DATASET_NAMES:
+        dataset_dir = output_dir / dataset_name
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        payload = datasets[dataset_name]
+
+        files = {
+            "input_rearranged": save_npy_txt(dataset_dir / "input_rearranged", payload["input_rearranged"]),
+            "weight": save_npy_txt(dataset_dir / "weight", payload["weight"]),
+            "bias": save_npy_txt(dataset_dir / "bias", payload["bias"]),
+            "kernel_expansion_idx": save_npy_txt(dataset_dir / "kernel_expansion_idx", payload["kernel_expansion_idx"]),
+            "reorder_idx": save_npy_txt(dataset_dir / "reorder_idx", payload["reorder_idx"]),
+            "output": save_npy_txt(dataset_dir / "output", payload["output"]),
+        }
+
+        dataset_stats = {name: array_stats(array) for name, array in payload.items()}
+        manifest = {
+            "dataset": dataset_name,
+            "kind": "layer2-5_real_convico_golden",
+            "layout": {
+                "input_rearranged": "[T=6, C=8, R=6, charts=5, H=2, W=4]",
+                "weight": "[Cout=8, Cin=8, Rin=6, K=7]",
+                "bias": "[Cout=8]",
+                "kernel_expansion_idx": "[Cout=8, Rout=6, Cin=8, Rin=6, K3x3=9, fields=4]",
+                "reorder_idx": "[R=6, charts=5, H+2=4, W+2=6]",
+                "output": "[T=6, C=8, R=6, charts=5, H=2, W=4]",
+            },
+            "source": {
+                "stage1_bundle": relpath(stage1_output_dir, root),
+                **dataset_manifest[dataset_name],
+            },
+            "files": files,
+            "stats": dataset_stats,
+        }
+        with (dataset_dir / "manifest.json").open("w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+
+        root_manifest["datasets"][dataset_name] = {
+            "path": relpath(dataset_dir, root),
+            "source": manifest["source"],
+            "stats": {
+                "input_rearranged": dataset_stats["input_rearranged"],
+                "output": dataset_stats["output"],
+            },
+        }
+
+    with (output_dir / "manifest.json").open("w", encoding="utf-8") as f:
+        json.dump(root_manifest, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    return root_manifest
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Export IFAN C8 R2 Stage-1 HLS golden data.")
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--layer2-5-output-dir", type=Path, default=DEFAULT_LAYER2_5_OUTPUT_DIR)
     parser.add_argument("--sample-index", type=int, default=0)
     parser.add_argument("--start-frame", type=int, default=0)
     parser.add_argument("--frames", type=int, default=6)
@@ -651,6 +844,7 @@ def main() -> None:
     checkpoint_path = resolve_path(args.checkpoint, root)
     input_path = resolve_path(args.input, root)
     output_dir = resolve_path(args.output_dir, root)
+    layer2_5_output_dir = resolve_path(args.layer2_5_output_dir, root)
 
     torch.set_num_threads(max(1, int(args.torch_threads)))
 
@@ -699,6 +893,9 @@ def main() -> None:
     maba_tensors = collect_feature_maba_tensors(model.feature_refiner, debug["final_head_logits"])
     readout_weights = collect_readout_weights(model)
     post_maba_tensors = collect_post_maba_tensors(model, debug, coords)
+    layer2_5_datasets, layer2_5_dataset_manifest = collect_layer2_5_convico_datasets(
+        model, debug, weights, geometry
+    )
 
     validate_bundle(
         stage1_input,
@@ -709,6 +906,7 @@ def main() -> None:
         maba_tensors,
         pre_readout_refined,
     )
+    validate_layer2_5_convico_datasets(layer2_5_datasets)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     save_npy_txt(output_dir / "stage1_input", stage1_input, write_text=True)
@@ -730,6 +928,13 @@ def main() -> None:
     maba_tensor_files = save_array_group(output_dir / "maba" / "tensors", maba_tensors)
     readout_weight_files = save_array_group(output_dir / "post_maba" / "weights", readout_weights)
     post_maba_tensor_files = save_array_group(output_dir / "post_maba" / "tensors", post_maba_tensors)
+    layer2_5_manifest = save_layer2_5_convico_datasets(
+        layer2_5_output_dir,
+        layer2_5_datasets,
+        layer2_5_dataset_manifest,
+        root=root,
+        stage1_output_dir=output_dir,
+    )
 
     tensor_stats = {
         "stage1_input": array_stats(stage1_input),
@@ -821,12 +1026,25 @@ def main() -> None:
             "maba_debug_tensors_npz": "maba_debug_tensors.npz",
             "readout_weights_npz": "readout_weights.npz",
             "post_maba_tensors_npz": "post_maba_tensors.npz",
+            "layer2_5_root_manifest": relpath(layer2_5_output_dir / "manifest.json", output_dir),
             "weights_flat": weight_files,
             "geometry_flat": geometry_files,
             "maba_weights_flat": maba_weight_files,
             "maba_tensors_flat": maba_tensor_files,
             "readout_weights_flat": readout_weight_files,
             "post_maba_tensors_flat": post_maba_tensor_files,
+        },
+        "layer2_5_contract": {
+            "root_dir": relpath(layer2_5_output_dir, root),
+            "datasets": layer2_5_manifest["datasets"],
+            "kernel_kind": "R1 shared ConvIco only",
+            "excludes": [
+                "per-block ReLU",
+                "temporal Conv1d",
+                "LNormIco",
+                "FeatureMABA",
+                "channel readout and SoftArgMax path",
+            ],
         },
         "tensor_stats": tensor_stats,
         "debug_tensor_stats": debug_stats,
@@ -854,6 +1072,8 @@ def main() -> None:
     print(f"Final logits min/max: {final_head_logits.min():.6g} / {final_head_logits.max():.6g}")
     print(f"MABA output shape: {tuple(pre_readout_refined.shape)}")
     print(f"MABA output min/max: {pre_readout_refined.min():.6g} / {pre_readout_refined.max():.6g}")
+    print(f"layer2-5 ConvIco real datasets: {relpath(layer2_5_output_dir, root)}")
+    print(f"layer2-5 datasets: {', '.join(LAYER2_5_DATASET_NAMES)}")
 
 
 if __name__ == "__main__":

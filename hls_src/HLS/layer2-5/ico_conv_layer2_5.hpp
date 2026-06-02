@@ -18,10 +18,26 @@
 #define H           2
 #define W           4
 #define CHARTS      5
-#define TIME_STEPS  52
 
-#define CIN         32
-#define COUT        32
+#ifndef ICO_LAYER2_5_TIME_STEPS
+#define ICO_LAYER2_5_TIME_STEPS 52
+#endif
+
+#ifndef ICO_LAYER2_5_CIN
+#define ICO_LAYER2_5_CIN 32
+#endif
+
+#ifndef ICO_LAYER2_5_COUT
+#define ICO_LAYER2_5_COUT 32
+#endif
+
+#ifndef ICO_LAYER2_5_OC_PAR_FACTOR
+#define ICO_LAYER2_5_OC_PAR_FACTOR 2
+#endif
+
+#define TIME_STEPS  ICO_LAYER2_5_TIME_STEPS
+#define CIN         ICO_LAYER2_5_CIN
+#define COUT        ICO_LAYER2_5_COUT
 #define RIN         6
 #define ROUT        6
 
@@ -31,7 +47,7 @@
 #define KERNEL_H    3
 #define KERNEL_W    3
 
-#define OC_PAR_FACTOR 2
+#define OC_PAR_FACTOR ICO_LAYER2_5_OC_PAR_FACTOR
 #define OC_TILE      OC_PAR_FACTOR
 
 #ifndef ICO_LAYER2_5_INPUT_W

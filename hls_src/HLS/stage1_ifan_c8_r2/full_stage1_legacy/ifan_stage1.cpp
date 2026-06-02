@@ -206,40 +206,64 @@ void ifan_stage1_top(
         fused_r1_a
     );
 
-    for (int block = 0; block < 4; block++) {
-        fusion_block_engine(
-            fused_r1_a,
-            weights.fusion_w[block],
-            weights.fusion_b[block],
-            weights.fusion_temporal_w[block],
-            weights.fusion_temporal_b[block],
-            weights.norm_gamma[3 + block],
-            weights.norm_beta[3 + block],
-            kernel_idx_main,
-            reorder_r1,
-            true,
-            fused_r1_b
-        );
-        if (block < 3) {
-            for (int t = 0; t < IFAN_STAGE1_T; t++) {
-                for (int c = 0; c < IFAN_BRANCH_CHANNELS; c++) {
-                    for (int r = 0; r < IFAN_R_FULL; r++) {
-                        for (int ch = 0; ch < IFAN_CHARTS; ch++) {
-                            for (int h = 0; h < IFAN_H_R1; h++) {
-                                for (int w = 0; w < IFAN_W_R1; w++) {
-#pragma HLS PIPELINE II=1
-                                    fused_r1_a[t][c][r][ch][h][w] = fused_r1_b[t][c][r][ch][h][w];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    fusion_block_engine(
+        fused_r1_a,
+        weights.fusion_w[0],
+        weights.fusion_b[0],
+        weights.fusion_temporal_w[0],
+        weights.fusion_temporal_b[0],
+        weights.norm_gamma[3],
+        weights.norm_beta[3],
+        kernel_idx_main,
+        reorder_r1,
+        true,
+        fused_r1_b
+    );
 
     fusion_block_engine(
         fused_r1_b,
+        weights.fusion_w[1],
+        weights.fusion_b[1],
+        weights.fusion_temporal_w[1],
+        weights.fusion_temporal_b[1],
+        weights.norm_gamma[4],
+        weights.norm_beta[4],
+        kernel_idx_main,
+        reorder_r1,
+        true,
+        fused_r1_a
+    );
+
+    fusion_block_engine(
+        fused_r1_a,
+        weights.fusion_w[2],
+        weights.fusion_b[2],
+        weights.fusion_temporal_w[2],
+        weights.fusion_temporal_b[2],
+        weights.norm_gamma[5],
+        weights.norm_beta[5],
+        kernel_idx_main,
+        reorder_r1,
+        true,
+        fused_r1_b
+    );
+
+    fusion_block_engine(
+        fused_r1_b,
+        weights.fusion_w[3],
+        weights.fusion_b[3],
+        weights.fusion_temporal_w[3],
+        weights.fusion_temporal_b[3],
+        weights.norm_gamma[6],
+        weights.norm_beta[6],
+        kernel_idx_main,
+        reorder_r1,
+        true,
+        fused_r1_a
+    );
+
+    fusion_block_engine(
+        fused_r1_a,
         weights.final_w,
         weights.final_b,
         weights.final_temporal_w,

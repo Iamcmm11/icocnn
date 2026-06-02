@@ -9,4 +9,5 @@ __pycache__
 hls_src/HLS/stage1_ifan_c8_r2/stage1_ifan_c8_r2_hls_prj/
 hls_src/HLS/stage1_ifan_c8_r2/hls_eval_logs/
 icoCNN-master/icoCNN.egg-info
-
+hls_src/HLS/stage1_ifan_c8_r2/_hls_work
+hls_src/HLS/layer2-5/layer2_5_c8t6_hls_prj

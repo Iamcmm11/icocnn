@@ -1,7 +1,7 @@
 #ifndef IFAN_STAGE1_POST_HPP
 #define IFAN_STAGE1_POST_HPP
 
-#include "ifan_stage1_maba.hpp"
+#include "../feature_maba/ifan_stage1_maba.hpp"
 
 #define IFAN_COORD_DIMS 3
 

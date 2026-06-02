@@ -1,6 +1,6 @@
 param(
     [ValidateSet("csim", "synth", "cosim", "all")]
-    [string]$Mode = "synth",
+    [string]$Mode = "csim",
     [int]$PollSeconds = 30,
     [int]$TimeoutMinutes = 0
 )
@@ -41,7 +41,18 @@ if (-not $VitisPath) {
     throw "vitis_hls was not found in PATH."
 }
 
-$Args = @("-f", "run_hls.tcl", $Mode)
+$ProjectRoot = Join-Path $Root "_hls_work"
+
+$env:ICO_HLS_MODE = $Mode
+$env:ICO_HLS_PROJECT = "stage1_ifan_c8_r2_frontend_hls_prj"
+$env:ICO_HLS_SOLUTION = "sol1"
+$env:ICO_HLS_TOP = "ifan_dual_frontend_top"
+$env:ICO_HLS_PART = "xc7k325tffg900-2"
+$env:ICO_HLS_CLOCK = "5.0"
+$env:ICO_HLS_PROJECT_ROOT = $ProjectRoot
+$env:ICO_HLS_SOURCE_DIR = $Root
+
+$Args = @("-f", "run_hls.tcl")
 $Start = Get-Date
 
 "Start: $Start" | Tee-Object -FilePath $SummaryLog
@@ -51,6 +62,7 @@ $Start = Get-Date
 "VitisWorkLog: $VitisWorkLog" | Tee-Object -FilePath $SummaryLog -Append
 "PollSeconds: $PollSeconds" | Tee-Object -FilePath $SummaryLog -Append
 "TimeoutMinutes: $TimeoutMinutes" | Tee-Object -FilePath $SummaryLog -Append
+"ProjectRoot: $ProjectRoot" | Tee-Object -FilePath $SummaryLog -Append
 
 $Process = Start-Process -FilePath $VitisPath `
     -ArgumentList $Args `
@@ -68,8 +80,8 @@ try {
         $Elapsed = (Get-Date) - $Start
         $StdoutSize = if (Test-Path $StdoutLog) { (Get-Item $StdoutLog).Length } else { 0 }
         $StderrSize = if (Test-Path $StderrLog) { (Get-Item $StderrLog).Length } else { 0 }
-        $ReportDir = Join-Path $Root "stage1_ifan_c8_r2_hls_prj\sol1\syn\report"
-        $CsynthRpt = Join-Path $ReportDir "ifan_stage1_top_csynth.rpt"
+        $ReportDir = Join-Path $ProjectRoot "stage1_ifan_c8_r2_frontend_hls_prj\sol1\syn\report"
+        $CsynthRpt = Join-Path $ReportDir "ifan_dual_frontend_top_csynth.rpt"
         $SizeRpt = Join-Path $ReportDir "csynth_design_size.rpt"
 
         $Line = "[{0:yyyy-MM-dd HH:mm:ss}] elapsed={1:hh\:mm\:ss} pid={2} cpu={3:N1}s ws={4:N1}MB stdout={5} stderr={6}" -f `
@@ -112,12 +124,26 @@ try {
     "ExitCode: $($Process.ExitCode)" | Tee-Object -FilePath $SummaryLog -Append
 }
 
-$FinalReport = Join-Path $Root "stage1_ifan_c8_r2_hls_prj\sol1\syn\report\ifan_stage1_top_csynth.rpt"
-$SizeReport = Join-Path $Root "stage1_ifan_c8_r2_hls_prj\sol1\syn\report\csynth_design_size.rpt"
+$WorkProject = Join-Path $ProjectRoot "stage1_ifan_c8_r2_frontend_hls_prj"
+$FinalReport = Join-Path $WorkProject "sol1\syn\report\ifan_dual_frontend_top_csynth.rpt"
+$SizeReport = Join-Path $WorkProject "sol1\syn\report\csynth_design_size.rpt"
 if (Test-Path $FinalReport) {
     "Final report: $FinalReport" | Tee-Object -FilePath $SummaryLog -Append
 } elseif (Test-Path $SizeReport) {
     "C-synthesis did not finish, but design-size report exists: $SizeReport" | Tee-Object -FilePath $SummaryLog -Append
+}
+
+if ($Mode -like "csim*") {
+    $CsimExe = Join-Path $WorkProject "sol1\csim\build\csim.exe"
+    if (Test-Path $CsimExe) {
+        "--- csim.exe rerun ---" | Tee-Object -FilePath $SummaryLog -Append
+        "Executable: $CsimExe" | Tee-Object -FilePath $SummaryLog -Append
+        "Runtime PATH: $env:PATH" | Tee-Object -FilePath $SummaryLog -Append
+        & $CsimExe *> $null
+        "csim.exe ExitCode: $LASTEXITCODE" | Tee-Object -FilePath $SummaryLog -Append
+    } else {
+        "csim.exe was not generated." | Tee-Object -FilePath $SummaryLog -Append
+    }
 }
 
 exit $Process.ExitCode

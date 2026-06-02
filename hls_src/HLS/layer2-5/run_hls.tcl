@@ -15,6 +15,8 @@ set solution_name [env_or_default "ICO_HLS_SOLUTION" $solution_name]
 set top_name [env_or_default "ICO_HLS_TOP" $top_name]
 set part_name [env_or_default "ICO_HLS_PART" $part_name]
 set clock_period [env_or_default "ICO_HLS_CLOCK" $clock_period]
+set cppflags [env_or_default "HLS_CPPFLAGS" ""]
+set cppflags [env_or_default "ICO_HLS_CPPFLAGS" $cppflags]
 set mode [string tolower [env_or_default "ICO_HLS_MODE" "quick"]]
 
 puts "=== Vitis HLS Terminal Flow ==="
@@ -23,6 +25,7 @@ puts "Solution : $solution_name"
 puts "Top      : $top_name"
 puts "Part     : $part_name"
 puts "Clock(ns): $clock_period"
+puts "CppFlags : $cppflags"
 puts "Mode     : $mode"
 
 if {[file exists $project_name]} {
@@ -33,10 +36,16 @@ if {[file exists $project_name]} {
 open_project $project_name
 set_top $top_name
 
-add_files ico_conv_layer2_5.cpp
-add_files ico_conv_layer2_5.hpp
+if {$cppflags ne ""} {
+    add_files -cflags $cppflags ico_conv_layer2_5.cpp
+    add_files ico_conv_layer2_5.hpp
+    add_files -tb -cflags $cppflags test_ico_conv_layer2_5.cpp
+} else {
+    add_files ico_conv_layer2_5.cpp
+    add_files ico_conv_layer2_5.hpp
+    add_files -tb test_ico_conv_layer2_5.cpp
+}
 add_files ../common/utils.hpp
-add_files -tb test_ico_conv_layer2_5.cpp
 
 open_solution -reset $solution_name
 set_part $part_name

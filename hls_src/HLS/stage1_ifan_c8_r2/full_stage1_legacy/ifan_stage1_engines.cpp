@@ -24,6 +24,161 @@ static inline data_t sigmoid_scalar(data_t x) {
     return 1.0f / (1.0f + std::exp(-x));
 }
 
+static void init_output_tile_r2(
+    const data_t bias[IFAN_BRANCH_CHANNELS],
+    int co_base,
+    act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+        const act_t bias_val = static_cast<act_t>(bias[co_base + coo]);
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R2 * IFAN_W_R2; sp++) {
+#pragma HLS PIPELINE II=1
+                const int ch = sp / (IFAN_H_R2 * IFAN_W_R2);
+                const int rem = sp % (IFAN_H_R2 * IFAN_W_R2);
+                const int h = rem / IFAN_W_R2;
+                const int w = rem % IFAN_W_R2;
+                output_tile[coo][ro][ch][h][w] = bias_val;
+            }
+        }
+    }
+}
+
+static void init_output_tile_r1(
+    const data_t bias[IFAN_BRANCH_CHANNELS],
+    int co_base,
+    act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+        const act_t bias_val = static_cast<act_t>(bias[co_base + coo]);
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R1 * IFAN_W_R1; sp++) {
+#pragma HLS PIPELINE II=1
+                const int ch = sp / (IFAN_H_R1 * IFAN_W_R1);
+                const int rem = sp % (IFAN_H_R1 * IFAN_W_R1);
+                const int h = rem / IFAN_W_R1;
+                const int w = rem % IFAN_W_R1;
+                output_tile[coo][ro][ch][h][w] = bias_val;
+            }
+        }
+    }
+}
+
+static void writeback_output_tile_r2(
+    act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2],
+    int co_base,
+    data_t output[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+        const int co = co_base + coo;
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R2 * IFAN_W_R2; sp++) {
+#pragma HLS PIPELINE II=1
+                const int ch = sp / (IFAN_H_R2 * IFAN_W_R2);
+                const int rem = sp % (IFAN_H_R2 * IFAN_W_R2);
+                const int h = rem / IFAN_W_R2;
+                const int w = rem % IFAN_W_R2;
+                output[co][ro][ch][h][w] = to_data_t(static_cast<acc_t>(output_tile[coo][ro][ch][h][w]));
+            }
+        }
+    }
+}
+
+static void writeback_output_tile_r1(
+    act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1],
+    int co_base,
+    data_t output[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+        const int co = co_base + coo;
+        for (int ro = 0; ro < IFAN_R_FULL; ro++) {
+            for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R1 * IFAN_W_R1; sp++) {
+#pragma HLS PIPELINE II=1
+                const int ch = sp / (IFAN_H_R1 * IFAN_W_R1);
+                const int rem = sp % (IFAN_H_R1 * IFAN_W_R1);
+                const int h = rem / IFAN_W_R1;
+                const int w = rem % IFAN_W_R1;
+                output[co][ro][ch][h][w] = to_data_t(static_cast<acc_t>(output_tile[coo][ro][ch][h][w]));
+            }
+        }
+    }
+}
+
+static void stage_ico_stem_weight_tile(
+    const data_t weight[IFAN_BRANCH_CHANNELS][1][1][IFAN_KERNEL_NEIGHBORS],
+    const int kernel_idx[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][1][1][9][4],
+    int co_base,
+    int ro,
+    weight_t kernel_tile[IFAN_OC_TILE][IFAN_KERNEL_H][IFAN_KERNEL_W]
+) {
+#pragma HLS ARRAY_PARTITION variable=kernel_tile complete dim=0
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+        const int co = co_base + coo;
+        for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
+#pragma HLS UNROLL
+            for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
+#pragma HLS UNROLL
+                const int k = kh * IFAN_KERNEL_W + kw;
+                const int idx_co = kernel_idx[co][ro][0][0][k][0];
+                const int idx_ci = kernel_idx[co][ro][0][0][k][1];
+                const int idx_ri = kernel_idx[co][ro][0][0][k][2];
+                const int idx_w = kernel_idx[co][ro][0][0][k][3];
+                kernel_tile[coo][kh][kw] =
+                    (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS)
+                        ? to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w])
+                        : static_cast<weight_t>(0);
+            }
+        }
+    }
+}
+
+static void stage_ico_main_weight_tile(
+    const data_t weight[IFAN_BRANCH_CHANNELS][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_NEIGHBORS],
+    const int kernel_idx[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][9][4],
+    int co_base,
+    int ro,
+    weight_t staged_weight[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W],
+    bool staged_valid[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+        const int co = co_base + coo;
+        for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+            for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+                for (int k = 0; k < IFAN_KERNEL_H * IFAN_KERNEL_W; k++) {
+#pragma HLS PIPELINE II=1
+                    const int idx_co = kernel_idx[co][ro][ci][ri][k][0];
+                    const int idx_ci = kernel_idx[co][ro][ci][ri][k][1];
+                    const int idx_ri = kernel_idx[co][ro][ci][ri][k][2];
+                    const int idx_w = kernel_idx[co][ro][ci][ri][k][3];
+                    const bool valid = idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS;
+                    staged_valid[coo][ci][ri][k] = valid;
+                    staged_weight[coo][ci][ri][k] =
+                        valid ? to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]) : static_cast<weight_t>(0);
+                }
+            }
+        }
+    }
+}
+
+static void stage_temporal_weight_tile(
+    const data_t weight[IFAN_BRANCH_CHANNELS][IFAN_BRANCH_CHANNELS][IFAN_TEMPORAL_KERNEL],
+    int co_base,
+    weight_t staged_weight[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_TEMPORAL_KERNEL]
+) {
+    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+        const int co = co_base + coo;
+        for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+            for (int k = 0; k < IFAN_TEMPORAL_KERNEL; k++) {
+#pragma HLS PIPELINE II=1
+                staged_weight[coo][ci][k] = to_weight_t(weight[co][ci][k]);
+            }
+        }
+    }
+}
+
 static inline int decode_src_ri(int reorder_val, int height, int width) {
     return reorder_val / (IFAN_CHARTS * height * width);
 }
@@ -506,9 +661,13 @@ void ico_conv_r2_stem_engine(
     const int reorder_idx[1][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2],
     data_t output[IFAN_STAGE1_T][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
 ) {
+#pragma HLS ARRAY_PARTITION variable=weight cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+#pragma HLS ARRAY_PARTITION variable=weight complete dim=4
+#pragma HLS ARRAY_PARTITION variable=bias cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+
     for (int t = 0; t < IFAN_STAGE1_T; t++) {
-        input_t staged[1][1][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
-        input_t padded[1][1][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2];
+        static input_t staged[1][1][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
+        static input_t padded[1][1][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2];
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=4
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=5
 #pragma HLS ARRAY_PARTITION variable=padded complete dim=4
@@ -524,32 +683,47 @@ void ico_conv_r2_stem_engine(
         }
         pad_r2_stem_frame(staged, reorder_idx, padded);
 
-        for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+        for (int co_base = 0; co_base < IFAN_BRANCH_CHANNELS; co_base += IFAN_OC_TILE) {
+            act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=1
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=2
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=4
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=5
+            init_output_tile_r2(bias, co_base, output_tile);
+
             for (int ro = 0; ro < IFAN_R_FULL; ro++) {
-                for (int ch = 0; ch < IFAN_CHARTS; ch++) {
-                    for (int h = 0; h < IFAN_H_R2; h++) {
-                        for (int w = 0; w < IFAN_W_R2; w++) {
+                weight_t kernel_tile[IFAN_OC_TILE][IFAN_KERNEL_H][IFAN_KERNEL_W];
+#pragma HLS ARRAY_PARTITION variable=kernel_tile complete dim=0
+#pragma HLS ARRAY_PARTITION variable=kernel_tile complete dim=2
+#pragma HLS ARRAY_PARTITION variable=kernel_tile complete dim=3
+                stage_ico_stem_weight_tile(weight, kernel_idx, co_base, ro, kernel_tile);
+
+                for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R2 * IFAN_W_R2; sp++) {
 #pragma HLS PIPELINE II=1
-                            acc_t sum = static_cast<acc_t>(bias[co]);
-                            for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
-                                for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
+                    const int ch = sp / (IFAN_H_R2 * IFAN_W_R2);
+                    const int rem = sp % (IFAN_H_R2 * IFAN_W_R2);
+                    const int h = rem / IFAN_W_R2;
+                    const int w = rem % IFAN_W_R2;
+
+                    for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
 #pragma HLS UNROLL
-                                    const int k = kh * IFAN_KERNEL_W + kw;
-                                    const int idx_co = kernel_idx[co][ro][0][0][k][0];
-                                    const int idx_ci = kernel_idx[co][ro][0][0][k][1];
-                                    const int idx_ri = kernel_idx[co][ro][0][0][k][2];
-                                    const int idx_w = kernel_idx[co][ro][0][0][k][3];
-                                    if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
-                                        sum += static_cast<acc_t>(padded[0][0][ch][h + kh][w + kw]) *
-                                               static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
-                                    }
-                                }
-                            }
-                            output[t][co][ro][ch][h][w] = to_data_t(sum);
-                        }
+                        const acc_t conv =
+                            static_cast<acc_t>(padded[0][0][ch][h + 0][w + 0]) * static_cast<acc_t>(kernel_tile[coo][0][0]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 0][w + 1]) * static_cast<acc_t>(kernel_tile[coo][0][1]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 0][w + 2]) * static_cast<acc_t>(kernel_tile[coo][0][2]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 1][w + 0]) * static_cast<acc_t>(kernel_tile[coo][1][0]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 1][w + 1]) * static_cast<acc_t>(kernel_tile[coo][1][1]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 1][w + 2]) * static_cast<acc_t>(kernel_tile[coo][1][2]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 2][w + 0]) * static_cast<acc_t>(kernel_tile[coo][2][0]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 2][w + 1]) * static_cast<acc_t>(kernel_tile[coo][2][1]) +
+                            static_cast<acc_t>(padded[0][0][ch][h + 2][w + 2]) * static_cast<acc_t>(kernel_tile[coo][2][2]);
+                        output_tile[coo][ro][ch][h][w] = static_cast<act_t>(
+                            static_cast<acc_t>(output_tile[coo][ro][ch][h][w]) + conv
+                        );
                     }
                 }
             }
+            writeback_output_tile_r2(output_tile, co_base, output[t]);
         }
         smooth_output_r2_frame(output[t]);
     }
@@ -563,9 +737,13 @@ void ico_conv_r2_main_engine(
     const int reorder_idx[IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2],
     data_t output[IFAN_STAGE1_T][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2]
 ) {
+#pragma HLS ARRAY_PARTITION variable=weight cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+#pragma HLS ARRAY_PARTITION variable=weight complete dim=4
+#pragma HLS ARRAY_PARTITION variable=bias cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+
     for (int t = 0; t < IFAN_STAGE1_T; t++) {
-        input_t staged[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
-        input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2];
+        static input_t staged[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
+        static input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2 + 2][IFAN_W_R2 + 2];
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=4
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=5
 #pragma HLS ARRAY_PARTITION variable=padded complete dim=4
@@ -585,35 +763,79 @@ void ico_conv_r2_main_engine(
         }
         pad_r2_main_frame(staged, reorder_idx, padded);
 
-        for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+        for (int co_base = 0; co_base < IFAN_BRANCH_CHANNELS; co_base += IFAN_OC_TILE) {
+            act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=1
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=2
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=4
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=5
+            init_output_tile_r2(bias, co_base, output_tile);
+
             for (int ro = 0; ro < IFAN_R_FULL; ro++) {
-                for (int ch = 0; ch < IFAN_CHARTS; ch++) {
-                    for (int h = 0; h < IFAN_H_R2; h++) {
-                        for (int w = 0; w < IFAN_W_R2; w++) {
+                for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+                    acc_t ri_partial[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R2][IFAN_W_R2];
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=1
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=2
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=4
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=5
+
+                    weight_t staged_weight[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W];
+                    bool staged_valid[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W];
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=1
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=4
+#pragma HLS ARRAY_PARTITION variable=staged_valid complete dim=1
+#pragma HLS ARRAY_PARTITION variable=staged_valid complete dim=4
+                    stage_ico_main_weight_tile(weight, kernel_idx, co_base, ro, staged_weight, staged_valid);
+
+                    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+                        for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R2 * IFAN_W_R2; sp++) {
 #pragma HLS PIPELINE II=1
-                            acc_t sum = static_cast<acc_t>(bias[co]);
-                            for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
-                                for (int ri = 0; ri < IFAN_R_FULL; ri++) {
-                                    for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
-                                        for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
-                                            const int k = kh * IFAN_KERNEL_W + kw;
-                                            const int idx_co = kernel_idx[co][ro][ci][ri][k][0];
-                                            const int idx_ci = kernel_idx[co][ro][ci][ri][k][1];
-                                            const int idx_ri = kernel_idx[co][ro][ci][ri][k][2];
-                                            const int idx_w = kernel_idx[co][ro][ci][ri][k][3];
-                                            if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
-                                                sum += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
-                                                       static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
-                                            }
+                            const int ch = sp / (IFAN_H_R2 * IFAN_W_R2);
+                            const int rem = sp % (IFAN_H_R2 * IFAN_W_R2);
+                            const int h = rem / IFAN_W_R2;
+                            const int w = rem % IFAN_W_R2;
+
+                            for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+                                acc_t conv = 0;
+                                for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
+#pragma HLS UNROLL
+                                    for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
+#pragma HLS UNROLL
+                                        const int k = kh * IFAN_KERNEL_W + kw;
+                                        if (staged_valid[coo][ci][ri][k]) {
+                                            conv += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
+                                                    static_cast<acc_t>(staged_weight[coo][ci][ri][k]);
                                         }
                                     }
                                 }
+                                ri_partial[coo][ri][ch][h][w] = conv;
                             }
-                            output[t][co][ro][ch][h][w] = to_data_t(sum);
+                        }
+                    }
+
+                    for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R2 * IFAN_W_R2; sp++) {
+#pragma HLS PIPELINE II=1
+                        const int ch = sp / (IFAN_H_R2 * IFAN_W_R2);
+                        const int rem = sp % (IFAN_H_R2 * IFAN_W_R2);
+                        const int h = rem / IFAN_W_R2;
+                        const int w = rem % IFAN_W_R2;
+
+                        for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+                            acc_t ri_sum = 0;
+                            for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+#pragma HLS UNROLL
+                                ri_sum += ri_partial[coo][ri][ch][h][w];
+                            }
+                            output_tile[coo][ro][ch][h][w] = static_cast<act_t>(
+                                static_cast<acc_t>(output_tile[coo][ro][ch][h][w]) + ri_sum
+                            );
                         }
                     }
                 }
             }
+            writeback_output_tile_r2(output_tile, co_base, output[t]);
         }
         smooth_output_r2_frame(output[t]);
     }
@@ -627,9 +849,13 @@ void ico_conv_r1_main_engine(
     const int reorder_idx[IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1 + 2][IFAN_W_R1 + 2],
     data_t output[IFAN_STAGE1_T][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1]
 ) {
+#pragma HLS ARRAY_PARTITION variable=weight cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+#pragma HLS ARRAY_PARTITION variable=weight complete dim=4
+#pragma HLS ARRAY_PARTITION variable=bias cyclic factor=IFAN_OC_PAR_FACTOR dim=1
+
     for (int t = 0; t < IFAN_STAGE1_T; t++) {
-        input_t staged[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1];
-        input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1 + 2][IFAN_W_R1 + 2];
+        static input_t staged[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1];
+        static input_t padded[IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1 + 2][IFAN_W_R1 + 2];
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=4
 #pragma HLS ARRAY_PARTITION variable=staged complete dim=5
 #pragma HLS ARRAY_PARTITION variable=padded complete dim=4
@@ -649,35 +875,79 @@ void ico_conv_r1_main_engine(
         }
         pad_r1_main_frame(staged, reorder_idx, padded);
 
-        for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+        for (int co_base = 0; co_base < IFAN_BRANCH_CHANNELS; co_base += IFAN_OC_TILE) {
+            act_t output_tile[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1];
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=1
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=2
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=4
+#pragma HLS ARRAY_PARTITION variable=output_tile complete dim=5
+            init_output_tile_r1(bias, co_base, output_tile);
+
             for (int ro = 0; ro < IFAN_R_FULL; ro++) {
-                for (int ch = 0; ch < IFAN_CHARTS; ch++) {
-                    for (int h = 0; h < IFAN_H_R1; h++) {
-                        for (int w = 0; w < IFAN_W_R1; w++) {
+                for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+                    acc_t ri_partial[IFAN_OC_TILE][IFAN_R_FULL][IFAN_CHARTS][IFAN_H_R1][IFAN_W_R1];
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=1
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=2
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=4
+#pragma HLS ARRAY_PARTITION variable=ri_partial complete dim=5
+
+                    weight_t staged_weight[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W];
+                    bool staged_valid[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_R_FULL][IFAN_KERNEL_H * IFAN_KERNEL_W];
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=1
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=4
+#pragma HLS ARRAY_PARTITION variable=staged_valid complete dim=1
+#pragma HLS ARRAY_PARTITION variable=staged_valid complete dim=4
+                    stage_ico_main_weight_tile(weight, kernel_idx, co_base, ro, staged_weight, staged_valid);
+
+                    for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+                        for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R1 * IFAN_W_R1; sp++) {
 #pragma HLS PIPELINE II=1
-                            acc_t sum = static_cast<acc_t>(bias[co]);
-                            for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
-                                for (int ri = 0; ri < IFAN_R_FULL; ri++) {
-                                    for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
-                                        for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
-                                            const int k = kh * IFAN_KERNEL_W + kw;
-                                            const int idx_co = kernel_idx[co][ro][ci][ri][k][0];
-                                            const int idx_ci = kernel_idx[co][ro][ci][ri][k][1];
-                                            const int idx_ri = kernel_idx[co][ro][ci][ri][k][2];
-                                            const int idx_w = kernel_idx[co][ro][ci][ri][k][3];
-                                            if (idx_w >= 0 && idx_w < IFAN_KERNEL_NEIGHBORS) {
-                                                sum += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
-                                                       static_cast<acc_t>(to_weight_t(weight[idx_co][idx_ci][idx_ri][idx_w]));
-                                            }
+                            const int ch = sp / (IFAN_H_R1 * IFAN_W_R1);
+                            const int rem = sp % (IFAN_H_R1 * IFAN_W_R1);
+                            const int h = rem / IFAN_W_R1;
+                            const int w = rem % IFAN_W_R1;
+
+                            for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+                                acc_t conv = 0;
+                                for (int kh = 0; kh < IFAN_KERNEL_H; kh++) {
+#pragma HLS UNROLL
+                                    for (int kw = 0; kw < IFAN_KERNEL_W; kw++) {
+#pragma HLS UNROLL
+                                        const int k = kh * IFAN_KERNEL_W + kw;
+                                        if (staged_valid[coo][ci][ri][k]) {
+                                            conv += static_cast<acc_t>(padded[ci][ri][ch][h + kh][w + kw]) *
+                                                    static_cast<acc_t>(staged_weight[coo][ci][ri][k]);
                                         }
                                     }
                                 }
+                                ri_partial[coo][ri][ch][h][w] = conv;
                             }
-                            output[t][co][ro][ch][h][w] = to_data_t(sum);
+                        }
+                    }
+
+                    for (int sp = 0; sp < IFAN_CHARTS * IFAN_H_R1 * IFAN_W_R1; sp++) {
+#pragma HLS PIPELINE II=1
+                        const int ch = sp / (IFAN_H_R1 * IFAN_W_R1);
+                        const int rem = sp % (IFAN_H_R1 * IFAN_W_R1);
+                        const int h = rem / IFAN_W_R1;
+                        const int w = rem % IFAN_W_R1;
+
+                        for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+                            acc_t ri_sum = 0;
+                            for (int ri = 0; ri < IFAN_R_FULL; ri++) {
+#pragma HLS UNROLL
+                                ri_sum += ri_partial[coo][ri][ch][h][w];
+                            }
+                            output_tile[coo][ro][ch][h][w] = static_cast<act_t>(
+                                static_cast<acc_t>(output_tile[coo][ro][ch][h][w]) + ri_sum
+                            );
                         }
                     }
                 }
             }
+            writeback_output_tile_r1(output_tile, co_base, output[t]);
         }
         smooth_output_r1_frame(output[t]);
     }
@@ -744,20 +1014,29 @@ void temporal_conv1d_r1_engine(
         for (int ch = 0; ch < IFAN_CHARTS; ch++) {
             for (int h = 0; h < IFAN_H_R1; h++) {
                 for (int w = 0; w < IFAN_W_R1; w++) {
-                    for (int t = 0; t < IFAN_STAGE1_T; t++) {
-                        for (int co = 0; co < IFAN_BRANCH_CHANNELS; co++) {
+                    for (int co_base = 0; co_base < IFAN_BRANCH_CHANNELS; co_base += IFAN_OC_TILE) {
+                        weight_t staged_weight[IFAN_OC_TILE][IFAN_BRANCH_CHANNELS][IFAN_TEMPORAL_KERNEL];
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=1
+#pragma HLS ARRAY_PARTITION variable=staged_weight complete dim=3
+                        stage_temporal_weight_tile(weight, co_base, staged_weight);
+
+                        for (int t = 0; t < IFAN_STAGE1_T; t++) {
 #pragma HLS PIPELINE II=1
-                            acc_t sum = static_cast<acc_t>(bias[co]);
-                            for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
-                                for (int k = 0; k < IFAN_TEMPORAL_KERNEL; k++) {
-                                    const int src_t = t - (IFAN_TEMPORAL_KERNEL - 1) + k;
-                                    if (src_t >= 0) {
-                                        sum += static_cast<acc_t>(input[src_t][ci][ri][ch][h][w]) *
-                                               static_cast<acc_t>(to_weight_t(weight[co][ci][k]));
+                            for (int coo = 0; coo < IFAN_OC_TILE; coo++) {
+#pragma HLS UNROLL
+                                acc_t sum = static_cast<acc_t>(bias[co_base + coo]);
+                                for (int ci = 0; ci < IFAN_BRANCH_CHANNELS; ci++) {
+                                    for (int k = 0; k < IFAN_TEMPORAL_KERNEL; k++) {
+#pragma HLS UNROLL
+                                        const int src_t = t - (IFAN_TEMPORAL_KERNEL - 1) + k;
+                                        if (src_t >= 0) {
+                                            sum += static_cast<acc_t>(input[src_t][ci][ri][ch][h][w]) *
+                                                   static_cast<acc_t>(staged_weight[coo][ci][k]);
+                                        }
                                     }
                                 }
+                                output[t][co_base + coo][ri][ch][h][w] = to_data_t(sum);
                             }
-                            output[t][co][ri][ch][h][w] = to_data_t(sum);
                         }
                     }
                 }

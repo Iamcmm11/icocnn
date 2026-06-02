@@ -11,16 +11,30 @@ for /f "tokens=* delims= " %%A in ("%XILINX_VIVADO%") do set "XILINX_VIVADO=%%A"
 
 set "MODE=%~1"
 if "%MODE%"=="" set "MODE=quick"
-set "PART=%~2"
-if "%PART%"=="" set "PART=xc7k325tffg900-2"
-set "CLOCK=%~3"
-if "%CLOCK%"=="" set "CLOCK=5.0"
-set "PROJECT=%~4"
-if "%PROJECT%"=="" set "PROJECT=layer2_5_hls_prj"
-set "SOLUTION=%~5"
-if "%SOLUTION%"=="" set "SOLUTION=sol1"
-set "TOP=%~6"
-if "%TOP%"=="" set "TOP=conv_ico_layer2_5"
+set "PRESET=%~2"
+set "CPPFLAGS="
+
+if /I "%PRESET%"=="c8t6" (
+    set "CPPFLAGS=-DICO_LAYER2_5_TIME_STEPS=6 -DICO_LAYER2_5_CIN=8 -DICO_LAYER2_5_COUT=8"
+    if "%~3"=="" (set "PART=xc7k325tffg900-2") else set "PART=%~3"
+    if "%~4"=="" (set "CLOCK=5.0") else set "CLOCK=%~4"
+    if "%~5"=="" (set "PROJECT=layer2_5_c8t6_hls_prj") else set "PROJECT=%~5"
+    if "%~6"=="" (set "SOLUTION=sol1") else set "SOLUTION=%~6"
+    if "%~7"=="" (set "TOP=conv_ico_layer2_5") else set "TOP=%~7"
+) else if /I "%PRESET%"=="baseline" (
+    if "%~3"=="" (set "PART=xc7k325tffg900-2") else set "PART=%~3"
+    if "%~4"=="" (set "CLOCK=5.0") else set "CLOCK=%~4"
+    if "%~5"=="" (set "PROJECT=layer2_5_hls_prj") else set "PROJECT=%~5"
+    if "%~6"=="" (set "SOLUTION=sol1") else set "SOLUTION=%~6"
+    if "%~7"=="" (set "TOP=conv_ico_layer2_5") else set "TOP=%~7"
+) else (
+    set "PRESET=custom"
+    if "%~2"=="" (set "PART=xc7k325tffg900-2") else set "PART=%~2"
+    if "%~3"=="" (set "CLOCK=5.0") else set "CLOCK=%~3"
+    if "%~4"=="" (set "PROJECT=layer2_5_hls_prj") else set "PROJECT=%~4"
+    if "%~5"=="" (set "SOLUTION=sol1") else set "SOLUTION=%~5"
+    if "%~6"=="" (set "TOP=conv_ico_layer2_5") else set "TOP=%~6"
+)
 
 echo ========================================
 echo Vitis HLS Terminal Runner
@@ -31,6 +45,8 @@ echo Clock(ns): %CLOCK%
 echo Project  : %PROJECT%
 echo Solution : %SOLUTION%
 echo Top      : %TOP%
+echo Preset   : %PRESET%
+echo CppFlags : %CPPFLAGS%
 echo ========================================
 
 if exist "%XILINX_HLS%\bin" set "PATH=%XILINX_HLS%\bin;%PATH%"
@@ -55,6 +71,13 @@ set "ICO_HLS_CLOCK=%CLOCK%"
 set "ICO_HLS_PROJECT=%PROJECT%"
 set "ICO_HLS_SOLUTION=%SOLUTION%"
 set "ICO_HLS_TOP=%TOP%"
+if not "%CPPFLAGS%"=="" (
+    if "%ICO_HLS_CPPFLAGS%"=="" (
+        set "ICO_HLS_CPPFLAGS=%CPPFLAGS%"
+    ) else (
+        set "ICO_HLS_CPPFLAGS=%ICO_HLS_CPPFLAGS% %CPPFLAGS%"
+    )
+)
 
 echo.
 echo [1/2] Running Vitis HLS flow...
