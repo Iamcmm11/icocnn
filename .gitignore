@@ -11,3 +11,17 @@ hls_src/HLS/stage1_ifan_c8_r2/hls_eval_logs/
 icoCNN-master/icoCNN.egg-info
 hls_src/HLS/stage1_ifan_c8_r2/_hls_work
 hls_src/HLS/layer2-5/layer2_5_c8t6_hls_prj
+
+# Generated stage-1 feature exports: keep only curated task3 overview images.
+IFAN_Edge/outputs/stage1_features/locata_task3_benchmark2_strong_frames/**
+!IFAN_Edge/outputs/stage1_features/locata_task3_benchmark2_strong_frames/
+!IFAN_Edge/outputs/stage1_features/locata_task3_benchmark2_strong_frames/task3_strong_frames_projection_contrast_overview.png
+!IFAN_Edge/outputs/stage1_features/locata_task3_benchmark2_strong_frames/task3_strong_frames_projection_fixed_scale_overview.png
+IFAN_Edge/outputs/stage1_features/locata_task3_source_standard_four_scenes_strong_frames/**
+!IFAN_Edge/outputs/stage1_features/locata_task3_source_standard_four_scenes_strong_frames/
+!IFAN_Edge/outputs/stage1_features/locata_task3_source_standard_four_scenes_strong_frames/four_scenes_strong_frames_projection_contrast_overview.png
+!IFAN_Edge/outputs/stage1_features/locata_task3_source_standard_four_scenes_strong_frames/four_scenes_strong_frames_projection_fixed_scale_overview.png
+
+# One-off stage1 visualization scripts not selected for upload.
+IFAN_Edge/scripts/visualize_stage1_locata_controlled_scenarios.py
+IFAN_Edge/scripts/visualize_stage1_locata_standard_scenarios.py
