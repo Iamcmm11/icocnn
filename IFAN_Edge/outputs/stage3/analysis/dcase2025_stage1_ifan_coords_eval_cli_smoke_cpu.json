@@ -1,0 +1,246 @@
+{
+  "kind": "stage3_dcase2025_stereo_transfer_evaluation",
+  "checkpoint": "/home/cmm/icocnn/IFAN_Edge/outputs/dcase_stage3/dcase_stereo_ifan_run80_bg_20260609_131300/checkpoints/best_doa_error.pt",
+  "manifest": "/home/cmm/icocnn/datasets/DCASE2025_Task3/locata_like_devtest_strict/manifest_all.csv",
+  "dataset_root": "/home/cmm/icocnn/datasets/DCASE2025_Task3",
+  "device": "cpu",
+  "limit": 1,
+  "exclude_initial_windows": 5,
+  "stereo_proxy": {
+    "baseline_m": 0.08,
+    "mic_positions_m": [
+      [
+        -0.03999999910593033,
+        0.0,
+        0.0
+      ],
+      [
+        0.03999999910593033,
+        0.0,
+        0.0
+      ]
+    ],
+    "target_mapping": "DCASE azimuth 0 deg -> +y/front; right positive -> +x"
+  },
+  "config": {
+    "fs": 16000,
+    "k": 4096,
+    "step": 3072,
+    "r": 2,
+    "apply_vad": true,
+    "lms_backend": "frequency_block",
+    "lms_map_mode": "tau_sample",
+    "lms_update_mode": "trajectory_tracking",
+    "srp_variant": "paper_original"
+  },
+  "model": {
+    "epoch": 80,
+    "model_kind": "ifan_coords",
+    "model_config": {
+      "r": 2,
+      "branch_channels": 8,
+      "final_head_pooling": false,
+      "smooth_vertices": true,
+      "temporal_conv_variant": "standard_1d",
+      "map_refiner": "maba",
+      "map_refiner_position": "pre_readout",
+      "map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 16,
+        "state_dim": 8,
+        "conv_kernel": 3,
+        "dropout": 0.1,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": true
+      },
+      "weak_map_refiner": "none",
+      "weak_map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 8,
+        "state_dim": 4,
+        "conv_kernel": 3,
+        "dropout": 0.0,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": false
+      }
+    },
+    "backbone_model_config": null,
+    "azimuth_head_config": null,
+    "metrics": {
+      "epoch": 80,
+      "train_loss": 0.17176717965682942,
+      "val_doa_error_deg": 40.680592477321625,
+      "val_folded_azimuth_rmse_deg": 41.263483605214525,
+      "val_horizontal_assumption_rmsae_deg": 44.763807862997055,
+      "epoch_time_s": 429.5543844310014
+    },
+    "load_notes": []
+  },
+  "overall": {
+    "count": 1,
+    "evaluated_windows": 20,
+    "doa_error_deg": {
+      "mean": 17.61844825744629,
+      "median": 17.61844825744629,
+      "std": 0.0,
+      "min": 17.61844825744629,
+      "max": 17.61844825744629
+    },
+    "folded_azimuth_mae_deg": {
+      "mean": 17.61844825744629,
+      "median": 17.61844825744629,
+      "std": 0.0,
+      "min": 17.61844825744629,
+      "max": 17.61844825744629
+    },
+    "folded_azimuth_rmse_deg": {
+      "mean": 18.732324600219727,
+      "median": 18.732324600219727,
+      "std": 0.0,
+      "min": 18.732324600219727,
+      "max": 18.732324600219727
+    },
+    "raw_azimuth_mae_deg": {
+      "mean": 17.61844825744629,
+      "median": 17.61844825744629,
+      "std": 0.0,
+      "min": 17.61844825744629,
+      "max": 17.61844825744629
+    },
+    "raw_azimuth_rmse_deg": {
+      "mean": 18.732324600219727,
+      "median": 18.732324600219727,
+      "std": 0.0,
+      "min": 18.732324600219727,
+      "max": 18.732324600219727
+    },
+    "horizontal_assumption_rmsae_deg": {
+      "mean": 19.30425453186035,
+      "median": 19.30425453186035,
+      "std": 0.0,
+      "min": 19.30425453186035,
+      "max": 19.30425453186035
+    }
+  },
+  "by_subset": {
+    "moving_single_source": {
+      "count": 1,
+      "evaluated_windows": 20,
+      "doa_error_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "folded_azimuth_mae_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "folded_azimuth_rmse_deg": {
+        "mean": 18.732324600219727,
+        "median": 18.732324600219727,
+        "std": 0.0,
+        "min": 18.732324600219727,
+        "max": 18.732324600219727
+      },
+      "raw_azimuth_mae_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "raw_azimuth_rmse_deg": {
+        "mean": 18.732324600219727,
+        "median": 18.732324600219727,
+        "std": 0.0,
+        "min": 18.732324600219727,
+        "max": 18.732324600219727
+      },
+      "horizontal_assumption_rmsae_deg": {
+        "mean": 19.30425453186035,
+        "median": 19.30425453186035,
+        "std": 0.0,
+        "min": 19.30425453186035,
+        "max": 19.30425453186035
+      }
+    }
+  },
+  "by_split": {
+    "dev-test-sony": {
+      "count": 1,
+      "evaluated_windows": 20,
+      "doa_error_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "folded_azimuth_mae_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "folded_azimuth_rmse_deg": {
+        "mean": 18.732324600219727,
+        "median": 18.732324600219727,
+        "std": 0.0,
+        "min": 18.732324600219727,
+        "max": 18.732324600219727
+      },
+      "raw_azimuth_mae_deg": {
+        "mean": 17.61844825744629,
+        "median": 17.61844825744629,
+        "std": 0.0,
+        "min": 17.61844825744629,
+        "max": 17.61844825744629
+      },
+      "raw_azimuth_rmse_deg": {
+        "mean": 18.732324600219727,
+        "median": 18.732324600219727,
+        "std": 0.0,
+        "min": 18.732324600219727,
+        "max": 18.732324600219727
+      },
+      "horizontal_assumption_rmsae_deg": {
+        "mean": 19.30425453186035,
+        "median": 19.30425453186035,
+        "std": 0.0,
+        "min": 19.30425453186035,
+        "max": 19.30425453186035
+      }
+    }
+  },
+  "per_clip": [
+    {
+      "clip_id": "fold4_room23_mix007_deg059_start1037",
+      "subset": "moving_single_source",
+      "split": "dev-test-sony",
+      "audio_relpath": "stereo_dev/dev-test-sony/fold4_room23_mix007_deg059_start1037.wav",
+      "metadata_relpath": "metadata_dev/dev-test-sony/fold4_room23_mix007_deg059_start1037.csv",
+      "evaluated_windows": 20,
+      "target_azimuth_mean_deg": 19.3179988861084,
+      "pred_azimuth_raw_mean_deg": 1.9955772161483765,
+      "pred_azimuth_folded_mean_deg": 1.9955772161483765,
+      "doa_error_deg": 17.61844825744629,
+      "folded_azimuth_mae_deg": 17.61844825744629,
+      "folded_azimuth_rmse_deg": 18.732324600219727,
+      "raw_azimuth_mae_deg": 17.61844825744629,
+      "raw_azimuth_rmse_deg": 18.732324600219727,
+      "horizontal_assumption_rmsae_deg": 19.30425453186035
+    }
+  ]
+}

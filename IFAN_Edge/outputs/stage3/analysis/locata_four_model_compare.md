@@ -93,3 +93,25 @@ Using `IFAN_80` as the accuracy-oriented reference:
 
 - `IFAN_C8_R2` is the more meaningful edge point: it cuts about `74.8%` parameters and `74.9%` MAC while increasing LOCATA average RMSAE by only about `0.62 deg` to `0.81 deg`.
 - `IFAN_C8_R3` keeps the same parameter reduction as `C8_R2`, but its MAC is essentially unchanged relative to `IFAN_80`, while the average RMSAE regression is noticeably larger.
+
+## DCASE2025 立体声迁移测试
+
+这是一项跨数据集、跨阵列的迁移测试，不是 LOCATA `benchmark2` 的等价替代。下面这组结果使用的模型权重是 `IFAN_Edge/outputs/stage3/logs/long80_c8_r2_maba_pre_readout_20260518_215405.log` 对应的 `best_rmsae.pt`。该模型原本是在 LOCATA 风格的 `benchmark2` 12 通道模拟阵列口径上训练的，这里是在筛选后的 DCASE2025 Task3 stereo 子集上做 zero-shot 迁移评估，并使用一个简单的 2 通道左右间距代理前端。
+
+- dataset: `datasets/DCASE2025_Task3/locata_like_devtest_strict/manifest_all.csv`
+- subset: `dev-test-sony + dev-test-tau`
+- clips: `727` total, `712` static single-source, `15` moving single-source
+- DCASE 音频: 2 通道 M/S stereo，24 kHz；为了适配该模型，这里重采样到 16 kHz
+- 主指标: `DOA error (deg)`；在这个单声源迁移近似下，具体实现为 active frame 上的 folded azimuth 平均绝对误差，因为 DCASE2025 Task3 的方位标签被折叠到前方视野且不提供 elevation
+- 详细报告: `IFAN_Edge/outputs/stage3/analysis/dcase2025_locata_like_devtest_strict_ifan_c8_r2_maba_pre_readout_best.md`
+
+| Model | DCASE Input | Training/Eval Mode | Clips | DOA error (deg) | Folded Az RMSE | Raw Az MAE | Raw Az RMSE | Horizontal-Assumption RMSAE |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ifan_c8_r2_maba_pre_readout_best | 2-ch stereo proxy | zero-shot transfer from 12-ch `benchmark2` training | 727 | 44.9631 | 45.5850 | 137.2535 | 137.7916 | 134.3113 |
+
+| Subset | Clips | Windows | DOA error (deg) | Folded Az RMSE | Raw Az MAE | Raw Az RMSE | Horizontal-Assumption RMSAE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| static_single_source | 712 | 14171 | 45.3128 | 45.9367 | 137.0159 | 137.5580 | 134.0944 |
+| moving_single_source | 15 | 300 | 28.3644 | 28.8920 | 148.5307 | 148.8778 | 144.6079 |
+
+解释: 这组结果主要反映的是前端和数据域不匹配带来的影响。当前 IFAN checkpoint 学到的是 `benchmark2` 12 麦阵列几何和 3D 球面 DOA 输出，而 DCASE2025 Task3 提供的是 2 通道 M/S stereo、前方折叠 azimuth 标签、且没有 elevation。官方 DCASE 的 `DOA error (deg)` 是在匹配成功的 true-positive 事件上计算的；在我们这个筛过的单声源子集上，由于每帧只有一个活跃声源、也没有单独检测分支，因此这里用 active frame 上的 folded azimuth 平均绝对误差来近似这个指标。如果要和 DCASE challenge leaderboard 做更严肃的直接对照，仍然需要训练一个专门的 stereo frontend 和 azimuth-only / folded-azimuth 目标模型。

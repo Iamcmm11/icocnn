@@ -1,0 +1,92 @@
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 50, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 100, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 150, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 200, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 250, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 300, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 350, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 400, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 450, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 500, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 550, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 600, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 650, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 700, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 750, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 800, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 850, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 900, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 950, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 1000, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "train_prepare", "processed": 1005, "total": 1005}
+{"event": "dcase_prepare_progress", "label": "validation_prepare", "processed": 50, "total": 112}
+{"event": "dcase_prepare_progress", "label": "validation_prepare", "processed": 100, "total": 112}
+{"event": "dcase_prepare_progress", "label": "validation_prepare", "processed": 112, "total": 112}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 50, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 100, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 150, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 200, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 250, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 300, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 350, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 400, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 450, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 500, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 550, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 600, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 650, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 700, "total": 727}
+{"event": "dcase_prepare_progress", "label": "test_prepare", "processed": 727, "total": 727}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 40, "total": 1005, "avg_loss": 0.8208398826420307, "elapsed_s": 6.926851956057362}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 80, "total": 1005, "avg_loss": 0.7699242930859327, "elapsed_s": 12.588317380985245}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 120, "total": 1005, "avg_loss": 0.7571927001078923, "elapsed_s": 18.241572711966}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 160, "total": 1005, "avg_loss": 0.739001408405602, "elapsed_s": 23.902200420037843}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 200, "total": 1005, "avg_loss": 0.7376672482490539, "elapsed_s": 29.55492939299438}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 240, "total": 1005, "avg_loss": 0.7149391517043113, "elapsed_s": 35.16966459294781}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 280, "total": 1005, "avg_loss": 0.7183286349688257, "elapsed_s": 40.938649425981566}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 320, "total": 1005, "avg_loss": 0.7117014463525265, "elapsed_s": 46.5904391920194}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 360, "total": 1005, "avg_loss": 0.7143561465044816, "elapsed_s": 52.22554364404641}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 400, "total": 1005, "avg_loss": 0.717017008587718, "elapsed_s": 57.85759307304397}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 440, "total": 1005, "avg_loss": 0.7103686928071758, "elapsed_s": 63.48679767199792}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 480, "total": 1005, "avg_loss": 0.6988581629469991, "elapsed_s": 69.1159773489926}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 520, "total": 1005, "avg_loss": 0.6883688726677344, "elapsed_s": 74.78863754600752}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 560, "total": 1005, "avg_loss": 0.6765061925564494, "elapsed_s": 80.44248188997153}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 600, "total": 1005, "avg_loss": 0.6732508662343025, "elapsed_s": 86.14270411501639}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 640, "total": 1005, "avg_loss": 0.6627322718966753, "elapsed_s": 91.75896028603893}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 680, "total": 1005, "avg_loss": 0.6583013572237071, "elapsed_s": 97.44223765598144}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 720, "total": 1005, "avg_loss": 0.6564547829743889, "elapsed_s": 103.06281827006023}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 760, "total": 1005, "avg_loss": 0.6525636331423332, "elapsed_s": 108.70871625898872}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 800, "total": 1005, "avg_loss": 0.6460981831885875, "elapsed_s": 114.34247278398834}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 840, "total": 1005, "avg_loss": 0.6447705210851772, "elapsed_s": 120.02465732500423}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 880, "total": 1005, "avg_loss": 0.6407745786011219, "elapsed_s": 125.67093278001994}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 920, "total": 1005, "avg_loss": 0.635795942272829, "elapsed_s": 131.2628181419568}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 960, "total": 1005, "avg_loss": 0.6275654402095825, "elapsed_s": 136.95876481104642}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 1000, "total": 1005, "avg_loss": 0.623624799311161, "elapsed_s": 142.70301563094836}
+{"event": "dcase_azimuth_train_progress", "epoch": 1, "processed": 1005, "total": 1005, "avg_loss": 0.6226339956717705, "elapsed_s": 143.58663389505818}
+{"event": "dcase_azimuth_validation_progress", "epoch": 1, "processed": 32, "total": 112}
+{"event": "dcase_azimuth_validation_progress", "epoch": 1, "processed": 64, "total": 112}
+{"event": "dcase_azimuth_validation_progress", "epoch": 1, "processed": 96, "total": 112}
+{"event": "dcase_azimuth_validation_progress", "epoch": 1, "processed": 112, "total": 112}
+{"event": "dcase_azimuth_epoch_complete", "epoch": 1, "train_loss": 0.6226339956717705, "val_doa_error_deg": 55.23458089147295, "val_folded_azimuth_rmse_deg": 60.78798769201551, "val_horizontal_assumption_rmsae_deg": 61.19157823494503, "epoch_time_s": 144.80285562307108}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 40, "total": 1005, "avg_loss": 0.4931525535881519, "elapsed_s": 5.647801609011367}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 80, "total": 1005, "avg_loss": 0.5530960965901613, "elapsed_s": 11.358892409014516}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 120, "total": 1005, "avg_loss": 0.5396258591363827, "elapsed_s": 17.03540480497759}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 160, "total": 1005, "avg_loss": 0.5345495018176735, "elapsed_s": 22.699692933936603}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 200, "total": 1005, "avg_loss": 0.5298493845760822, "elapsed_s": 28.42244702100288}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 240, "total": 1005, "avg_loss": 0.5134995477894942, "elapsed_s": 34.13039358193055}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 280, "total": 1005, "avg_loss": 0.5157133735184158, "elapsed_s": 39.815234848996624}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 320, "total": 1005, "avg_loss": 0.5066771880723536, "elapsed_s": 45.56693894602358}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 360, "total": 1005, "avg_loss": 0.506291651311848, "elapsed_s": 51.229178003035486}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 400, "total": 1005, "avg_loss": 0.5058393329754471, "elapsed_s": 56.87589524302166}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 440, "total": 1005, "avg_loss": 0.49396242865107276, "elapsed_s": 62.51933281403035}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 480, "total": 1005, "avg_loss": 0.4880530166129271, "elapsed_s": 68.1713435780257}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 520, "total": 1005, "avg_loss": 0.4855599046326601, "elapsed_s": 73.88341436395422}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 560, "total": 1005, "avg_loss": 0.4779575052271996, "elapsed_s": 79.45869359304197}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 600, "total": 1005, "avg_loss": 0.47804843438168365, "elapsed_s": 85.01568159193266}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 640, "total": 1005, "avg_loss": 0.47413546142634005, "elapsed_s": 90.65941466693766}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 680, "total": 1005, "avg_loss": 0.47081624311121073, "elapsed_s": 96.33146916201804}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 720, "total": 1005, "avg_loss": 0.4690475941325227, "elapsed_s": 101.9954299289966}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 760, "total": 1005, "avg_loss": 0.4680969862365409, "elapsed_s": 107.61457900400274}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 800, "total": 1005, "avg_loss": 0.465027042273432, "elapsed_s": 113.21957816393115}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 840, "total": 1005, "avg_loss": 0.4591948711002866, "elapsed_s": 118.88339807197917}
+{"event": "dcase_azimuth_train_progress", "epoch": 2, "processed": 880, "total": 1005, "avg_loss": 0.452982131366364, "elapsed_s": 124.57442074397113}

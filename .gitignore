@@ -11,6 +11,7 @@ hls_src/HLS/stage1_ifan_c8_r2/hls_eval_logs/
 icoCNN-master/icoCNN.egg-info
 hls_src/HLS/stage1_ifan_c8_r2/_hls_work
 hls_src/HLS/layer2-5/layer2_5_c8t6_hls_prj
+IFAN_Edge/outputs/dcase_stage3
 
 # Generated stage-1 feature exports: keep only curated task3 overview images.
 IFAN_Edge/outputs/stage1_features/locata_task3_benchmark2_strong_frames/**

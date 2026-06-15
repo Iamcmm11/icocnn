@@ -1,0 +1,285 @@
+{
+  "kind": "stage3_dcase2025_stereo_transfer_evaluation",
+  "checkpoint": "/home/cmm/icocnn/IFAN_Edge/outputs/dcase_stage3/dcase_stereo_ifan_azimuth_only_stage2_azimuth_only_smoke_cpu_20260614_171345/checkpoints/best_doa_error.pt",
+  "manifest": "/home/cmm/icocnn/datasets/DCASE2025_Task3/locata_like_devtest_strict/manifest_all.csv",
+  "dataset_root": "/home/cmm/icocnn/datasets/DCASE2025_Task3",
+  "device": "cpu",
+  "limit": 1,
+  "exclude_initial_windows": 5,
+  "stereo_proxy": {
+    "baseline_m": 0.08,
+    "mic_positions_m": [
+      [
+        -0.03999999910593033,
+        0.0,
+        0.0
+      ],
+      [
+        0.03999999910593033,
+        0.0,
+        0.0
+      ]
+    ],
+    "target_mapping": "DCASE azimuth 0 deg -> +y/front; right positive -> +x"
+  },
+  "config": {
+    "fs": 16000,
+    "k": 4096,
+    "step": 3072,
+    "r": 2,
+    "apply_vad": true,
+    "lms_backend": "frequency_block",
+    "lms_map_mode": "tau_sample",
+    "lms_update_mode": "trajectory_tracking",
+    "srp_variant": "paper_original"
+  },
+  "model": {
+    "epoch": 1,
+    "model_kind": "dcase_azimuth_only_ifan",
+    "model_config": {
+      "r": 2,
+      "branch_channels": 8,
+      "final_head_pooling": false,
+      "smooth_vertices": true,
+      "temporal_conv_variant": "standard_1d",
+      "map_refiner": "maba",
+      "map_refiner_position": "pre_readout",
+      "map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 16,
+        "state_dim": 8,
+        "conv_kernel": 3,
+        "dropout": 0.1,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": true
+      },
+      "weak_map_refiner": "none",
+      "weak_map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 8,
+        "state_dim": 4,
+        "conv_kernel": 3,
+        "dropout": 0.0,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": false
+      }
+    },
+    "backbone_model_config": {
+      "r": 2,
+      "branch_channels": 8,
+      "final_head_pooling": false,
+      "smooth_vertices": true,
+      "temporal_conv_variant": "standard_1d",
+      "map_refiner": "maba",
+      "map_refiner_position": "pre_readout",
+      "map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 16,
+        "state_dim": 8,
+        "conv_kernel": 3,
+        "dropout": 0.1,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": true
+      },
+      "weak_map_refiner": "none",
+      "weak_map_maba": {
+        "charts": 5,
+        "height": 2,
+        "width": 4,
+        "d_model": 8,
+        "state_dim": 4,
+        "conv_kernel": 3,
+        "dropout": 0.0,
+        "use_residual": true,
+        "use_gate": true,
+        "use_state": false
+      }
+    },
+    "azimuth_head_config": {
+      "hidden_dim": 32,
+      "dropout": 0.1
+    },
+    "metrics": {
+      "epoch": 1,
+      "train_loss": 0.42206376791000366,
+      "val_doa_error_deg": 111.31546020507812,
+      "val_folded_azimuth_rmse_deg": 113.89885711669922,
+      "val_horizontal_assumption_rmsae_deg": 138.28463745117188,
+      "epoch_time_s": 0.7316106709768064
+    },
+    "load_notes": [],
+    "init_load_notes": [
+      "Initialized azimuth-only model backbone from Stage-1 IFAN checkpoint; azimuth_head kept random."
+    ]
+  },
+  "overall": {
+    "count": 1,
+    "evaluated_windows": 20,
+    "doa_error_deg": {
+      "mean": 57.9798698425293,
+      "median": 57.9798698425293,
+      "std": 0.0,
+      "min": 57.9798698425293,
+      "max": 57.9798698425293
+    },
+    "folded_azimuth_mae_deg": {
+      "mean": 57.9798698425293,
+      "median": 57.9798698425293,
+      "std": 0.0,
+      "min": 57.9798698425293,
+      "max": 57.9798698425293
+    },
+    "folded_azimuth_rmse_deg": {
+      "mean": 58.58236312866211,
+      "median": 58.58236312866211,
+      "std": 0.0,
+      "min": 58.58236312866211,
+      "max": 58.58236312866211
+    },
+    "raw_azimuth_mae_deg": {
+      "mean": 57.9798698425293,
+      "median": 57.9798698425293,
+      "std": 0.0,
+      "min": 57.9798698425293,
+      "max": 57.9798698425293
+    },
+    "raw_azimuth_rmse_deg": {
+      "mean": 58.58236312866211,
+      "median": 58.58236312866211,
+      "std": 0.0,
+      "min": 58.58236312866211,
+      "max": 58.58236312866211
+    },
+    "horizontal_assumption_rmsae_deg": {
+      "mean": 58.58235168457031,
+      "median": 58.58235168457031,
+      "std": 0.0,
+      "min": 58.58235168457031,
+      "max": 58.58235168457031
+    }
+  },
+  "by_subset": {
+    "moving_single_source": {
+      "count": 1,
+      "evaluated_windows": 20,
+      "doa_error_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "folded_azimuth_mae_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "folded_azimuth_rmse_deg": {
+        "mean": 58.58236312866211,
+        "median": 58.58236312866211,
+        "std": 0.0,
+        "min": 58.58236312866211,
+        "max": 58.58236312866211
+      },
+      "raw_azimuth_mae_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "raw_azimuth_rmse_deg": {
+        "mean": 58.58236312866211,
+        "median": 58.58236312866211,
+        "std": 0.0,
+        "min": 58.58236312866211,
+        "max": 58.58236312866211
+      },
+      "horizontal_assumption_rmsae_deg": {
+        "mean": 58.58235168457031,
+        "median": 58.58235168457031,
+        "std": 0.0,
+        "min": 58.58235168457031,
+        "max": 58.58235168457031
+      }
+    }
+  },
+  "by_split": {
+    "dev-test-sony": {
+      "count": 1,
+      "evaluated_windows": 20,
+      "doa_error_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "folded_azimuth_mae_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "folded_azimuth_rmse_deg": {
+        "mean": 58.58236312866211,
+        "median": 58.58236312866211,
+        "std": 0.0,
+        "min": 58.58236312866211,
+        "max": 58.58236312866211
+      },
+      "raw_azimuth_mae_deg": {
+        "mean": 57.9798698425293,
+        "median": 57.9798698425293,
+        "std": 0.0,
+        "min": 57.9798698425293,
+        "max": 57.9798698425293
+      },
+      "raw_azimuth_rmse_deg": {
+        "mean": 58.58236312866211,
+        "median": 58.58236312866211,
+        "std": 0.0,
+        "min": 58.58236312866211,
+        "max": 58.58236312866211
+      },
+      "horizontal_assumption_rmsae_deg": {
+        "mean": 58.58235168457031,
+        "median": 58.58235168457031,
+        "std": 0.0,
+        "min": 58.58235168457031,
+        "max": 58.58235168457031
+      }
+    }
+  },
+  "per_clip": [
+    {
+      "clip_id": "fold4_room23_mix007_deg059_start1037",
+      "subset": "moving_single_source",
+      "split": "dev-test-sony",
+      "audio_relpath": "stereo_dev/dev-test-sony/fold4_room23_mix007_deg059_start1037.wav",
+      "metadata_relpath": "metadata_dev/dev-test-sony/fold4_room23_mix007_deg059_start1037.csv",
+      "evaluated_windows": 20,
+      "target_azimuth_mean_deg": 19.3179988861084,
+      "pred_azimuth_raw_mean_deg": 77.2978744506836,
+      "pred_azimuth_folded_mean_deg": 77.2978744506836,
+      "doa_error_deg": 57.9798698425293,
+      "folded_azimuth_mae_deg": 57.9798698425293,
+      "folded_azimuth_rmse_deg": 58.58236312866211,
+      "raw_azimuth_mae_deg": 57.9798698425293,
+      "raw_azimuth_rmse_deg": 58.58236312866211,
+      "horizontal_assumption_rmsae_deg": 58.58235168457031
+    }
+  ]
+}

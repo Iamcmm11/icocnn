@@ -1,3 +1,4 @@
+from .dcase_azimuth import DcaseAzimuthHeadConfig, DcaseAzimuthOnlyIFANModel
 from .map_maba import FeatureMABATemporalRefiner, MABATemporalRefiner, MapMABATemporalConfig
 from .placeholders import (
     FeatureAttentionWeightModule,
@@ -11,6 +12,8 @@ from .placeholders import (
 )
 
 __all__ = [
+    "DcaseAzimuthHeadConfig",
+    "DcaseAzimuthOnlyIFANModel",
     "FeatureAttentionWeightModule",
     "FeatureMABATemporalRefiner",
     "IFANModel",

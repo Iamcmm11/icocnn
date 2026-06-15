@@ -506,7 +506,12 @@ class IFANModel(nn.Module):
         fused = direct + enhanced * weight
         return fused, weight
 
-    def forward(self, x: torch.Tensor, return_attention: bool = False, return_debug: bool = False):
+    def forward_map_logits(
+        self,
+        x: torch.Tensor,
+        return_attention: bool = False,
+        return_debug: bool = False,
+    ):
         self._validate_input(x)
         expected_channels = self.expected_input_channels()
         if x.shape[1] != expected_channels:
@@ -571,7 +576,6 @@ class IFANModel(nn.Module):
         if debug is not None:
             debug["map_refined_logits"] = logits
         logits = self.clean_vertices(logits)
-        coords = self.sam(logits)
         if debug is not None:
             debug["attention"] = attention
             debug["softargmax_input"] = logits
@@ -580,7 +584,23 @@ class IFANModel(nn.Module):
             debug["weak_map_refiner"] = self.config.weak_map_refiner
 
         if return_debug:
+            return logits, debug
+        if return_attention:
+            return logits, attention
+        return logits
+
+    def forward(self, x: torch.Tensor, return_attention: bool = False, return_debug: bool = False):
+        result = self.forward_map_logits(x, return_attention=return_attention, return_debug=return_debug)
+        if return_debug:
+            logits, debug = result
+            coords = self.sam(logits)
             return coords, debug
         if return_attention:
+            logits, attention = result
+            coords = self.sam(logits)
             return coords, attention
+        logits = result
+        coords = self.sam(logits)
+        if return_debug:
+            raise RuntimeError("Unreachable state in IFANModel.forward debug path.")
         return coords
