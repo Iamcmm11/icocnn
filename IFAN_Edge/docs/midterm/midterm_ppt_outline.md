@@ -105,24 +105,45 @@
 
 ## 6. 轻量化设计：IcoConv 主瓶颈与 C8_R2 边缘候选
 
-- IcoConv 的参数量与 MAC 对通道宽度敏感，通道宽度下降可显著降低计算量。
-- 轻量化策略：
-  - 保持二十面体拓扑和时序建模流程。
-  - 将主干宽度收缩到 `C=8`。
-  - 保持 `r=2` 网格分辨率，避免 `r=3` 带来的 MAC 回升。
-- 当前边缘轻量化候选模型：`DFA-IcoNet-Edge`。
-- 表述边界：
-  - 这是面向 IcoConv 主瓶颈的结构化轻量化与边缘折中设计。
-  - 不包装成新的通道裁剪算法或新的网络结构理论。
+- 轻量化设计目标：
+  - 目标不是“简单减小网络”，而是围绕 IcoConv 主瓶颈，在保证纯 DOA 精度的前提下，把后端主干压缩成更适合规则 DSP tile 执行的结构。
+- 为什么这样设计：
+  - 前端 `PHAT + LMS` 双特征需要较高空间分辨率完成互补信息交互，因此融合前不宜过早压缩。
+  - 在 `r=2` 完成双分支融合后做一次 `PoolIco`，将 Fusion Feature 降到 `r=1`，可以把后续深层主干限制在更小网格上执行。
+  - 这样前段保留表达能力，后段降低空间计算和片上缓存压力，更符合“前端补强、后端收缩”的设计思路。
+- 具体压缩策略：
+  - 保持二十面体拓扑、双特征输入和时序建模流程不变。
+  - 将主干宽度从 `C=16` 压缩到 `C=8`。
+  - 这样核心 IcoConv 从 `16 x 16` 通道计算块压缩为 `8 x 8` 的规则稠密块，正好对应单个完整 DSP tile。
+  - 当前边缘轻量化候选模型：`DFA-IcoNet-Edge`。
+- 为什么主线不是结构化剪枝：
+  - 我们先测试过基于 `C=16` 权重的 SAF-lite 结构化剪枝，例如 `2-of-8` 稀疏保留。
+  - 理论上它能把 pruned IcoConv 的有效 MAC 压到 dense 的 `25%`，但实际硬件实现仍需要稀疏索引、块内保留位置和不规则调度。
+  - 现有 `c16_saf_lite_2of8_phase1` 结果显示：20 epoch 验证明显退化，four-scene mean 相对 baseline 为 `+4.6818 deg`，hard mean 为 `+5.5605 deg`，没有形成可用主线。
+  - 因此我们没有继续沿“稀疏索引控制”推进，而是回到更规则的 dense channel slimming 路线。
+- 当前结论：
+  - `DFA-IcoNet-Edge` 不是权重稀疏化主线，而是 `DSP tile` 对齐的规则稠密压缩主线。
+  - 这条路线的优势在于：计算块规则、控制路径干净、避免零跳过和稀疏索引开销，更适合后续 HLS/FPGA 映射。
 
 图表建议：
 
 - 放一个小公式或示意：`MAC_IcoConv ~ Cin * Cout * grid_size`。
-- 旁边放模型定位卡片：`DFA-IcoNet = 完整宽度精度参考`，`DFA-IcoNet-Edge = 边缘轻量化候选`。
+- 主图建议画成三段：
+  - `双特征融合 at r=2`
+  - `PoolIco: r=2 -> r=1`
+  - `C16 -> C8 dense channel slimming`
+- 配一张“DSP tile 对齐的稠密结构压缩”表：
+  - `C16 dense = 16 out x 16 in = 4 个 8x8 tile`
+  - `SAF 4of8 = 16 out x 8 effective in = 128 multiplies`
+  - `SAF 2of8 = 16 out x 4 effective in = 64 multiplies，但需索引/稀疏调度`
+  - `C8_R2 = 8 out x 8 in = 1 个完整 8x8 tile = 64 multiplies`
+- 再配一个小结果框：
+  - `SAF-lite 2of8: 理论压缩高，但 four-scene/hard-scene 明显退化`
+  - `C8_R2: 规则 dense tile，LOCATA 平均仍优于 baseline`
 
 备注：
 
-- 本页把原先参数量、C8、C8_R3 的部分压缩，为实验和硬件页让出空间。
+- 这一页的讲法应是：先给出我们最终采用的 dense channel slimming 路线，再回头说明为什么剪枝路线没有成为主线。这样老师更容易跟上主结论。
 
 ## 7. 实验设置：模拟实验 + LOCATA 真实数据评测
 

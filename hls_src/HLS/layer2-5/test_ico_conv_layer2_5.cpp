@@ -32,6 +32,17 @@ static int parse_layer_id(int argc, char** argv) {
     return layer_id;
 }
 
+static float resolve_max_error_tolerance() {
+    const char* env_tol = std::getenv("ICO_LAYER2_5_MAX_ERR_TOL");
+    if (env_tol != NULL && env_tol[0] != '\0') {
+        const float parsed = std::strtof(env_tol, NULL);
+        if (parsed > 0.0f) {
+            return parsed;
+        }
+    }
+    return 1e-3f;
+}
+
 static std::string normalize_data_dir(const std::string& path) {
     if (path.empty()) return path;
     const char last = path[path.size() - 1];
@@ -39,14 +50,49 @@ static std::string normalize_data_dir(const std::string& path) {
     return path + "/";
 }
 
+static std::string normalize_separators(std::string path) {
+    for (size_t i = 0; i < path.size(); i++) {
+        if (path[i] == '\\') {
+            path[i] = '/';
+        }
+    }
+    return path;
+}
+
+static std::string resolve_existing_data_dir(const std::string& raw_path) {
+    if (raw_path.empty()) return "";
+    const std::string normalized = normalize_data_dir(normalize_separators(raw_path));
+    if (file_exists(normalized + "input_rearranged.txt")) {
+        return normalized;
+    }
+
+    std::string prefix = "";
+    for (int depth = 0; depth < 8; depth++) {
+        const std::string candidate = prefix + normalized;
+        if (file_exists(candidate + "input_rearranged.txt")) {
+            return candidate;
+        }
+        prefix += "../";
+    }
+    return "";
+}
+
 static std::string resolve_data_dir(int layer_id, int argc, char** argv) {
     if (argc >= 3) {
-        return normalize_data_dir(argv[2]);
+        const std::string resolved = resolve_existing_data_dir(argv[2]);
+        if (!resolved.empty()) {
+            return resolved;
+        }
+        return normalize_data_dir(normalize_separators(argv[2]));
     }
 
     const char* env_dir = std::getenv("ICO_LAYER2_5_DATA_DIR");
     if (env_dir != NULL && env_dir[0] != '\0') {
-        return normalize_data_dir(env_dir);
+        const std::string resolved = resolve_existing_data_dir(env_dir);
+        if (!resolved.empty()) {
+            return resolved;
+        }
+        return normalize_data_dir(normalize_separators(env_dir));
     }
 
     const std::string suffix = "layer" + std::to_string(layer_id) + "/";
@@ -133,11 +179,13 @@ static void fill_synthetic_reorder_idx(int reorder_idx[RIN][CHARTS][H_PADDED][W_
 
 int main(int argc, char** argv) {
     const int layer_id = parse_layer_id(argc, argv);
+    const float max_err_tol = resolve_max_error_tolerance();
     std::cout << "=== IcoConv Layer2-5 C Verification ===" << std::endl;
     std::cout << "Selected layer: " << layer_id << std::endl;
     std::cout << "Configured shape: T=" << TIME_STEPS
               << " CIN=" << CIN << " COUT=" << COUT
               << " RIN=" << RIN << " ROUT=" << ROUT << std::endl;
+    std::cout << "Max error tolerance: " << max_err_tol << std::endl;
 
     const size_t input_expected = (size_t)TIME_STEPS * CIN * RIN * CHARTS * H * W;
     const size_t weight_expected = (size_t)COUT * CIN * RIN * 7;
@@ -260,7 +308,7 @@ int main(int argc, char** argv) {
         float rms_err = rmse(out_flat, ref_output_vec);
         std::cout << "Max Error: " << max_err << std::endl;
         std::cout << "RMSE: " << rms_err << std::endl;
-        std::cout << (max_err < 1e-3f ? "PASS" : "FAIL") << std::endl;
+        std::cout << (max_err <= max_err_tol ? "PASS" : "FAIL") << std::endl;
     } else {
         std::cout << "Reference output file not found or empty, skip compare." << std::endl;
     }
