@@ -11,23 +11,34 @@ for /f "tokens=* delims= " %%A in ("%XILINX_VIVADO%") do set "XILINX_VIVADO=%%A"
 
 set "MODE=%~1"
 if "%MODE%"=="" set "MODE=csim"
-set "PART=%~2"
+set "MODULE=%~2"
+if "%MODULE%"=="" set "MODULE=frontend"
+set "PART=%~3"
 if "%PART%"=="" set "PART=xc7k325tffg900-2"
-set "CLOCK=%~3"
+set "CLOCK=%~4"
 if "%CLOCK%"=="" set "CLOCK=5.0"
-set "PROJECT=%~4"
-if "%PROJECT%"=="" set "PROJECT=stage1_ifan_c8_r2_frontend_hls_prj"
-set "SOLUTION=%~5"
+set "PROJECT=%~5"
+if /I "%MODULE%"=="temporal" (
+    if "%PROJECT%"=="" set "PROJECT=stage1_ifan_c8_r2_temporal_r1_hls_prj"
+) else (
+    if "%PROJECT%"=="" set "PROJECT=stage1_ifan_c8_r2_frontend_hls_prj"
+)
+set "SOLUTION=%~6"
 if "%SOLUTION%"=="" set "SOLUTION=sol1"
-set "TOP=%~6"
-if "%TOP%"=="" set "TOP=ifan_dual_frontend_top"
-set "PROJECT_ROOT=%~7"
+set "TOP=%~7"
+if /I "%MODULE%"=="temporal" (
+    if "%TOP%"=="" set "TOP=ifan_temporal_r1_top"
+) else (
+    if "%TOP%"=="" set "TOP=ifan_dual_frontend_top"
+)
+set "PROJECT_ROOT=%~8"
 if "%PROJECT_ROOT%"=="" set "PROJECT_ROOT=%SCRIPT_DIR%_hls_work"
 
 echo ========================================
 echo Vitis HLS Terminal Runner
 echo ========================================
 echo Mode     : %MODE%
+echo Module   : %MODULE%
 echo Part     : %PART%
 echo Clock(ns): %CLOCK%
 echo Project  : %PROJECT%
@@ -79,6 +90,7 @@ if errorlevel 1 (
 )
 
 set "ICO_HLS_MODE=%MODE%"
+set "ICO_HLS_MODULE=%MODULE%"
 set "ICO_HLS_PART=%PART%"
 set "ICO_HLS_CLOCK=%CLOCK%"
 set "ICO_HLS_PROJECT=%PROJECT%"

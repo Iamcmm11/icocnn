@@ -1,16 +1,18 @@
 CXX ?= g++
-CXXFLAGS ?= -std=c++11 -O2 -I. -Ifull_stage1_legacy -Ifrontend_dual_feature -Ifeature_maba -Ipost_maba -Wall -Wextra -Wno-unknown-pragmas
+CXXFLAGS ?= -std=c++11 -O2 -I. -Ifull_stage1_legacy -Ifrontend_dual_feature -Ifeature_maba -Ipost_maba -Itemporal_r1 -Wall -Wextra -Wno-unknown-pragmas
 
 TARGET = test_ifan_dual_frontend
 FULL_TARGET = test_ifan_stage1
 MABA_TARGET = test_feature_maba
 POST_TARGET = test_post_maba
+TEMPORAL_TARGET = test_ifan_temporal_r1
 SRCS = frontend_dual_feature/ifan_dual_frontend.cpp full_stage1_legacy/ifan_stage1_engines.cpp frontend_dual_feature/test_ifan_dual_frontend.cpp
 FULL_SRCS = full_stage1_legacy/ifan_stage1.cpp full_stage1_legacy/ifan_stage1_engines.cpp full_stage1_legacy/test_ifan_stage1.cpp
 MABA_SRCS = feature_maba/ifan_stage1_maba.cpp feature_maba/test_feature_maba.cpp
 POST_SRCS = post_maba/ifan_stage1_post.cpp post_maba/test_post_maba.cpp
+TEMPORAL_SRCS = temporal_r1/ifan_temporal_r1.cpp temporal_r1/test_ifan_temporal_r1.cpp
 
-.PHONY: all clean run full run-full maba run-maba post run-post
+.PHONY: all clean run full run-full maba run-maba post run-post temporal run-temporal
 
 all: $(TARGET)
 
@@ -44,5 +46,13 @@ run-maba: $(MABA_TARGET)
 run-post: $(POST_TARGET)
 	./$(POST_TARGET)
 
+temporal: $(TEMPORAL_TARGET)
+
+$(TEMPORAL_TARGET): $(TEMPORAL_SRCS) full_stage1_legacy/ifan_stage1.hpp temporal_r1/ifan_temporal_r1.hpp
+	$(CXX) $(CXXFLAGS) $(TEMPORAL_SRCS) -o $(TEMPORAL_TARGET)
+
+run-temporal: $(TEMPORAL_TARGET)
+	./$(TEMPORAL_TARGET)
+
 clean:
-	rm -f $(TARGET) $(TARGET).exe $(FULL_TARGET) $(FULL_TARGET).exe $(MABA_TARGET) $(MABA_TARGET).exe $(POST_TARGET) $(POST_TARGET).exe
+	rm -f $(TARGET) $(TARGET).exe $(FULL_TARGET) $(FULL_TARGET).exe $(MABA_TARGET) $(MABA_TARGET).exe $(POST_TARGET) $(POST_TARGET).exe $(TEMPORAL_TARGET) $(TEMPORAL_TARGET).exe

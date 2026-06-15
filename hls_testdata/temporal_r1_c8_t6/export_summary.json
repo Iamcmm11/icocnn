@@ -1,0 +1,57 @@
+{
+  "export": {
+    "created_utc": "2026-06-02T07:40:18+00:00",
+    "script": "hls_src\\HLS\\stage1_ifan_c8_r2\\export_temporal_r1_testdata.py",
+    "python": "G:\\PostGraduateFile\\anaconda\\python.exe",
+    "python_version": "3.12.5",
+    "numpy_version": "1.26.4"
+  },
+  "source": {
+    "stage1_dir": "hls_testdata\\stage1_ifan_c8_r2\\scene_1_t6",
+    "stage1_weights_sha256": "16341641286cf5f807da7e54830c9cc380c0ca8f1141f7fc97b0fe6faa431d21",
+    "stage1_debug_sha256": "dbd985dbf493fbad6e88527236ba91d3359528b9d4cc71c78622527c0be4ac03",
+    "convico_dir": "hls_testdata\\layer2-5_c8_t6"
+  },
+  "datasets": {
+    "fusion0": {
+      "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\fusion0",
+      "input_node": "relu(layer2-5_c8_t6/fusion0/output)",
+      "temporal_output_node": "fusion0_temporal_pre_norm",
+      "block_output_node": "debug['fusion_head_blocks'][0]",
+      "post_block_replay_max_abs_diff": 7.152557373046875e-07,
+      "post_block_replay_rmse": 1.062460435010764e-07
+    },
+    "fusion1": {
+      "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\fusion1",
+      "input_node": "relu(layer2-5_c8_t6/fusion1/output)",
+      "temporal_output_node": "fusion1_temporal_pre_norm",
+      "block_output_node": "debug['fusion_head_blocks'][1]",
+      "post_block_replay_max_abs_diff": 7.152557373046875e-07,
+      "post_block_replay_rmse": 1.0652093251868528e-07
+    },
+    "fusion2": {
+      "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\fusion2",
+      "input_node": "relu(layer2-5_c8_t6/fusion2/output)",
+      "temporal_output_node": "fusion2_temporal_pre_norm",
+      "block_output_node": "debug['fusion_head_blocks'][2]",
+      "post_block_replay_max_abs_diff": 1.430511474609375e-06,
+      "post_block_replay_rmse": 1.2919107745313777e-07
+    },
+    "fusion3": {
+      "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\fusion3",
+      "input_node": "relu(layer2-5_c8_t6/fusion3/output)",
+      "temporal_output_node": "fusion3_temporal_pre_norm",
+      "block_output_node": "debug['fusion_head_blocks'][3]",
+      "post_block_replay_max_abs_diff": 9.5367431640625e-07,
+      "post_block_replay_rmse": 1.3588051407598236e-07
+    },
+    "final": {
+      "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\final",
+      "input_node": "relu(layer2-5_c8_t6/final/output)",
+      "temporal_output_node": "final_temporal_pre_norm",
+      "block_output_node": "debug['final_head_logits']",
+      "post_block_replay_max_abs_diff": 7.152557373046875e-07,
+      "post_block_replay_rmse": 1.3586219697014638e-07
+    }
+  }
+}

@@ -19,6 +19,7 @@ set top_name [env_or_default "ICO_HLS_TOP" $top_name]
 set part_name [env_or_default "ICO_HLS_PART" $part_name]
 set clock_period [env_or_default "ICO_HLS_CLOCK" $clock_period]
 set mode [string tolower [env_or_default "ICO_HLS_MODE" "synth"]]
+set module_name [string tolower [env_or_default "ICO_HLS_MODULE" "frontend"]]
 set cppflags [env_or_default "ICO_HLS_CPPFLAGS" ""]
 
 puts "=== Vitis HLS Terminal Flow ==="
@@ -30,21 +31,47 @@ puts "Top      : $top_name"
 puts "Part     : $part_name"
 puts "Clock(ns): $clock_period"
 puts "Mode     : $mode"
+puts "Module   : $module_name"
 puts "CppFlags : $cppflags"
 
 set project_path [file normalize [file join $project_root $project_name]]
 file mkdir $project_root
 open_project -reset $project_path
 set_top $top_name
-if {$cppflags eq ""} {
-    add_files [file join $source_dir frontend_dual_feature ifan_dual_frontend.cpp]
-    add_files [file join $source_dir full_stage1_legacy ifan_stage1_engines.cpp]
-    add_files -tb [file join $source_dir frontend_dual_feature test_ifan_dual_frontend.cpp]
+set saved_pwd [pwd]
+cd $source_dir
+if {$module_name eq "temporal"} {
+    set temporal_stage_dir [file normalize [file join $project_root temporal_r1]]
+    set legacy_stage_dir [file normalize [file join $project_root full_stage1_legacy]]
+    file mkdir $temporal_stage_dir
+    file mkdir $legacy_stage_dir
+    file copy -force [file join $source_dir temporal_r1 ifan_temporal_r1.cpp] [file join $temporal_stage_dir ifan_temporal_r1.cpp]
+    file copy -force [file join $source_dir temporal_r1 ifan_temporal_r1.hpp] [file join $temporal_stage_dir ifan_temporal_r1.hpp]
+    file copy -force [file join $source_dir temporal_r1 test_ifan_temporal_r1.cpp] [file join $temporal_stage_dir test_ifan_temporal_r1.cpp]
+    file copy -force [file join $source_dir full_stage1_legacy ifan_stage1.hpp] [file join $legacy_stage_dir ifan_stage1.hpp]
+    if {$cppflags eq ""} {
+        add_files [file join $temporal_stage_dir ifan_temporal_r1.cpp]
+        add_files [file join $temporal_stage_dir ifan_temporal_r1.hpp]
+        add_files [file join $legacy_stage_dir ifan_stage1.hpp]
+        add_files -tb [file join $temporal_stage_dir test_ifan_temporal_r1.cpp]
+    } else {
+        add_files -cflags $cppflags [file join $temporal_stage_dir ifan_temporal_r1.cpp]
+        add_files [file join $temporal_stage_dir ifan_temporal_r1.hpp]
+        add_files [file join $legacy_stage_dir ifan_stage1.hpp]
+        add_files -tb -cflags $cppflags [file join $temporal_stage_dir test_ifan_temporal_r1.cpp]
+    }
 } else {
-    add_files -cflags $cppflags [file join $source_dir frontend_dual_feature ifan_dual_frontend.cpp]
-    add_files -cflags $cppflags [file join $source_dir full_stage1_legacy ifan_stage1_engines.cpp]
-    add_files -tb -cflags $cppflags [file join $source_dir frontend_dual_feature test_ifan_dual_frontend.cpp]
+    if {$cppflags eq ""} {
+        add_files frontend_dual_feature/ifan_dual_frontend.cpp
+        add_files full_stage1_legacy/ifan_stage1_engines.cpp
+        add_files -tb frontend_dual_feature/test_ifan_dual_frontend.cpp
+    } else {
+        add_files -cflags $cppflags frontend_dual_feature/ifan_dual_frontend.cpp
+        add_files -cflags $cppflags full_stage1_legacy/ifan_stage1_engines.cpp
+        add_files -tb -cflags $cppflags frontend_dual_feature/test_ifan_dual_frontend.cpp
+    }
 }
+cd $saved_pwd
 open_solution -reset $solution_name
 set_part $part_name
 create_clock -period $clock_period -name default

@@ -1,0 +1,98 @@
+{
+  "dataset": "fusion3",
+  "kind": "temporal_r1_real_golden",
+  "layout": {
+    "input": "[T=6, C=8, R=6, charts=5, H=2, W=4]",
+    "weight": "[Cout=8, Cin=8, K=5]",
+    "bias": "[Cout=8]",
+    "output": "[T=6, C=8, R=6, charts=5, H=2, W=4]"
+  },
+  "source": {
+    "convico_dataset": "hls_testdata\\layer2-5_c8_t6\\fusion3",
+    "input_node": "relu(layer2-5_c8_t6/fusion3/output)",
+    "temporal_output_node": "fusion3_temporal_pre_norm",
+    "block_output_node": "debug['fusion_head_blocks'][3]",
+    "post_block_replay_max_abs_diff": 9.5367431640625e-07,
+    "post_block_replay_rmse": 1.3588051407598236e-07
+  },
+  "files": {
+    "input": {
+      "npy": "input.npy",
+      "txt": "input.txt"
+    },
+    "weight": {
+      "npy": "weight.npy",
+      "txt": "weight.txt"
+    },
+    "bias": {
+      "npy": "bias.npy",
+      "txt": "bias.txt"
+    },
+    "output": {
+      "npy": "output.npy",
+      "txt": "output.txt"
+    }
+  },
+  "stats": {
+    "input": {
+      "shape": [
+        6,
+        8,
+        6,
+        5,
+        2,
+        4
+      ],
+      "dtype": "float32",
+      "size": 11520,
+      "finite": true,
+      "min": 0.0,
+      "max": 2.1355607509613037,
+      "mean": 0.24854575131541373,
+      "std": 0.3535488947614085
+    },
+    "weight": {
+      "shape": [
+        8,
+        8,
+        5
+      ],
+      "dtype": "float32",
+      "size": 320,
+      "finite": true,
+      "min": -0.21601931750774384,
+      "max": 0.1851682811975479,
+      "mean": -0.014610732191067654,
+      "std": 0.0920508101126268
+    },
+    "bias": {
+      "shape": [
+        8
+      ],
+      "dtype": "float32",
+      "size": 8,
+      "finite": true,
+      "min": -0.17278897762298584,
+      "max": 0.1205180361866951,
+      "mean": -0.023828974226489663,
+      "std": 0.10234234480596603
+    },
+    "output": {
+      "shape": [
+        6,
+        8,
+        6,
+        5,
+        2,
+        4
+      ],
+      "dtype": "float32",
+      "size": 11520,
+      "finite": true,
+      "min": -1.196315884590149,
+      "max": 0.7473995685577393,
+      "mean": -0.1758661746076541,
+      "std": 0.24160068355552103
+    }
+  }
+}
