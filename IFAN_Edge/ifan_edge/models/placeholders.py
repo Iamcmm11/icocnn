@@ -67,13 +67,14 @@ class ResidualLearningModule(nn.Module):
         super().__init__()
         self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
         self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
+        self.norm = icoCNN.LNormIco(channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
         x = torch.relu(self.conv1(x))
-        x = x + residual
         x = self.conv2(x)
-        return x + residual
+        x = self.norm(x)
+        return torch.relu(x + residual)
 
 
 class FeatureAttentionWeightModule(nn.Module):

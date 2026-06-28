@@ -1,436 +1,412 @@
-# IFAN-Edge 中期答辩 PPT 大纲
+# DFA-IcoNet-Edge 中期答辩 PPT 生成大纲（优化版）
 
-> 建议规模：20 页。  
-> 汇报主线：以 `icoCNN` 为 baseline，围绕 `PHAT + LMS` 双特征、注意力融合网络、轻量化边缘候选和 FPGA/HLS 适配形成 IFAN-Edge 工作闭环。  
-> 参考定位：IFAN 原论文作为相关工作、结构启发和图表风格参考，不作为本次汇报的主线标题。  
-> 结果来源：`IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`、`IFAN_Edge/docs/stage_03_architecture_compare.md`、`相关参考论文/毕业设计最初设想计划.md`。
+> 用途：本文件用于直接交给 PPT 生成器，生成一份学术风格、适合现场汇报的硕士中期答辩 PPT。  
+> 建议页数：18 页。  
+> 汇报主线：以 `icoCNN` 为 baseline，围绕 `PHAT + LMS` 双特征输入、双分支注意力融合网络、边缘轻量化候选模型和 FPGA/HLS 映射规划，形成“算法改进 -> 实验验证 -> 边缘部署”的闭环。  
+> 重要限制：PPT 生成器不要自动生成实验相关表格、柱状图、折线图、tracking 图、HLS 资源表。所有标记为【实验图表占位】的地方只需要留出空白区域，并在空白框内标明后续应插入的图片或表格名称。
+
+## 全局生成要求
+
+- 语言：中文。
+- 场景：电子信息/嵌入式方向硕士研究生中期答辩。
+- 风格：学术、简约、严谨、克制，重点突出结构清晰和信息层级，不做科技展板式装饰。
+- 配色：白色背景为主，深蓝仅用于标题、页眉或少量重点强调；正文使用黑色/深灰，辅助线条使用浅灰。
+- 装饰限制：不要使用渐变背景、发光效果、复杂纹理、3D 图标、大面积深色背景或强烈科技感元素。
+- 版式：每页只保留 1 个核心结论，正文尽量短句化，避免大段文字堆砌。
+- 字号：标题清晰，正文适合投影阅读；每页正文不超过 5 个主 bullet。
+- 图表规则：流程图、结构图、对比矩阵可以由 PPT 生成器绘制；实验数据图、实验表、资源表必须保留空白占位框。
+- 占位框规则：使用浅灰虚线边框，框内写清“此处放入：文件名/图表名/数据来源”，不要生成假数据。
+- 术语统一：PPT 展示名使用 `DFA-IcoNet`、`DFA-IcoNet-Edge`、`DFA-IcoNet-Edge-MABA`；实验代号可在小字备注中对应为 `IFAN_80`、`IFAN_C8_R2`、`ifan_c8_r2_maba_pre_readout_best`。
+
+## 模型命名对照
+
+| PPT 展示名 | 实验代号 | 角色定位 |
+| --- | --- | --- |
+| `icoCNN baseline` | `baseline` | 原始二十面体 DOA 估计基线 |
+| `DFA-IcoNet` | `IFAN_80` | 完整宽度精度参考模型 |
+| `DFA-IcoNet-Edge` | `IFAN_C8_R2` | 边缘轻量化候选模型 |
+| `DFA-IcoNet-Edge-MABA` | `ifan_c8_r2_maba_pre_readout_best` | 轻量化基础上的时序增强扩展 |
 
 ## 1. 题目页：面向边缘部署的二十面体声源定位网络设计与优化
 
-- 标题建议：面向边缘部署的二十面体声源定位网络设计与优化。
-- 副标题：中期检查汇报。
-- 信息：姓名、专业、导师、日期。
-- 一句话定位：以 icoCNN 为基线，构建双特征注意力融合网络，并探索面向 FPGA 的轻量化部署路径。
+### 页面目的
 
-图表建议：
+建立答辩主题和技术主线，让评委一眼知道研究对象、算法基础和边缘部署方向。
 
-- 放一张简化系统图：麦克风阵列 -> PHAT/LMS 特征 -> IFAN-Edge 网络 -> DOA 输出 -> FPGA/HLS 部署。
+### 页面内容
 
+- 标题：面向边缘部署的二十面体声源定位网络设计与优化。
+- 副标题：硕士研究生中期检查汇报。
+- 信息：姓名、专业、导师、学院、日期。
+- 一句话定位：以 `icoCNN` 为基线，构建 `PHAT + LMS` 双特征注意力融合网络，并探索面向 FPGA 的轻量化部署路径。
+
+### 版式与占位
+
+- 左侧或居中放标题信息。
+- 右侧放一条简化技术链路图：`麦克风阵列 -> PHAT/LMS 特征 -> DFA-IcoNet-Edge -> DOA 输出 -> FPGA/HLS 部署`。
+- 该链路图可由 PPT 生成器绘制，不需要实验图片。
 
 ## 2. 研究背景：多通道声源定位与边缘部署需求
 
-- 研究现状：近年的声学场景分析更偏向 DCASE/SELD 一类联合任务，同时处理事件检测、事件分类、DOA 估计甚至距离估计；这类模型能力更综合，但并非针对纯 DOA 估计专项设计，方位估计精度和边缘部署代价之间仍有优化空间。
-- 选择纯 DOA 的原因：本课题不追求把所有声学任务合并到一个大模型里，而是深耕“方位估计”这一单一但关键的感知能力，在可解释的二十面体空间建模框架下针对性优化模型结构。
-- 声源定位任务目标：从多通道麦克风信号估计声源方向，并验证模型在不同声学环境和运动状态下的稳定性。
-  - 运动状态包含 3 类单源场景：固定麦克风静态声源、固定麦克风移动声源、移动麦克风移动声源。
-  - 声学环境包含 4 种典型难度组合：`30dB/T60=0.2s`、`30dB/T60=0.8s`、`5dB/T60=0.8s`、`5dB/T60=1.4s`。
-  - 后续实验验证分为两条线：模拟四场景用于声学环境鲁棒性测试，LOCATA `Task1/3/5` 用于运动状态适应性测试。
-- 本课题优势：依托 LOCATA 单源任务覆盖固定/移动麦克风、静态/动态声源等运动状态，同时用四种 SNR/T60 组合验证恶劣声学环境下的鲁棒性；后续可补充 DCASE 片段作为跨数据集专项 DOA 对比。
-- 边缘端部署不仅要求模型精度，还要求控制参数量、MAC、片上缓存和数据搬运压力；音频前端可采用软件/异构预处理，硬件侧优先关注网络后端。
-- 本课题的核心问题：如何在 icoCNN baseline 上增强纯方位估计能力，并形成更适合边缘硬件映射的轻量化网络后端。
-
-图表建议：
-
-- 右侧补一个验证矩阵：纯 DOA 专项设计 -> 声学环境鲁棒性测试（4 个模拟 scene）+ 运动状态适应性测试（LOCATA Task1/3/5）+ 后续 DCASE 片段交叉对比。
-
-
-## 3. Baseline 与问题切入：icoCNN 的优势、瓶颈和改进空间
-
-- 为什么选择 `icoCNN` 作为 baseline：
-  - `icoCNN` 是面向纯 DOA 估计的二十面体网络，与本课题“方位估计专项优化”的目标一致。
-  - 相比 DCASE/SELD 多任务模型，`icoCNN` 的任务边界更清晰，更适合评估纯方位估计性能。
-- baseline 的主要瓶颈：
-  - 特征侧：单一 PHAT 响应依赖相位加权互相关，在低 SNR、强混响和运动场景下容易出现峰值扩散或伪峰，导致方位读出不稳定。
-  - 时序侧：声源或麦克风运动会带来跨帧时延变化，单帧 PHAT 图难以显式保留这种动态时延演化信息。
-  - 结构侧：baseline 缺少面向互补特征的自适应融合机制，难以在不同声学条件下选择更稳定的空间证据。
-  - 部署侧：IcoConv 计算量随输入/输出通道宽度近似二次增长，边缘部署资源压力较大。
-- 本课题的改进方向：
-  - 引入 LMS 自适应时延估计特征，补充 PHAT 在复杂声学环境下的动态时延信息。
-  - 将 PHAT 的稳健空间响应与 LMS 的时序自适应能力融合，增强二十面体特征表达。
-  - 设计双分支残差增强与注意力融合结构，形成 `DFA-IcoNet`。
-  - 通过 `DFA-IcoNet-Edge` 做结构化宽度收缩，降低参数量与 MAC。
-  - 将硬件侧目标收束为网络后端 ConvIco 数据流与 FPGA 资源闭合。
-- 答辩边界主动说明：
-  - 当前不宣称横向超越所有 SELD/SOTA 模型，而是在同一二十面体 DOA 框架下验证专项结构改进和边缘映射可行性。
-  - 当前不宣称完整音频前端全链路 FPGA 实现，硬件重点优先放在二十面体网络后端。
-
-图表建议：
-
-- 表格对比：`为什么选 icoCNN`、`baseline 瓶颈`、`本文对应改进`。
-- 可在页脚加一句防追问口径：`SELD/DCASE 多任务模型作为后续扩展对比，当前主线聚焦纯 DOA 与硬件映射闭环。`
-
-
-## 4. 本课题工作总览：双特征、融合网络、轻量化、FPGA 映射
-
-- 研究目标：面向纯 DOA 估计任务，在 `icoCNN` 二十面体 baseline 上提升复杂声学环境和运动场景下的方位估计稳定性。
-- 特征补强：针对单一 PHAT 在低 SNR、强混响和运动场景下可能出现伪峰或跨帧信息不足的问题，构建 `PHAT + LMS` 双特征二十面体输入。
-- 网络设计：从 icoCNN 单特征主干扩展为双分支残差增强与注意力融合网络，形成完整宽度精度参考模型 `DFA-IcoNet`。
-- 边缘轻量化：围绕 IcoConv 主瓶颈进行结构化宽度收缩，形成边缘轻量化候选模型 `DFA-IcoNet-Edge`。
-- 时序增强：在轻量化主干上进一步引入 feature 级 `pre_readout MABA` temporal refiner，形成当前确定模型 `DFA-IcoNet-Edge-MABA`，用于增强低 SNR / 高混响场景下的跨帧特征稳定性。
-- 实验验证：
-  - 模拟四场景验证声学环境鲁棒性。
-  - LOCATA `Task1/3/5` 验证固定/移动麦克风、静态/动态声源下的运动状态适应性。
-  - DCASE-2025挑战赛DOA数据集作为跨数据集纯 DOA 对比。
-- 硬件边界：当前不追求完整音频前端全链路 FPGA 实现，优先探索二十面体网络后端 ConvIco / IcoConv 的 HLS 数据流、资源闭合和整网预算。
-
-图表建议：
-
-- 六段式路线图：Problem -> Feature -> Network -> Edge -> MABA Temporal Refine -> Hardware。
-- 图中标注两条验证线：`模拟四场景 = 声学环境鲁棒性`，`LOCATA Task1/3/5 = 运动状态适应性`。
-
-
-## 5. 算法主体设计：PHAT+LMS 双特征与注意力融合网络
-
-- 前端补强：构建 `PHAT + LMS` 双特征二十面体输入。
-  - `channel 0 = PHAT`：提供稳健的相位加权空间响应。
-  - `channel 1 = LMS`：补充跨帧动态时延估计信息。
-  - 已实现 `SRPPHATIcoMapAdapter`、`SRPLMSIcoMap`、`DualFeatureIcoPreprocessor`。
-- 可视化证据：四个典型 scene 已导出双特征投影图，用于说明 PHAT/LMS 在二十面体网格上形成可观察的空间响应。
-  - `IFAN_Edge/outputs/stage1_features/scene_*/feature_maps_projection_contrast.png`
-- 网络主体：在保留 icoCNN 二十面体卷积能力的基础上，扩展为双分支残差增强与注意力融合结构。
-  - PHAT / LMS 双输入分支。
-  - branch-local fusion + shared attention weight module。
-  - second-stage fusion 后进入深层 fusion head 完成方向估计。
-- 当前完整宽度精度参考模型：`DFA-IcoNet`。
-
-图表建议：
-
-- 主图：`多通道音频 -> PHAT/LMS 双特征 -> 双分支残差增强 -> shared attention fusion -> fusion head -> DOA`。
-- 右下角放 1-2 张 `feature_maps_projection_contrast.png` 小图作为特征可视化证据，不必四张全放。
-- 图名写成“本课题双特征注意力融合网络结构”，不要写成复现论文结构。
-
-备注：
-
-- 这一页相当于算法主体总页：把前端、可视化和网络结构压缩到一页，后面直接衔接轻量化。
-
-## 6. 轻量化设计：IcoConv 主瓶颈与 C8_R2 边缘候选
-
-- 轻量化设计目标：
-  - 目标不是“简单减小网络”，而是围绕 IcoConv 主瓶颈，在保证纯 DOA 精度的前提下，把后端主干压缩成更适合规则 DSP tile 执行的结构。
-- 为什么这样设计：
-  - 前端 `PHAT + LMS` 双特征需要较高空间分辨率完成互补信息交互，因此融合前不宜过早压缩。
-  - 在 `r=2` 完成双分支融合后做一次 `PoolIco`，将 Fusion Feature 降到 `r=1`，可以把后续深层主干限制在更小网格上执行。
-  - 这样前段保留表达能力，后段降低空间计算和片上缓存压力，更符合“前端补强、后端收缩”的设计思路。
-- 具体压缩策略：
-  - 保持二十面体拓扑、双特征输入和时序建模流程不变。
-  - 将主干宽度从 `C=16` 压缩到 `C=8`。
-  - 这样核心 IcoConv 从 `16 x 16` 通道计算块压缩为 `8 x 8` 的规则稠密块，正好对应单个完整 DSP tile。
-  - 当前边缘轻量化候选模型：`DFA-IcoNet-Edge`。
-- 为什么主线不是结构化剪枝：
-  - 我们先测试过基于 `C=16` 权重的 SAF-lite 结构化剪枝，例如 `2-of-8` 稀疏保留。
-  - 理论上它能把 pruned IcoConv 的有效 MAC 压到 dense 的 `25%`，但实际硬件实现仍需要稀疏索引、块内保留位置和不规则调度。
-  - 现有 `c16_saf_lite_2of8_phase1` 结果显示：20 epoch 验证明显退化，four-scene mean 相对 baseline 为 `+4.6818 deg`，hard mean 为 `+5.5605 deg`，没有形成可用主线。
-  - 因此我们没有继续沿“稀疏索引控制”推进，而是回到更规则的 dense channel slimming 路线。
-- 当前结论：
-  - `DFA-IcoNet-Edge` 不是权重稀疏化主线，而是 `DSP tile` 对齐的规则稠密压缩主线。
-  - 这条路线的优势在于：计算块规则、控制路径干净、避免零跳过和稀疏索引开销，更适合后续 HLS/FPGA 映射。
-
-图表建议：
-
-- 放一个小公式或示意：`MAC_IcoConv ~ Cin * Cout * grid_size`。
-- 主图建议画成三段：
-  - `双特征融合 at r=2`
-  - `PoolIco: r=2 -> r=1`
-  - `C16 -> C8 dense channel slimming`
-- 配一张“DSP tile 对齐的稠密结构压缩”表：
-  - `C16 dense = 16 out x 16 in = 4 个 8x8 tile`
-  - `SAF 4of8 = 16 out x 8 effective in = 128 multiplies`
-  - `SAF 2of8 = 16 out x 4 effective in = 64 multiplies，但需索引/稀疏调度`
-  - `C8_R2 = 8 out x 8 in = 1 个完整 8x8 tile = 64 multiplies`
-- 再配一个小结果框：
-  - `SAF-lite 2of8: 理论压缩高，但 four-scene/hard-scene 明显退化`
-  - `C8_R2: 规则 dense tile，LOCATA 平均仍优于 baseline`
-
-备注：
-
-- 这一页的讲法应是：先给出我们最终采用的 dense channel slimming 路线，再回头说明为什么剪枝路线没有成为主线。这样老师更容易跟上主结论。
-
-## 7. 实验设置：模拟实验 + LOCATA 真实数据评测
-
-- 模拟实验：
-  - 用于验证训练闭环、收敛趋势和不同声学场景下的模型行为。
-  - 可保留 four-scene / hard-scene 指标作为辅助证据。
-- LOCATA 评测：
-  - subset：`eval`
-  - array：`benchmark2`
-  - tasks：`task1, task3, task5`
-  - available recordings：`task1=13, task3=5, task5=5, total=23`
-  - 指标：recording-level RMSAE，分 with silences / without silences。
-- 对比模型：
-  - `baseline = icoCNN`
-  - `DFA-IcoNet = 完整宽度精度参考模型`
-  - `DFA-IcoNet-Edge = 边缘轻量化候选模型`
-  - `DFA-IcoNet-Edge-MABA = pre_readout MABA 时序增强模型，对应 ifan_c8_r2_maba_pre_readout_best`
-
-图表建议：
-
-- 放一张紧凑实验设置表：数据集、任务、指标、模型。
-
-备注：
-
-- 训练策略、评测协议和数据口径合并到一页，不再拆成多页。
-
-## 8. LOCATA 总体结果：核心模型对比
+### 页面目的
 
-| Model | Params | MAC | With Silences Avg | Without Silences Avg |
-| --- | ---: | ---: | ---: | ---: |
-| icoCNN baseline | 290017 | - | 8.5718 | 7.1976 |
-| DFA-IcoNet | 125457 | 459532800 | 7.2407 | 6.2693 |
-| DFA-IcoNet-Edge | 31561 | 115211520 | 7.8581 | 7.0755 |
-| DFA-IcoNet-Edge-MABA | 32353 | 116213760 | 7.7960 | 6.9130 |
-
-- `DFA-IcoNet` 相对 icoCNN baseline：
-  - with silences average 改善 `1.3310 deg`
-  - without silences average 改善 `0.9283 deg`
-- `DFA-IcoNet-Edge` 相对 icoCNN baseline：
-  - with silences average 改善 `0.7136 deg`
-  - without silences average 改善 `0.1221 deg`
-- `DFA-IcoNet-Edge-MABA` 相对 `DFA-IcoNet-Edge`：
-  - 参数量仅从 `31561` 增至 `32353`，MAC 从 `115211520` 增至 `116213760`
-  - with silences average 进一步改善 `0.0621 deg`
-  - without silences average 进一步改善 `0.1625 deg`
-- 结果解释：MABA 的总体平均收益不大，但在不显著增加资源的情况下改善了 LOCATA 平均值，为后续 hard-scene 时序增强提供证据。
-
-图表建议：
-
-- 主图：with / without silences RMSAE 双柱状图，越低越好，加入 `DFA-IcoNet-Edge-MABA` 第四根柱。
-- 角落保留参数量和 MAC 小表。
-
-备注：
-
-- 该页是算法实验核心结果页，建议保留完整数字。
-
-## 9. 分任务结果：Task1 / Task3 / Task5 稳定性观察
-
-- LOCATA 单源任务：
-  - Task1：静态或相对简单场景，recording 数最多。
-  - Task3 / Task5：更能体现真实数据中场景差异。
-- 展示重点：
-  - 不只看总体平均，还要看不同任务上的波动。
-  - `DFA-IcoNet` 作为完整宽度模型更稳定。
-  - `DFA-IcoNet-Edge` 在轻量化后仍保持总体平均优势，但部分任务损失需要解释。
-  - `DFA-IcoNet-Edge-MABA` 的收益主要集中在 Task5：with silences Task5 mean 从 `11.8516` 降至 `11.2159`，without silences Task5 mean 从 `9.9599` 降至 `8.5478`。
-  - Task1/Task3 上 MABA 有小幅波动，说明 pre_readout MABA 更像 hard-scene / 动态场景增强，而不是所有任务的均匀增益模块。
-
-图表建议：
-
-- 每个 task 一组柱状图：icoCNN baseline / DFA-IcoNet / DFA-IcoNet-Edge / DFA-IcoNet-Edge-MABA。
-- 指标优先用 mean RMSAE，可分 with silences 和 without silences 两张小图。
-
-备注：
-
-- 这页用于支撑“真实数据上的稳定性”，图会比较大，单独展示。
-
-## 10. Tracking 可视化：真实轨迹与预测轨迹对比
-
-- 目标：参考 IFAN 原论文 tracking 图的表达方式，生成本课题自己的轨迹可视化。
-- 优先方案：
-  - 从 LOCATA `Task1 / Task3 / Task5` 选 1-2 个 recording。
-  - 绘制 ground truth、icoCNN baseline、DFA-IcoNet、DFA-IcoNet-Edge、DFA-IcoNet-Edge-MABA 的时间序列轨迹。
-  - 可分别画 azimuth / elevation，或画球面角度误差随时间变化。
-- 当前状态：
-  - LOCATA 评估已有 recording 级 RMSAE JSON/MD。
-  - 现有脚本尚未直接输出 LOCATA tracking PNG，需要后续补充脚本或手动基于预测结果生成。
-- 替代方案：
-  - 若 LOCATA tracking 图来不及生成，先用 `IFAN_Edge/scripts/analyze_stage3_scene.py` 生成模拟场景 `trajectory_rmsae.png`，作为轨迹误差分布展示。
-
-图表建议：
-
-- 一页放 2 张大图：
-  - 图 1：azimuth tracking，ground truth vs models。
-  - 图 2：frame-level angular error 或 elevation tracking。
-
-备注：
-
-- 这页要明确“参考论文图风格”，但展示的是本课题结果，不要直接搬论文图作为结果。
+说明为什么研究纯 DOA 估计，以及为什么需要考虑边缘部署。
 
-## 11. 资源-精度折中：参数量、MAC 与 RMSAE
-
-| Comparison | Params Change | MAC Change | With Silences Avg Delta | Without Silences Avg Delta |
-| --- | ---: | ---: | ---: | ---: |
-| DFA-IcoNet vs icoCNN baseline | 56.7% reduction | n/a | -1.3310 deg | -0.9283 deg |
-| DFA-IcoNet-Edge vs icoCNN baseline | 89.1% reduction | n/a | -0.7136 deg | -0.1221 deg |
-| DFA-IcoNet-Edge vs DFA-IcoNet | 74.8% reduction | 74.9% reduction | +0.6174 deg | +0.8062 deg |
-| DFA-IcoNet-Edge-MABA vs DFA-IcoNet-Edge | +2.5% params | +0.9% MAC | -0.0621 deg | -0.1625 deg |
-
-- 关键结论：`DFA-IcoNet-Edge` 用约 `75%` 的参数量与 MAC 压缩，换取可接受的平均精度损失。
-- `DFA-IcoNet-Edge-MABA` 在极小资源增量下带来平均精度补偿，尤其对 hard-scene / Task5 更有价值。
-- 后续 FPGA/HLS 默认以 `DFA-IcoNet-Edge` 为基础网络候选，并单独评估 MABA refiner 是否纳入时序增强扩展。
-
-图表建议：
-
-- Pareto 散点图：
-  - 横轴：MAC 或 Params。
-  - 纵轴：LOCATA average RMSAE。
-  - 点：icoCNN baseline / DFA-IcoNet / DFA-IcoNet-Edge / DFA-IcoNet-Edge-MABA。
+### 页面内容
 
-备注：
+- 多通道麦克风阵列声源定位是智能感知、机器人听觉和人机交互中的关键基础能力；相比 DCASE/SELD 多任务建模，纯 DOA 估计仍需要高精度、低成本的专项优化。
+- 原始 `icoCNN` 的核心选择不是普通平面 CNN，而是把 SRP-PHAT 方向图放到二十面体球面网格上建模。
+- 选择二十面体网格的原因：DOA 和 SRP-PHAT 图天然服从球面旋转几何，等角投影存在极点过采样，普通平面 CNN 的平移等变性与问题不完全匹配。
+- `icoCNN` 优势：二十面体旋转等变近似球面旋转，IcoConv 可用标准 2D 卷积实现，并通过 SoftArgMax 直接输出 DOA，适合作为低成本纯 DOA baseline。
+- 边缘部署不仅关注 RMSAE 精度，还需要控制参数量、MAC、片上缓存和数据搬运。
 
-- 这一页承接算法实验到硬件映射的转场。
+### 版式与占位
 
-## 12. Pre-readout MABA 时序增强与消融收束
-
-- 加入 MABA 的原因：
-  - `DFA-IcoNet-Edge` 已经完成主干轻量化，但低 SNR / 高混响和动态场景下仍可能出现跨帧响应不稳定。
-  - MABA temporal refiner 用于补充轻量化主干的时序建模能力，不改变 `PHAT + LMS` 和二十面体主干的基本接口。
-- 当前确定模型：
-  - `DFA-IcoNet-Edge-MABA` 对应实验 `ifan_c8_r2_maba_pre_readout_best`。
-  - 只在一个位置加入 MABA：`final_block` 之后、`channel_readout` 之前。
-  - 输入张量为 `[B, T, C, R, 5, H, W]`，此时 channel 和 region 信息尚未被压缩成单通道响应图。
-- 结构作用：
-  - `pre_readout MABA` 基本保留完整 MABA 形态：Linear In、depthwise temporal conv、gate、state scan、Linear Out 和 residual。
-  - 它负责 feature 级时序重整，在读出前利用多通道、多 region 的弱证据抑制跨帧尖峰和伪峰。
-  - 不再把 `pre_softargmax` 作为主模型组成部分；`dual_refine` 只作为消融，说明过晚的响应图级整形可能对 hard scene 产生过平滑风险。
-- 实验观察：
-  - 模拟 `scene_4 (5dB/T60=1.4s)` 中，`pre_readout` 将 `DFA-IcoNet-Edge` 的 RMSAE 从 `17.9796 deg` 降到 `13.9095 deg`，说明 feature 级时序重整对强噪声强混响场景有明显价值。
-  - 模拟四场景 mean 从 `9.9787 deg` 降到 `8.5406 deg`，hard mean 从 `14.2679 deg` 降到 `11.6980 deg`。
-  - LOCATA without silences average 从 `7.0755 deg` 降到 `6.9130 deg`，with silences average 从 `7.8581 deg` 降到 `7.7960 deg`。
-  - LOCATA Task5 改善最明显，说明该模块更适合补强复杂动态/强干扰场景，而不是追求所有任务平均无波动提升。
-- 其他消融收束：
-  - `C8_R3` 参数量与 `DFA-IcoNet-Edge` 相近，但 MAC 基本不降，固定为失败参考。
-  - `map_maba` 放在响应图压缩之后，scene_4 基本没有改善；`dual_refine` 增加第二个弱 refiner 后 scene_1/2/3 略有收益，但 scene_4 弱于 `pre_readout`，因此不作为当前确定模型。
+- 左侧：背景问题三段式卡片，分别为“纯 DOA 估计”“复杂声学环境”“边缘部署约束”。
+- 右侧：绘制“算法指标 -> 硬件指标”的映射图：`RMSAE / Params / MAC -> DSP / BRAM / LUT / Latency`。
+- 该页不需要实验图表占位。
 
-图表建议：
+## 3. 问题定义：baseline 瓶颈与本课题切入点
 
-- 主图画成单一插入位置流程：`Final block -> pre_readout MABA -> channel_readout -> region max -> CleanVertices -> SoftArgMax`。
-- 配一个小表：`DFA-IcoNet-Edge / map_maba / pre_readout / dual_refine` 在 `scene_4`、four-scene mean、hard mean 和 LOCATA average 上的对比。
-
-备注：
-
-- 这页的定位是“pre_readout MABA 为什么有效”，不要把 MABA 讲成两个位置同时加入的主流程。
-
-## 13. FPGA/HLS 设计目标：为什么算法收束后需要硬件映射
-
-- 边缘部署不只看模型参数，还要看：
-  - MAC 压力。
-  - 片上缓存。
-  - 数据搬运。
-  - DSP / BRAM / LUT / FF 资源。
-  - 延迟与吞吐。
-- 算法收束后的硬件目标：
-  - 以 `DFA-IcoNet` 作为精度参考。
-  - 以 `DFA-IcoNet-Edge` 作为默认边缘实现候选。
-  - 将 `DFA-IcoNet-Edge-MABA` 作为可选时序增强扩展，单独评估其少量额外参数/MAC 对 HLS 资源和延迟的影响。
-  - 围绕 ConvIco / IcoConv 主瓶颈做数据流与资源优化。
+### 页面目的
 
-图表建议：
+把问题从宏观背景收束到本课题的具体技术切入点。
 
-- 算法指标 -> 硬件指标映射图：Params/MAC/RMSAE -> DSP/BRAM/LUT/Latency。
-
-备注：
-
-- 这一页开始进入后续工作，不要讲成已完成整网上板。
-
-## 14. FPGA 整体架构预期：前端、缓存、IcoConv 加速、输出
-
-- 预期系统分层：
-  - 输入与特征准备：接收 PHAT/LMS 特征或其片上缓存表示。
-  - 几何预处理：二十面体邻接、PadIco、局部窗口组织。
-  - ConvIco 加速核心：权重读取、局部 MAC、通道归并。
-  - 输出模块：归一化、方向读出、SoftArgMax / 后处理。
-- 设计原则：
-  - memory-first，先解决数据组织与缓存，再谈算子并行。
-  - 用多个可调度小模块，而不是单一不可控大阵列。
-  - 让硬件结构匹配二十面体卷积的数据访问特点。
-
-图表建议：
-
-- FPGA 顶层框图：Feature Buffer -> Geometry / PadIco -> ConvIco Engine -> Output Head。
-
-备注：
-
-- 这一页讲“预期架构”，可以用论文式框图风格。
-
-## 15. ConvIco 硬件数据流：PadIco、局部缓冲、权重展开、DSP MAC
-
-- 数据流重点：
-  - `PadIco` 与重排映射器：把复杂几何访问规则化。
-  - 局部输入缓冲：减少直接访问大数组导致的端口冲突。
-  - 紧凑权重表示与展开：服务局部卷积窗口。
-  - DSP MAC 阵列：承担热点乘加。
-  - output tile 与局部部分和归并：控制累加路径和输出写回。
-- 与当前 HLS 文档的对接：
-  - layer2-5 共享 ConvIco 块已有 DSP48E1-aware 数据流描述。
-  - 后续要把 `DFA-IcoNet-Edge` 的网络规模映射到该类硬件骨架上。
-
-图表建议：
-
-- 参考 `hls_src/layer2-5论文插图增强版架构图-中文.md` 或 `layer2-5_DSP48E1_aware_bilingual_flowchart.md`，重画简化版。
-
-备注：
-
-- 这页是硬件技术核心页，建议放大数据流图。
-
-## 16. 当前 HLS 基础与资源风险
-
-- 已有基础：
-  - layer0 / layer1 / layer2-5 的 HLS 工程与资源报告。
-  - layer2-5 中 `PadIco` 相关 pipeline 已有 `Final II = 1` 的阶段性记录。
-  - 已有定点量化、局部缓冲、DSP-aware 路径分析。
-- 资源风险：
-  - layer1 仍可能存在 LUT 超限或资源压力。
-  - 整网级资源闭合尚未完成。
-  - 前端特征生成是否上板仍需明确边界。
-- 后续硬件验证重点：
-  - `DFA-IcoNet` 与 `DFA-IcoNet-Edge` 的整网预算对比。
-  - ConvIco 主路径延迟、资源和精度影响。
-
-图表建议：
-
-- 放 HLS 资源快照表：layer0 / layer1 / layer2-5 的 BRAM、DSP、FF、LUT、Latency。
-- 对超限或风险项用颜色标注。
-
-备注：
-
-- 主动说明风险，比把硬件写成已经完成更稳。
-
-## 17. 后续计划：补图、gap 解释、硬件预算、论文撰写
-
-- 算法侧：
-  - 补 LOCATA tracking 可视化图。
-  - 继续解释完整宽度模型与相关论文最佳结果之间的 gap。
-  - 固化 `DFA-IcoNet` 和 `DFA-IcoNet-Edge` 的最终结果表。
-- 图表侧：
-  - 生成 LOCATA tracking 图。
-  - 生成 LOCATA 分任务柱状图。
-  - 生成参数量 / MAC / RMSAE Pareto 图。
-- 硬件侧：
-  - 以 `DFA-IcoNet-Edge` 做整网资源预算。
-  - 对接 layer1 / layer2-5 的 HLS 数据流。
-  - 明确前端是否进入硬件实现边界。
-- 论文侧：
-  - 完成算法实验章节。
-  - 完成硬件架构与后续实现章节。
-
-图表建议：
-
-- 甘特图或任务矩阵：算法补充、图表生成、HLS 预算、论文撰写。
-
-备注：
-
-- 这一页可以直接作为中期后任务安排。
-
-## 18. 总结页：当前完成度、创新点、下一阶段交付
-
-- 当前完成：
-  - 以 icoCNN 为 baseline 的双特征注意力融合网络工程链路。
-  - PHAT + LMS 双特征可视化。
-  - LOCATA 统一口径下的三模型核心比较。
-  - `DFA-IcoNet-Edge` 边缘轻量化候选验证。
-- 当前创新表述：
-  - 双特征二十面体输入与注意力融合结构的工程实现。
-  - 面向 IcoConv 主瓶颈的轻量化边缘折中设计。
-  - 面向 FPGA/HLS 的 ConvIco 数据流与资源闭合规划。
-- 下一阶段交付：
-  - LOCATA tracking 图。
-  - 完整实验图表。
-  - `DFA-IcoNet-Edge` 整网硬件预算。
-  - 毕业论文实验与硬件章节。
-
-图表建议：
-
-- 三栏总结：已完成 / 正在补充 / 下一阶段交付。
-
-备注：
-
-- 最后一页回扣主线：不是单纯复现 IFAN，而是在 icoCNN baseline 上完成 IFAN-Edge 的算法与硬件收束。
+### 页面内容
+
+- `icoCNN baseline` 优点：任务边界清晰，面向纯 DOA 估计；二十面体网格更匹配球面方向几何，避免等角投影极点过采样和普通平面卷积的几何错配。
+- 特征瓶颈：单一 PHAT 响应在低 SNR、强混响和运动场景下容易出现峰值扩散或伪峰。
+- 时序稳定性问题：baseline 已有与 IcoConv 交替的因果 1D 卷积，可利用短时上下文；但在声源/麦克风运动、静音片段和强混响伪峰场景下，读出前特征序列仍可能出现跨帧响应波动，影响 DOA 轨迹稳定性。
+- 结构瓶颈：baseline 只处理单一空间响应，不能建模“特征可靠性随环境变化”；简单拼接或相加也难以根据 SNR、混响和运动状态保留可靠峰、抑制误峰。
+- 部署瓶颈：IcoConv 计算量随通道宽度近似二次增长，FPGA/HLS 映射存在资源压力。
+
+### 版式与占位
+
+- 使用三列表格：`Baseline 优势`、`主要瓶颈`、`本文改进方向`。
+- 页脚加一句边界说明：当前主线聚焦纯 DOA 与网络后端硬件映射，不宣称完成完整音频前端全链路 FPGA 实现。
+- 该页不需要实验图表占位。
+
+## 4. 研究目标与技术路线总览
+
+### 页面目的
+
+给出全文逻辑地图，让后续算法、实验和硬件部分形成闭环。
+
+### 页面内容
+
+- 目标 1：构建 `PHAT + LMS` 双特征二十面体输入，补强复杂声学环境下的空间响应表达。
+- 目标 2：设计双分支残差增强与共享注意力融合网络，形成 `DFA-IcoNet`。
+- 目标 3：围绕 IcoConv 主瓶颈进行规则稠密宽度收缩，形成 `DFA-IcoNet-Edge`。
+- 目标 4：在已有局部时序卷积基础上，引入 `pre_readout MABA` 作为轻量化网络的时序增强扩展。
+- 目标 5：面向 FPGA/HLS 规划 ConvIco 数据流、缓存结构和资源闭合路径。
+
+### 版式与占位
+
+- 绘制六段式技术路线图：`Problem -> Feature -> Network -> Edge -> MABA -> Hardware`。
+- 下方用两条验证线标注：`模拟四场景 = 声学环境鲁棒性`，`LOCATA Task1/3/5 = 运动状态适应性`。
+- 该页不需要实验图表占位。
+
+## 5. 双特征前端：PHAT + LMS 二十面体输入
+
+### 页面目的
+
+说明为什么不是只用 PHAT，而是引入 LMS 作为互补特征。
+
+### 页面内容
+
+- `PHAT`：在高 SNR、低混响场景下峰值更清晰，是稳健的空间定位基准线索。
+- `LMS`：来自自适应滤波的时延估计，在大混响或低 SNR 场景中可能保留与 DOA 相关的另一类证据，但复杂混响下也可能误估。
+- 因此 LMS 不是替代 PHAT，而是补充 PHAT 在不同声学条件下失稳时的互补空间证据。
+- 双特征统一映射到二十面体网格，形成两通道输入：`channel 0 = PHAT`，`channel 1 = LMS`。
+- 已实现模块：`SRPPHATIcoMapAdapter`、`SRPLMSIcoMap`、`DualFeatureIcoPreprocessor`。
+
+### 版式与占位
+
+- 左侧绘制前端流程图：`多通道音频 -> PHAT 分支 / LMS 分支 -> 二十面体投影 -> 双通道特征图`。
+- 右侧留出 2 个小图占位框。
+- 【实验图表占位】右上框：此处放入 `IFAN_Edge/outputs/stage1_features/scene_1/feature_maps_projection_contrast.png`。
+- 【实验图表占位】右下框：此处放入 `IFAN_Edge/outputs/stage1_features/scene_4/feature_maps_projection_contrast.png`。
+- 占位框只需标明图片路径，不要让 PPT 生成器自动绘制热力图。
+
+## 6. 网络结构：双分支残差增强与注意力融合
+
+### 页面目的
+
+展示 `DFA-IcoNet` 的核心结构创新，并和 baseline 的单特征主干形成对比。
+
+### 页面内容
+
+- 从单特征 `icoCNN` 扩展为 PHAT/LMS 双输入分支。
+- 每个分支保留直通特征，并通过 residual learning module 得到增强特征。
+- 共享 attention weight module 根据输入声学环境学习特征权重，避免对两类响应做固定比例融合。
+- 两级融合后进入深层 fusion head，最后通过 `CleanVertices -> SoftArgMax` 输出 DOA。
+- 完整宽度模型 `DFA-IcoNet` 作为精度参考模型。
+
+### 版式与占位
+
+- 中央绘制网络结构图：`PHAT branch` 与 `LMS branch` 左右并行，经过 residual、attention、fusion head 后输出。
+- 右下角放小注释：实验代号 `IFAN_80`。
+- 该页结构图可由 PPT 生成器绘制，不需要实验图表占位。
+
+## 7. 边缘轻量化：IcoConv 主瓶颈与 C8_R2 设计
+
+### 页面目的
+
+解释 `DFA-IcoNet-Edge` 为什么采用规则稠密宽度收缩，而不是把重点放在不规则稀疏剪枝。
+
+### 页面内容
+
+- IcoConv 的计算量近似满足：`MAC_IcoConv ~ Cin * Cout * grid_size`。
+- 因此主干通道宽度是影响参数量和 MAC 的关键变量。
+- 轻量化策略：保留双特征输入和二十面体拓扑，在融合后通过 `PoolIco: r=2 -> r=1` 降低后端空间计算压力。
+- 将主干宽度从 `C=16` 收缩到 `C=8`，使核心计算块更接近单个规则 `8 x 8 DSP tile`。
+- 当前边缘候选模型为 `DFA-IcoNet-Edge`，实验代号 `IFAN_C8_R2`。
+
+### 版式与占位
+
+- 上方绘制三段式轻量化图：`双特征融合 at r=2 -> PoolIco r=2 to r=1 -> C16 to C8 dense slimming`。
+- 下方绘制对比矩阵：`C16 dense`、`SAF-lite 2-of-8`、`C8_R2 dense`。
+- 该页表格是结构解释表，可由 PPT 生成器绘制，不属于实验结果表。
+
+## 8. MABA 时序增强：pre_readout 插入位置
+
+### 页面目的
+
+说明为什么在轻量化网络中加入 MABA，以及为什么选择 `pre_readout` 位置。
+
+### 页面内容
+
+- `DFA-IcoNet-Edge` 仍保留 IcoConv 后的因果 1D 卷积，但轻量化后在低 SNR、高混响和动态场景下可能出现跨帧响应不稳定。
+- `pre_readout MABA` 在 `final_block` 之后、`channel_readout` 之前进行 feature 级时序重整，用状态扫描补充固定窗口 1D 卷积的局部建模。
+- 该位置仍保留多通道和多 region 信息，能在读出前抑制跨帧尖峰和伪峰。
+- 当前确定扩展模型为 `DFA-IcoNet-Edge-MABA`。
+- MABA 是可选时序增强扩展，后续硬件映射需单独评估其资源代价。
+
+### 版式与占位
+
+- 中央绘制插入位置流程图：`Final block -> pre_readout MABA -> channel_readout -> region max -> CleanVertices -> SoftArgMax`。
+- 右侧用小模块图展示 MABA 内部：`Linear In -> Temporal Conv -> Gate/State Scan -> Linear Out -> Residual`。
+- 该页结构图可由 PPT 生成器绘制，不需要实验图表占位。
+
+## 9. 实验设置：模拟四场景 + LOCATA 真实数据
+
+### 页面目的
+
+统一说明实验口径，避免评委对数据来源和评价指标产生疑问。
+
+### 页面内容
+
+- 模拟四场景：用于验证不同 SNR/T60 条件下的声学环境鲁棒性。
+- 四种场景：`30dB/T60=0.2s`、`30dB/T60=0.8s`、`5dB/T60=0.8s`、`5dB/T60=1.4s`。
+- LOCATA 评测口径：`eval / benchmark2 / task1, task3, task5`。
+- 可用 recording：`task1=13`，`task3=5`，`task5=5`，合计 `23`。
+- 指标：recording-level RMSAE，分别统计 with silences 与 without silences。
+
+### 版式与占位
+
+- 左侧绘制“数据集与任务”信息卡。
+- 右侧绘制“模型对比对象”列表：`icoCNN baseline`、`DFA-IcoNet`、`DFA-IcoNet-Edge`、`DFA-IcoNet-Edge-MABA`。
+- 该页是实验设置说明表，可由 PPT 生成器绘制，不属于实验结果表。
+
+## 10. 核心结果：LOCATA 总体性能对比
+
+### 页面目的
+
+展示最重要的实验结论：完整模型提升精度，边缘模型大幅降规模后仍保持平均优势。
+
+### 页面内容
+
+- `DFA-IcoNet` 相对 `icoCNN baseline`：with silences average 改善 `1.3310 deg`，without silences average 改善 `0.9283 deg`。
+- `DFA-IcoNet-Edge` 相对 `icoCNN baseline`：with silences average 改善 `0.7136 deg`，without silences average 改善 `0.1221 deg`。
+- `DFA-IcoNet-Edge-MABA` 相对 `DFA-IcoNet-Edge`：without silences average 进一步改善 `0.1625 deg`。
+- 结论：`DFA-IcoNet-Edge` 是当前边缘候选主线，`MABA` 是小资源增量下的时序增强扩展。
+
+### 版式与占位
+
+- 【实验图表占位】页面中央偏上放一张大表占位框：此处放入“LOCATA 四模型总体结果表”。
+- 占位框内标明数据来源：`IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`。
+- 【实验图表占位】页面中央偏下放柱状图占位框：此处放入“with / without silences RMSAE 双柱状图，四个模型对比”。
+- PPT 生成器不要自动绘制表格或柱状图，只保留两个占位框。
+
+## 11. 分任务结果：Task1 / Task3 / Task5 稳定性观察
+
+### 页面目的
+
+说明模型在不同真实任务上的表现差异，突出 Task5 中 MABA 的价值。
+
+### 页面内容
+
+- Task1：相对简单，recording 数最多，适合观察总体稳定性。
+- Task3 / Task5：更能体现真实场景中的运动状态和声学差异。
+- `DFA-IcoNet` 作为完整宽度模型整体更稳定。
+- `DFA-IcoNet-Edge` 轻量化后仍保持总体平均优势，但部分任务存在波动。
+- `DFA-IcoNet-Edge-MABA` 的收益主要集中在 Task5：with silences Task5 mean 从 `11.8516` 降至 `11.2159`，without silences Task5 mean 从 `9.9599` 降至 `8.5478`。
+
+### 版式与占位
+
+- 【实验图表占位】整页采用 2 x 1 图表布局。
+- 上方占位框：此处放入“LOCATA Task1/Task3/Task5 with silences mean RMSAE 分任务柱状图”。
+- 下方占位框：此处放入“LOCATA Task1/Task3/Task5 without silences mean RMSAE 分任务柱状图”。
+- 占位框内标明数据来源：`IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`。
+- PPT 生成器不要自动绘制分任务柱状图。
+
+## 12. MABA 消融结果：时序增强的收益边界
+
+### 页面目的
+
+说明 MABA 的有效位置和收益边界，避免把 MABA 讲成所有任务无条件提升的模块。
+
+### 页面内容
+
+- `pre_readout MABA` 在读出前保留多通道、多 region 弱证据，更适合抑制复杂场景下的伪峰。
+- 模拟 `scene_4 (5dB/T60=1.4s)` 中，RMSAE 从 `17.9796 deg` 降到 `13.9095 deg`。
+- 模拟四场景 mean 从 `9.9787 deg` 降到 `8.5406 deg`。
+- hard mean 从 `14.2679 deg` 降到 `11.6980 deg`。
+- 结论：MABA 更像 hard-scene / 动态场景增强模块，而不是所有任务的均匀增益模块。
+
+### 版式与占位
+
+- 左侧放 `pre_readout MABA` 插入位置小流程图，可由 PPT 生成器绘制。
+- 【实验图表占位】右侧放消融结果表占位框：此处放入“DFA-IcoNet-Edge / map_maba / pre_readout / dual_refine 在 scene_4、four-scene mean、hard mean 和 LOCATA average 上的对比表”。
+- 占位框内标明数据来源：`IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`。
+- PPT 生成器不要自动生成消融表。
+
+## 13. 资源-精度折中：Params、MAC 与 RMSAE
+
+### 页面目的
+
+把算法结果自然过渡到边缘部署，突出 `DFA-IcoNet-Edge` 的取舍价值。
+
+### 页面内容
+
+- `DFA-IcoNet` 相对 baseline：参数量减少 `56.7%`，且 LOCATA 平均精度提升。
+- `DFA-IcoNet-Edge` 相对 `DFA-IcoNet`：参数量减少 `74.8%`，MAC 减少 `74.9%`。
+- `DFA-IcoNet-Edge` 相对 baseline：参数量减少 `89.1%`，同时 LOCATA 平均仍优于 baseline。
+- `DFA-IcoNet-Edge-MABA` 仅增加约 `2.5%` 参数和 `0.9%` MAC，带来一定平均精度补偿。
+- 结论：后续 FPGA/HLS 默认以 `DFA-IcoNet-Edge` 为主线，MABA 作为可选扩展评估。
+
+### 版式与占位
+
+- 【实验图表占位】左侧放资源-精度对比表占位框：此处放入“Params / MAC / RMSAE trade-off 表”。
+- 【实验图表占位】右侧放 Pareto 散点图占位框：此处放入“横轴 MAC 或 Params，纵轴 LOCATA average RMSAE，四模型 Pareto 图”。
+- 占位框内标明数据来源：`IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md`。
+- PPT 生成器不要自动生成 Pareto 图或资源表。
+
+## 14. Tracking 可视化：真实轨迹与预测轨迹对比
+
+### 页面目的
+
+用直观轨迹图辅助说明模型输出的时间连续性和真实数据表现。
+
+### 页面内容
+
+- 计划从 LOCATA `Task1 / Task3 / Task5` 中选择典型 recording。
+- 绘制 ground truth、baseline、`DFA-IcoNet`、`DFA-IcoNet-Edge`、`DFA-IcoNet-Edge-MABA` 的时间序列轨迹。
+- 优先展示 azimuth tracking 与 frame-level angular error。
+- 若 LOCATA tracking 图尚未生成，可暂用模拟场景 `trajectory_rmsae.png` 作为替代展示。
+- 该页用于增强直观性，不替代第 10-13 页的定量结论。
+
+### 版式与占位
+
+- 【实验图表占位】上方大图框：此处放入“LOCATA azimuth tracking，ground truth vs models”。
+- 【实验图表占位】下方大图框：此处放入“frame-level angular error 或 elevation tracking”。
+- 若未生成 LOCATA tracking 图，框内改写为：此处暂放模拟场景 `trajectory_rmsae.png`。
+- PPT 生成器不要自动绘制轨迹曲线。
+
+## 15. FPGA/HLS 设计目标：从算法收束到硬件映射
+
+### 页面目的
+
+说明为什么中期后半部分要进入硬件映射，并明确硬件工作边界。
+
+### 页面内容
+
+- 边缘部署不只看模型大小，还要看 DSP、BRAM、LUT、FF、延迟和吞吐。
+- `DFA-IcoNet` 作为精度参考，`DFA-IcoNet-Edge` 作为默认硬件映射候选。
+- 当前硬件重点放在二十面体网络后端 ConvIco / IcoConv，不宣称完整音频前端全链路上板。
+- 硬件设计围绕三个问题展开：数据组织、局部缓存、DSP MAC 复用。
+- 后续需要完成整网级资源预算和关键层 HLS 验证。
+
+### 版式与占位
+
+- 左侧绘制算法到硬件的映射箭头：`DFA-IcoNet-Edge -> ConvIco dataflow -> HLS resource budget -> FPGA deployment`。
+- 右侧列出硬件评价指标：`DSP / BRAM / LUT / FF / Latency / II`。
+- 该页不需要实验图表占位。
+
+## 16. ConvIco 硬件数据流与当前 HLS 基础
+
+### 页面目的
+
+展示硬件侧的技术核心，以及当前已有基础和风险。
+
+### 页面内容
+
+- ConvIco 数据流重点：`PadIco`、局部输入缓冲、权重展开、DSP MAC、output tile 归并。
+- `PadIco` 与重排映射器用于把复杂二十面体几何访问规则化。
+- 局部缓冲减少大数组访问导致的端口冲突。
+- DSP-aware MAC 路径承担主要乘加计算。
+- 当前已有 layer0 / layer1 / layer2-5 的 HLS 工程与阶段性资源报告，但整网级资源闭合尚未完成。
+
+### 版式与占位
+
+- 左侧绘制 ConvIco 数据流框图：`Feature Buffer -> Geometry/PadIco -> Local Buffer -> DSP MAC -> Output Head`。
+- 【实验图表占位】右侧放 HLS 资源快照表占位框：此处放入“layer0 / layer1 / layer2-5 的 BRAM、DSP、FF、LUT、Latency 资源表”。
+- 占位框内可标明参考来源：`hls_src/hls_reports/latest_summary.md`、`hls_src/hls_reports/layer1_latest_summary.md`、`hls_src/hls_reports/layer2_5_latest_summary.md`。
+- PPT 生成器不要自动生成 HLS 资源数据表。
+
+## 17. 后续计划：补图、资源预算与论文撰写
+
+### 页面目的
+
+给出中期之后的工作安排，让评委看到可执行的收尾路径。
+
+### 页面内容
+
+- 算法侧：固化最终模型口径，补充 LOCATA tracking 可视化，继续解释与相关论文最好结果之间的 gap。
+- 图表侧：生成分任务柱状图、资源-精度 Pareto 图、MABA 消融表和 tracking 图。
+- 硬件侧：以 `DFA-IcoNet-Edge` 做整网资源预算，对接 layer1 / layer2-5 HLS 数据流。
+- 论文侧：完成算法实验章节，补充硬件架构与后续实现章节。
+- 风险控制：明确前端是否进入硬件实现边界，避免把未完成工作表述成已完成。
+
+### 版式与占位
+
+- 使用四象限任务矩阵：`算法补充`、`图表生成`、`HLS 预算`、`论文撰写`。
+- 也可使用横向时间线：`中期后 1-2 周`、`3-4 周`、`5-6 周`、`论文定稿前`。
+- 该页不需要实验图表占位。
+
+## 18. 总结页：完成度、创新点与下一阶段交付
+
+### 页面目的
+
+回扣主线，形成答辩结束页。
+
+### 页面内容
+
+- 已完成：`PHAT + LMS` 双特征前端、双分支注意力融合网络、LOCATA 统一口径评测、边缘轻量化候选验证。
+- 当前结果：`DFA-IcoNet` 提升定位精度，`DFA-IcoNet-Edge` 在大幅压缩后仍保持平均优势。
+- 创新点 1：双特征二十面体输入与注意力融合结构。
+- 创新点 2：面向 IcoConv 主瓶颈的规则稠密轻量化设计。
+- 创新点 3：面向 FPGA/HLS 的 ConvIco 数据流与资源闭合规划。
+- 下一阶段交付：完整实验图表、tracking 可视化、整网 HLS 资源预算、毕业论文实验与硬件章节。
+
+### 版式与占位
+
+- 使用三栏总结：`已完成`、`当前创新`、`下一阶段交付`。
+- 页脚回扣一句：本课题不是单纯复现 IFAN，而是在 `icoCNN` baseline 上完成面向边缘部署的算法与硬件收束。
+- 该页不需要实验图表占位。
+
+## 实验图表占位索引
+
+| 页码 | 占位内容 | 建议位置 | 来源或后续插入内容 |
+| --- | --- | --- | --- |
+| 5 | 双特征投影图 | 右侧上下两个小图框 | `IFAN_Edge/outputs/stage1_features/scene_1/feature_maps_projection_contrast.png`，`scene_4/feature_maps_projection_contrast.png` |
+| 10 | LOCATA 四模型总体结果表 | 页面中央偏上 | `IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md` |
+| 10 | with / without silences 双柱状图 | 页面中央偏下 | 后续根据 LOCATA 结果生成图片 |
+| 11 | 分任务 RMSAE 柱状图 | 上下两张大图 | 后续根据 LOCATA Task1/3/5 结果生成图片 |
+| 12 | MABA 消融结果表 | 右侧大表框 | `IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md` |
+| 13 | 资源-精度 trade-off 表 | 左侧 | `IFAN_Edge/outputs/stage3/analysis/locata_four_model_compare.md` |
+| 13 | Params/MAC-RMSAE Pareto 图 | 右侧 | 后续根据四模型数据生成图片 |
+| 14 | LOCATA tracking 图 | 上下两张大图 | 后续生成 azimuth/elevation 或 frame-level error 图片 |
+| 16 | HLS 资源快照表 | 右侧 | `hls_src/hls_reports/latest_summary.md` 等 HLS 报告 |
+
+## 给 PPT 生成器的最终提示词

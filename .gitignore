@@ -25,3 +25,5 @@ IFAN_Edge/outputs/stage1_features/locata_task3_source_standard_four_scenes_stron
 # One-off stage1 visualization scripts not selected for upload.
 IFAN_Edge/scripts/visualize_stage1_locata_controlled_scenarios.py
 IFAN_Edge/scripts/visualize_stage1_locata_standard_scenarios.py
+相关参考论文
+paper_rewriting_output
