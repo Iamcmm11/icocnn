@@ -127,8 +127,8 @@ def ifan_paper_style_summary(config: IFANModelConfig) -> dict[str, object]:
     charts = 5
     height = 2**config.r
     width = 2 ** (config.r + 1)
-    pooled_height = max(height // 2, 1) if config.r > 1 else height
-    pooled_width = max(width // 2, 1) if config.r > 1 else width
+    pooled_height = max(height // 2, 1) if config.pre_fusion_pooling and config.r > 1 else height
+    pooled_width = max(width // 2, 1) if config.pre_fusion_pooling and config.r > 1 else width
     channels = config.branch_channels
 
     temporal_fn = (
@@ -198,6 +198,7 @@ def ifan_summary(config: IFANModelConfig) -> dict[str, object]:
             "aux_in_channels": config.aux_in_channels,
             "aux_feature_name": "LMS",
             "branch_channels": config.branch_channels,
+            "pre_fusion_pooling": config.pre_fusion_pooling,
             "final_head_pooling": config.final_head_pooling,
             "smooth_vertices": config.smooth_vertices,
             "temporal_conv_variant": config.temporal_conv_variant,
@@ -273,6 +274,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", choices=("all", "baseline", "ifan"), default="all")
     parser.add_argument("--r", type=int, default=2)
     parser.add_argument("--branch-channels", type=int, default=PAPER_IFAN_BRANCH_CHANNELS)
+    parser.add_argument("--no-pre-fusion-pooling", action="store_true")
     parser.add_argument("--temporal-conv-variant", choices=("standard_1d", "depthwise_separable_1d"), default="standard_1d")
     parser.add_argument("--librispeech-path", default="datasets/LibriSpeech")
     parser.add_argument("--signal-length", type=int, default=2)
@@ -296,6 +298,7 @@ def main() -> None:
             phat_in_channels=1,
             aux_in_channels=1,
             branch_channels=args.branch_channels,
+            pre_fusion_pooling=not args.no_pre_fusion_pooling,
             final_head_pooling=False,
             temporal_conv_variant=args.temporal_conv_variant,
         )

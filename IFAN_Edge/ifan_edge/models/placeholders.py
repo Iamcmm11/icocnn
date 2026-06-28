@@ -23,6 +23,7 @@ class IFANModelConfig:
     aux_in_channels: int = 1
     branch_channels: int = PAPER_IFAN_BRANCH_CHANNELS
     smooth_vertices: bool = True
+    pre_fusion_pooling: bool = True
     final_head_pooling: bool = False
     temporal_conv_variant: str = "standard_1d"
     map_refiner: str = "none"
@@ -30,6 +31,7 @@ class IFANModelConfig:
     map_maba: MapMABATemporalConfig = field(default_factory=MapMABATemporalConfig)
     weak_map_refiner: str = "none"
     weak_map_maba: MapMABATemporalConfig = field(default_factory=lambda: MapMABATemporalConfig(d_model=8, state_dim=4, dropout=0.0, use_state=False))
+    legacy_frontend_residual: bool = False
 
     @property
     def fused_channels(self) -> int:
@@ -63,18 +65,24 @@ class IFANModelConfig:
 class ResidualLearningModule(nn.Module):
     """Residual feature enhancement module used inside each frontend branch."""
 
-    def __init__(self, r: int, channels: int, smooth_vertices: bool = True):
+    def __init__(self, r: int, channels: int, smooth_vertices: bool = True, legacy_norm: bool = False):
         super().__init__()
+        self.legacy_norm = bool(legacy_norm)
         self.conv1 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
         self.conv2 = icoCNN.ConvIco(r, channels, channels, 6, 6, smooth_vertices=smooth_vertices)
-        self.norm = icoCNN.LNormIco(channels, 6)
+        if self.legacy_norm:
+            self.norm = icoCNN.LNormIco(channels, 6)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
         x = torch.relu(self.conv1(x))
+        if self.legacy_norm:
+            x = self.conv2(x)
+            x = self.norm(x)
+            return torch.relu(x + residual)
+        x = x + residual
         x = self.conv2(x)
-        x = self.norm(x)
-        return torch.relu(x + residual)
+        return x + residual
 
 
 class FeatureAttentionWeightModule(nn.Module):
@@ -110,6 +118,7 @@ class FrontendFeatureBranch(nn.Module):
             r=config.r,
             channels=config.branch_channels,
             smooth_vertices=config.smooth_vertices,
+            legacy_norm=config.legacy_frontend_residual,
         )
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -263,8 +272,9 @@ class IFANModel(nn.Module):
             smooth_vertices=config.smooth_vertices,
         )
 
-        self.pre_fusion_pool = icoCNN.PoolIco(config.r, 6, smooth_vertices=config.smooth_vertices) if config.r > 1 else None
-        self.fusion_r = config.r - 1 if config.r > 1 else config.r
+        use_pre_fusion_pool = bool(config.pre_fusion_pooling and config.r > 1)
+        self.pre_fusion_pool = icoCNN.PoolIco(config.r, 6, smooth_vertices=config.smooth_vertices) if use_pre_fusion_pool else None
+        self.fusion_r = config.r - 1 if use_pre_fusion_pool else config.r
 
         self.fusion_blocks = nn.ModuleList(
             [

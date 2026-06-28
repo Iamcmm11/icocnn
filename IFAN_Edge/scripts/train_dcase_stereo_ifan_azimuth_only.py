@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--micro-batch-size", type=int, default=None)
     parser.add_argument("--eval-batch-size", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
+    parser.add_argument("--channel-swap-augmentation", action="store_true", help="Enable random stereo channel swap during training.")
+    parser.add_argument("--no-channel-swap-augmentation", action="store_true", help="Disable random stereo channel swap during training.")
+    parser.add_argument("--channel-swap-probability", type=float, default=None)
+    parser.add_argument("--edge-weight", type=float, default=None)
+    parser.add_argument("--edge-weight-threshold-deg", type=float, default=None)
     parser.add_argument("--train-limit", type=int, default=None)
     parser.add_argument("--validation-limit", type=int, default=None)
     parser.add_argument("--test-limit", type=int, default=None)
@@ -59,6 +64,18 @@ def main() -> None:
         config.eval_batch_size = int(args.eval_batch_size)
     if args.lr is not None:
         config.lr = float(args.lr)
+    if args.channel_swap_augmentation and args.no_channel_swap_augmentation:
+        raise ValueError("Use at most one of --channel-swap-augmentation and --no-channel-swap-augmentation.")
+    if args.channel_swap_augmentation:
+        config.channel_swap_augmentation = True
+    if args.no_channel_swap_augmentation:
+        config.channel_swap_augmentation = False
+    if args.channel_swap_probability is not None:
+        config.channel_swap_probability = float(args.channel_swap_probability)
+    if args.edge_weight is not None:
+        config.edge_weight = float(args.edge_weight)
+    if args.edge_weight_threshold_deg is not None:
+        config.edge_weight_threshold_deg = float(args.edge_weight_threshold_deg)
     if args.output_suffix is not None:
         config.output_suffix = str(args.output_suffix)
 

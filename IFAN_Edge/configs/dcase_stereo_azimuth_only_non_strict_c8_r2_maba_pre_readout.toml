@@ -1,0 +1,81 @@
+[project]
+stage_name = "dcase_stereo_stage_03_non_strict"
+experiment_name = "dcase_stereo_ifan_azimuth_only"
+
+[runtime]
+seed = 42
+device = "cuda"
+output_suffix = "non_strict_speech_run20_bg"
+
+[paths]
+output_root = "IFAN_Edge/outputs/dcase_stage3"
+analysis_output_root = "IFAN_Edge/outputs/stage3/analysis"
+dataset_root = "datasets/DCASE2025_Task3"
+train_manifest = "datasets/DCASE2025_Task3/locata_like/manifest_all.csv"
+test_manifest = "datasets/DCASE2025_Task3/locata_like_devtest/manifest_all.csv"
+train_splits = ["dev-train-sony", "dev-train-tau"]
+ifan_init_checkpoint_path = "IFAN_Edge/outputs/dcase_stage3/dcase_stereo_ifan_azimuth_only_stage2_azimuth_only_run30_bg_20260614_172251/checkpoints/best_doa_error.pt"
+
+[data]
+validation_fraction = 0.1
+validation_min_per_bucket = 1
+fs = 16000
+k = 4096
+step = 3072
+stereo_baseline_m = 0.08
+exclude_initial_windows = 5
+apply_vad = true
+lms_order = 64
+lms_step_size = 0.01
+lms_map_normalize = true
+lms_map_mode = "tau_sample"
+lms_peak_sigma = 2.0
+lms_update_mode = "trajectory_tracking"
+lms_normalized = false
+lms_include_self_pairs = true
+lms_backend = "frequency_block"
+lms_block_size = 256
+srp_variant = "paper_original"
+phat_sinc_half_width = 0
+
+[model]
+r = 2
+branch_channels = 8
+final_head_pooling = false
+smooth_vertices = true
+map_refiner = "maba"
+map_refiner_position = "pre_readout"
+
+[map_maba]
+d_model = 16
+state_dim = 8
+conv_kernel = 3
+dropout = 0.1
+use_residual = true
+use_gate = true
+use_state = true
+
+[azimuth_head]
+hidden_dim = 32
+dropout = 0.1
+
+[augmentation]
+channel_swap_augmentation = false
+channel_swap_probability = 0.0
+
+[loss]
+edge_weight = 1.0
+edge_weight_threshold_deg = 60.0
+
+[training]
+epochs = 20
+batch_size = 8
+micro_batch_size = 2
+eval_batch_size = 32
+lr = 2e-5
+weight_decay = 0.0
+checkpoint_every = 5
+experiment_role = "dcase_stereo_azimuth_only_non_strict_speech_init_from_stage2_best"
+
+[notes]
+summary = "Broaden DCASE training and evaluation from the speech-only strict single-source-id subset to the speech-only non-strict LOCATA-like subset, while keeping the Stage-2 azimuth-only topology, optimizer scale, and evaluation pipeline unchanged."

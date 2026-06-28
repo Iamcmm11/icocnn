@@ -78,9 +78,11 @@ def test_stage3_default_contract_matches_locked_mainline() -> None:
     assert config.srp_variant == "paper_original"
     assert config.temporal_conv_variant == "standard_1d"
     assert config.temporal_module == "conv"
+    assert config.pre_fusion_pooling is True
 
     contract = config.experiment_contract()
     assert contract["experiment_role"] == "mainline_baseline"
+    assert contract["pre_fusion_pooling"] is True
     assert contract["lightweight_gate"]["ready_delta_deg"] == pytest.approx(0.3)
 
 
@@ -138,6 +140,26 @@ def test_stage3_ifan_debug_shapes_and_parameter_target() -> None:
     assert debug["attention"]["phat"].shape == (2, 6, 16, 6, 5, 4, 8)
     assert debug["attention"]["lms"].shape == (2, 6, 16, 6, 5, 4, 8)
     assert abs(model.count_parameters(trainable_only=True) - PAPER_IFAN_PARAM_TARGET) <= 64
+
+
+def test_stage3_ifan_can_keep_fusion_at_input_resolution_without_poolico() -> None:
+    pooled = IFANModel(IFANModelConfig(r=2, final_head_pooling=False))
+    model = IFANModel(IFANModelConfig(r=2, pre_fusion_pooling=False, final_head_pooling=False))
+    x = torch.randn(2, model.expected_input_channels(), 6, 5, 4, 8)
+
+    coords, debug = model(x, return_debug=True)
+
+    assert coords.shape == (2, 6, 3)
+    assert model.pre_fusion_pool is None
+    assert model.fusion_r == 2
+    assert model.output_r == 2
+    assert debug["post_second_fusion"].shape == (2, 6, 16, 6, 5, 4, 8)
+    assert debug["fusion_feature"].shape == (2, 6, 16, 6, 5, 4, 8)
+    assert all(block.shape == (2, 6, 16, 6, 5, 4, 8) for block in debug["fusion_head_blocks"])
+    assert debug["channel_readout_logits"].shape == (2, 6, 1, 6, 5, 4, 8)
+    assert debug["softargmax_input"].shape == (2, 6, 5, 4, 8)
+    assert model.count_parameters(trainable_only=True) == pooled.count_parameters(trainable_only=True)
+    assert model.mac_proxy((1, 2, 6, 5, 4, 8))["total"] > pooled.mac_proxy((1, 2, 6, 5, 4, 8))["total"]
 
 
 def test_stage3_ifan_backward_produces_finite_nonzero_gradients() -> None:
