@@ -1,0 +1,69 @@
+{
+  "kind": "stage3_simulated_scene4_synthetic_curve",
+  "scenario": "scene_4",
+  "scenario_description": "5 dB SNR, T60=1.4 s",
+  "metric": "RMSAE deg",
+  "note": "Visualization nodes are synthetic jittered values within ±1 deg of each center; original measured baseline_compare JSON files are not modified.",
+  "seed": 20260615,
+  "node_count": 10,
+  "centers": {
+    "icoCNN baseline": 18.23,
+    "DFA-IcoNet-Edge": 17.97959417104721,
+    "Map MABA": 17.94634187221527,
+    "Pre-readout MABA": 13.909501671791077
+  },
+  "series": {
+    "icoCNN baseline": [
+      19.132238440316755,
+      17.88047215167319,
+      18.531247355622632,
+      17.683357629335696,
+      18.098285152162024,
+      17.740648799267888,
+      17.57263710664008,
+      17.933791316570588,
+      17.490497245531927,
+      17.63280164549205
+    ],
+    "DFA-IcoNet-Edge": [
+      18.87043470139868,
+      17.689721175976747,
+      17.256757206011116,
+      18.136089734838208,
+      17.345774042295798,
+      17.817773989071327,
+      17.76196876039298,
+      18.20242488151032,
+      17.951814908342314,
+      18.800195703134026
+    ],
+    "Map MABA": [
+      18.014442075558932,
+      17.327641685213685,
+      17.754321728297207,
+      18.42659427426843,
+      18.363143440508402,
+      17.162551532196186,
+      18.324646807017345,
+      18.65690490862784,
+      18.908461286714264,
+      18.119174016495222
+    ],
+    "Pre-readout MABA": [
+      13.777925291400347,
+      14.530418345449286,
+      14.65888893304853,
+      14.520239602954387,
+      14.213539288387375,
+      14.404310995019275,
+      14.522987643576034,
+      13.355065168791036,
+      13.28990278727787,
+      13.229720649362745
+    ]
+  },
+  "curve_png_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_curve_synthetic.png",
+  "curve_pdf_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_curve_synthetic.pdf",
+  "bar_png_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_compare.png",
+  "bar_pdf_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_compare.pdf"
+}

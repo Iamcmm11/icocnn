@@ -83,6 +83,7 @@ class IFANTrainingConfig:
     step: int = 3072
     r: int = 2
     branch_channels: int = PAPER_IFAN_BRANCH_CHANNELS
+    pre_fusion_pooling: bool = True
     final_head_pooling: bool = False
     smooth_vertices: bool = True
     map_refiner: str = "none"
@@ -209,6 +210,7 @@ class IFANTrainingConfig:
             step=int(data.get("step", cls.step)),
             r=int(model.get("r", cls.r)),
             branch_channels=int(model.get("branch_channels", cls.branch_channels)),
+            pre_fusion_pooling=bool(model.get("pre_fusion_pooling", cls.pre_fusion_pooling)),
             final_head_pooling=bool(model.get("final_head_pooling", cls.final_head_pooling)),
             smooth_vertices=bool(model.get("smooth_vertices", cls.smooth_vertices)),
             map_refiner=str(model.get("map_refiner", cls.map_refiner)),
@@ -294,7 +296,7 @@ class IFANTrainingConfig:
 
     def model_config(self) -> IFANModelConfig:
         charts = 5
-        fusion_r = self.r - 1 if self.r > 1 else self.r
+        fusion_r = self.r - 1 if self.pre_fusion_pooling and self.r > 1 else self.r
         output_r = fusion_r - 1 if self.final_head_pooling else fusion_r
         spatial_h = 2**output_r
         spatial_w = 2 ** (output_r + 1)
@@ -304,6 +306,7 @@ class IFANTrainingConfig:
             aux_in_channels=1,
             branch_channels=self.branch_channels,
             smooth_vertices=self.smooth_vertices,
+            pre_fusion_pooling=self.pre_fusion_pooling,
             final_head_pooling=self.final_head_pooling,
             temporal_conv_variant=self.temporal_conv_variant,
             map_refiner=self.map_refiner,
@@ -322,6 +325,7 @@ class IFANTrainingConfig:
             "experiment_role": self.experiment_role,
             "model_topology": "paper_dual_mainline",
             "branch_channels": self.branch_channels,
+            "pre_fusion_pooling": self.pre_fusion_pooling,
             "feature_pair": "phat+lms",
             "srp_variant": self.srp_variant,
             "map_refiner": self.map_refiner,
@@ -740,6 +744,7 @@ class IFANTrainingPipeline:
 	            "model_config": {
 	                "r": self.model_config.r,
 	                "branch_channels": self.model_config.branch_channels,
+	                "pre_fusion_pooling": self.model_config.pre_fusion_pooling,
 	                "final_head_pooling": self.model_config.final_head_pooling,
 	                "smooth_vertices": self.model_config.smooth_vertices,
 	                "temporal_conv_variant": self.model_config.temporal_conv_variant,
@@ -842,6 +847,7 @@ class IFANTrainingPipeline:
                     "epochs": self.config.epochs,
                     "model_topology": "paper_dual_mainline",
                     "branch_channels": self.model_config.branch_channels,
+                    "pre_fusion_pooling": self.model_config.pre_fusion_pooling,
                     "final_head_pooling": self.model_config.final_head_pooling,
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "srp_variant": self.config.srp_variant,
@@ -1077,6 +1083,7 @@ class IFANTrainingPipeline:
 	                    "model_config": {
 	                        "r": self.model_config.r,
 	                        "branch_channels": self.model_config.branch_channels,
+	                        "pre_fusion_pooling": self.model_config.pre_fusion_pooling,
 	                        "final_head_pooling": self.model_config.final_head_pooling,
 	                        "smooth_vertices": self.model_config.smooth_vertices,
 	                        "temporal_conv_variant": self.model_config.temporal_conv_variant,
@@ -1116,6 +1123,7 @@ class IFANTrainingPipeline:
                     "validation_split_path": str(val_split_path),
                     "model_topology": "paper_dual_mainline",
                     "branch_channels": self.model_config.branch_channels,
+                    "pre_fusion_pooling": self.model_config.pre_fusion_pooling,
                     "final_head_pooling": self.model_config.final_head_pooling,
                     "input_ablation_mode": self.config.input_ablation_mode,
                     "experiment_role": self.config.experiment_role,
@@ -1269,6 +1277,7 @@ class IFANTrainingPipeline:
             "epochs": self.config.epochs,
             "model_topology": "paper_dual_mainline",
             "branch_channels": self.model_config.branch_channels,
+            "pre_fusion_pooling": self.model_config.pre_fusion_pooling,
             "final_head_pooling": self.model_config.final_head_pooling,
             "input_ablation_mode": self.config.input_ablation_mode,
 	            "srp_variant": self.config.srp_variant,

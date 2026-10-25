@@ -92,6 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--input-ablation-mode", choices=("none", "phat_only", "lms_only"), default=None)
     parser.add_argument("--branch-channels", type=int, default=None, help="Override IFAN branch width for lightweight experiments.")
+    parser.add_argument("--no-pre-fusion-pooling", action="store_true", help="Keep the fusion head at the input icosahedral resolution instead of applying PoolIco before fusion blocks.")
     parser.add_argument("--final-head-pooling", action="store_true", help="Apply the optional final pooling stage before SoftArgMax.")
     parser.add_argument("--map-refiner", choices=("none", "maba"), default=None, help="Optional map-level temporal refiner inserted before SoftArgMax.")
     parser.add_argument("--map-refiner-position", choices=("pre_softargmax", "pre_readout"), default=None, help="Insertion point for the optional MABA refiner.")
@@ -179,6 +180,8 @@ def main() -> None:
         config.input_ablation_mode = str(args.input_ablation_mode)
     if args.branch_channels is not None:
         config.branch_channels = int(args.branch_channels)
+    if args.no_pre_fusion_pooling:
+        config.pre_fusion_pooling = False
     if args.final_head_pooling:
         config.final_head_pooling = True
     if args.map_refiner is not None:

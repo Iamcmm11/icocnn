@@ -1,0 +1,30 @@
+{
+  "kind": "stage3_locata_tracking",
+  "generated_at": "2026-06-15T23:20:43",
+  "subset": "eval",
+  "subset_path": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval",
+  "array": "benchmark2",
+  "task": 5,
+  "recording": "recording3",
+  "device": "cuda",
+  "angle": "azimuth",
+  "frame_count": 242,
+  "plot_frame_count": 242,
+  "plot_start_sec": null,
+  "plot_seconds": null,
+  "png_path": "IFAN_Edge/outputs/stage3/analysis/locata_tracking/task5_recording3_benchmark2_dfa_iconet_edge_tracking.png",
+  "pdf_path": "IFAN_Edge/outputs/stage3/analysis/locata_tracking/task5_recording3_benchmark2_dfa_iconet_edge_tracking.pdf",
+  "checkpoints": [
+    {
+      "label": "DFA-IcoNet-Edge",
+      "checkpoint": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_c8_paper_original_20260505_222115/checkpoints/best_rmsae.pt"
+    }
+  ],
+  "metrics": [
+    {
+      "label": "DFA-IcoNet-Edge",
+      "with_silences_rmsae_deg": 14.25067138671875,
+      "without_silences_rmsae_deg": 8.562884330749512
+    }
+  ]
+}

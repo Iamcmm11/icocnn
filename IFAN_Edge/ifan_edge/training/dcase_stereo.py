@@ -16,6 +16,7 @@ from ..dcase_stereo import (
     PreparedDcaseClip,
     aggregate_reports,
     build_active_mask_tensor,
+    build_edge_weight_tensor,
     build_folded_azimuth_sincos_tensor,
     build_model_config,
     build_report,
@@ -232,6 +233,10 @@ class DcaseStereoAzimuthOnlyTrainingConfig(DcaseStereoTrainingConfig):
     epochs: int = 30
     experiment_role: str = "dcase_stereo_azimuth_only_c8_r2_maba_pre_readout_init_from_stage1_dcase80"
     azimuth_head: DcaseAzimuthHeadConfig = field(default_factory=DcaseAzimuthHeadConfig)
+    channel_swap_augmentation: bool = False
+    channel_swap_probability: float = 0.5
+    edge_weight: float = 1.0
+    edge_weight_threshold_deg: float = 60.0
 
     @classmethod
     def from_toml(cls, path: str | Path) -> "DcaseStereoAzimuthOnlyTrainingConfig":
@@ -239,7 +244,32 @@ class DcaseStereoAzimuthOnlyTrainingConfig(DcaseStereoTrainingConfig):
         with Path(path).open("rb") as handle:
             raw = tomli.load(handle)
         config.azimuth_head = DcaseAzimuthHeadConfig.from_mapping(raw.get("azimuth_head", {}))
+        augmentation = raw.get("augmentation", {})
+        loss = raw.get("loss", {})
+        config.channel_swap_augmentation = bool(
+            augmentation.get("channel_swap_augmentation", cls.channel_swap_augmentation)
+        )
+        config.channel_swap_probability = float(
+            augmentation.get("channel_swap_probability", cls.channel_swap_probability)
+        )
+        config.edge_weight = float(loss.get("edge_weight", cls.edge_weight))
+        config.edge_weight_threshold_deg = float(loss.get("edge_weight_threshold_deg", cls.edge_weight_threshold_deg))
+        config.validate_stage2_5_options()
         return config
+
+    def validate_stage2_5_options(self) -> None:
+        if not 0.0 <= float(self.channel_swap_probability) <= 1.0:
+            raise ValueError(
+                "channel_swap_probability must be in [0, 1], "
+                f"got {self.channel_swap_probability!r}."
+            )
+        if float(self.edge_weight) <= 0.0:
+            raise ValueError(f"edge_weight must be positive, got {self.edge_weight!r}.")
+        if not 0.0 <= float(self.edge_weight_threshold_deg) <= 90.0:
+            raise ValueError(
+                "edge_weight_threshold_deg must be in [0, 90], "
+                f"got {self.edge_weight_threshold_deg!r}."
+            )
 
     def experiment_contract(self) -> dict[str, Any]:
         payload = super().experiment_contract()
@@ -248,6 +278,10 @@ class DcaseStereoAzimuthOnlyTrainingConfig(DcaseStereoTrainingConfig):
                 "model_topology": "dcase_azimuth_only_ifan",
                 "target_mode": "folded_azimuth_sincos",
                 "azimuth_head": self.azimuth_head.to_dict(),
+                "channel_swap_augmentation": bool(self.channel_swap_augmentation),
+                "channel_swap_probability": float(self.channel_swap_probability),
+                "edge_weight": float(self.edge_weight),
+                "edge_weight_threshold_deg": float(self.edge_weight_threshold_deg),
             }
         )
         return payload
@@ -266,6 +300,11 @@ def serialize_model_config(model_config: IFANModelConfig) -> dict[str, Any]:
         "weak_map_refiner": model_config.weak_map_refiner,
         "weak_map_maba": asdict(model_config.weak_map_maba),
     }
+
+
+def analysis_name_from_manifest(manifest_path: str | Path) -> str:
+    manifest = Path(manifest_path)
+    return manifest.parent.name or manifest.stem
 
 
 class DcaseStereoTrainer:
@@ -576,7 +615,7 @@ class DcaseStereoTrainer:
                 flush=True,
             ),
         )
-        analysis_output_name = f"dcase2025_locata_like_devtest_strict_{output_dir.name}.json"
+        analysis_output_name = f"dcase2025_{analysis_name_from_manifest(self.config.test_manifest)}_{output_dir.name}.json"
         analysis_output_path = Path(self.config.analysis_output_root) / analysis_output_name
         test_report = build_report(
             reports=test_reports,
@@ -652,6 +691,7 @@ class DcaseStereoAzimuthOnlyTrainer(DcaseStereoTrainer):
         validation_limit: int | None = None,
         test_limit: int | None = None,
     ):
+        config.validate_stage2_5_options()
         super().__init__(
             config,
             train_limit=train_limit,
@@ -685,6 +725,14 @@ class DcaseStereoAzimuthOnlyTrainer(DcaseStereoTrainer):
                 micro_indices = group_indices[micro_start : micro_start + micro_batch_size]
                 micro_clips = [train_clips[int(index)] for index in micro_indices]
                 mic_batch = np.stack([clip.windows for clip in micro_clips], axis=0)
+                channel_swap_mask = None
+                if self.config.channel_swap_augmentation and self.config.channel_swap_probability > 0.0:
+                    channel_swap_mask = (
+                        np.random.random(len(micro_clips)) < float(self.config.channel_swap_probability)
+                    )
+                    if np.any(channel_swap_mask):
+                        mic_batch = mic_batch.copy()
+                        mic_batch[channel_swap_mask] = mic_batch[channel_swap_mask][:, :, ::-1, :].copy()
                 scenes = [clip.scene for clip in micro_clips]
                 with torch.no_grad():
                     maps, _ = preprocessor.data_transformation(mic_batch, scenes)
@@ -697,11 +745,20 @@ class DcaseStereoAzimuthOnlyTrainer(DcaseStereoTrainer):
                 target_sincos = build_folded_azimuth_sincos_tensor(
                     micro_clips,
                     device=pred_sincos.device,
+                    channel_swap_mask=channel_swap_mask,
+                )
+                edge_weights = build_edge_weight_tensor(
+                    micro_clips,
+                    device=pred_sincos.device,
+                    edge_weight=float(self.config.edge_weight),
+                    edge_threshold_deg=float(self.config.edge_weight_threshold_deg),
+                    channel_swap_mask=channel_swap_mask,
                 )
                 loss = masked_sincos_loss(
                     pred_sincos=pred_sincos,
                     target_sincos=target_sincos,
                     active_mask=active_mask,
+                    weights=edge_weights,
                 )
                 scaled_loss = loss * (float(len(micro_clips)) / float(group_items))
                 scaled_loss.backward()
@@ -901,7 +958,7 @@ class DcaseStereoAzimuthOnlyTrainer(DcaseStereoTrainer):
                 flush=True,
             ),
         )
-        analysis_output_name = f"dcase2025_locata_like_devtest_strict_{output_dir.name}.json"
+        analysis_output_name = f"dcase2025_{analysis_name_from_manifest(self.config.test_manifest)}_{output_dir.name}.json"
         analysis_output_path = Path(self.config.analysis_output_root) / analysis_output_name
         test_report = build_report(
             reports=test_reports,

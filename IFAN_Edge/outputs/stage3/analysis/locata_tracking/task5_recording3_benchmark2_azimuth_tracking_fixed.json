@@ -1,0 +1,53 @@
+{
+  "kind": "stage3_locata_tracking",
+  "generated_at": "2026-06-15T23:03:02",
+  "subset": "eval",
+  "subset_path": "/home/cmm/icocnn/datasets/LOCATA/LOCATA/eval",
+  "array": "benchmark2",
+  "task": 5,
+  "recording": "recording3",
+  "device": "cuda",
+  "angle": "azimuth",
+  "frame_count": 242,
+  "plot_frame_count": 242,
+  "plot_start_sec": null,
+  "plot_seconds": null,
+  "png_path": "IFAN_Edge/outputs/stage3/analysis/locata_tracking/task5_recording3_benchmark2_azimuth_tracking_fixed.png",
+  "pdf_path": "IFAN_Edge/outputs/stage3/analysis/locata_tracking/task5_recording3_benchmark2_azimuth_tracking_fixed.pdf",
+  "checkpoints": [
+    {
+      "label": "DFA-IcoNet",
+      "checkpoint": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_freqblock_paper_original_20260426_155330/checkpoints/best_rmsae.pt"
+    },
+    {
+      "label": "DFA-IcoNet-Edge",
+      "checkpoint": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_c8_paper_original_20260505_222115/checkpoints/best_rmsae.pt"
+    },
+    {
+      "label": "DFA-IcoNet-Edge-MABA",
+      "checkpoint": "IFAN_Edge/outputs/stage3/ifan_stage3_long80_c8_r2_maba_pre_readout_20260518_215408/checkpoints/best_rmsae.pt"
+    }
+  ],
+  "metrics": [
+    {
+      "label": "icoCNN baseline",
+      "with_silences_rmsae_deg": 14.655278205871582,
+      "without_silences_rmsae_deg": 8.901735305786133
+    },
+    {
+      "label": "DFA-IcoNet",
+      "with_silences_rmsae_deg": 13.771503448486328,
+      "without_silences_rmsae_deg": 8.449399948120117
+    },
+    {
+      "label": "DFA-IcoNet-Edge",
+      "with_silences_rmsae_deg": 14.25067138671875,
+      "without_silences_rmsae_deg": 8.562884330749512
+    },
+    {
+      "label": "DFA-IcoNet-Edge-MABA",
+      "with_silences_rmsae_deg": 13.66503620147705,
+      "without_silences_rmsae_deg": 8.145956993103027
+    }
+  ]
+}

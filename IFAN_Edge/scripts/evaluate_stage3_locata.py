@@ -479,11 +479,19 @@ def main() -> None:
         recording_filter=recording_filter,
     )
 
-    ifan_model = IFANModel(pipeline.model_config)
     model_state_dict = remap_legacy_map_refiner_keys(
         checkpoint["model_state_dict"],
         model_config=pipeline.model_config,
     )
+    legacy_norm_keys = [
+        "phat_branch.residual.norm.weight",
+        "phat_branch.residual.norm.bias",
+        "aux_branch.residual.norm.weight",
+        "aux_branch.residual.norm.bias",
+    ]
+    if any(key in model_state_dict for key in legacy_norm_keys):
+        pipeline.model_config.legacy_frontend_residual = True
+    ifan_model = IFANModel(pipeline.model_config)
     ifan_model.load_state_dict(model_state_dict)
     ifan_model.to(device)
     ifan_model.eval()
@@ -521,6 +529,7 @@ def main() -> None:
             "lms_backend": str(config.lms_backend),
             "lms_map_mode": str(config.lms_map_mode),
             "lms_update_mode": str(config.lms_update_mode),
+            "pre_fusion_pooling": bool(config.pre_fusion_pooling),
             "final_head_pooling": bool(config.final_head_pooling),
         },
         "experiment_contract": config.experiment_contract(),

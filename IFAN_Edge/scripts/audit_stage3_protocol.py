@@ -37,6 +37,7 @@ def build_experiment_contract(config: Any) -> dict[str, Any]:
         "experiment_role": getattr(config, "experiment_role", DEFAULT_EXPERIMENT_ROLE),
         "model_topology": "paper_dual_mainline",
         "feature_pair": "phat+lms",
+        "pre_fusion_pooling": getattr(config, "pre_fusion_pooling", True),
         "srp_variant": getattr(config, "srp_variant", DEFAULT_SRP_VARIANT),
         "lms_backend": getattr(config, "lms_backend", "frequency_block"),
         "temporal_conv_variant": getattr(config, "temporal_conv_variant", DEFAULT_TEMPORAL_CONV_VARIANT),
@@ -80,6 +81,7 @@ def load_config_from_inputs(checkpoint_path: str | None, config_path: str | None
             train_snr_max_phase2=float(training.get("train_snr_max_phase2", 30.0)),
             train_t60_min=float(training.get("train_t60_min", 0.2)),
             train_t60_max=float(training.get("train_t60_max", 1.3)),
+            pre_fusion_pooling=bool(model.get("pre_fusion_pooling", True)),
             final_head_pooling=bool(model.get("final_head_pooling", False)),
             lms_backend=str(data.get("lms_backend", "frequency_block")),
             baseline_checkpoint_path=str(

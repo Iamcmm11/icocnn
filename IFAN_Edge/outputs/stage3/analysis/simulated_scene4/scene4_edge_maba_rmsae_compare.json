@@ -1,0 +1,28 @@
+{
+  "kind": "stage3_simulated_scene4_compare_display",
+  "scenario": "scene_4",
+  "scenario_description": "5 dB SNR, T60=1.4 s",
+  "metric": "RMSAE deg",
+  "note": "Display chart uses requested baseline scene_4 value 18.23; original measured baseline_compare JSON files are not modified.",
+  "rows": [
+    {
+      "label": "icoCNN baseline",
+      "rmsae_deg": 18.23
+    },
+    {
+      "label": "DFA-IcoNet Edge",
+      "rmsae_deg": 17.97959417104721
+    },
+    {
+      "label": "Map MABA",
+      "rmsae_deg": 17.94634187221527
+    },
+    {
+      "label": "Pre-readout MABA",
+      "rmsae_deg": 13.909501671791077
+    }
+  ],
+  "edge_to_pre_readout_maba_improvement_deg": 4.070092499256134,
+  "png_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_compare.png",
+  "pdf_path": "IFAN_Edge/outputs/stage3/analysis/simulated_scene4/scene4_edge_maba_rmsae_compare.pdf"
+}

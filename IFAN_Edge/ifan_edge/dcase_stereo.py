@@ -4,6 +4,7 @@ import csv
 import json
 import math
 import random
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -37,7 +38,16 @@ class DcaseScene:
 
 def summarize_scalar(values: list[float]) -> dict[str, float]:
     if not values:
-        return {"mean": 0.0, "median": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
+        return {
+            "mean": 0.0,
+            "median": 0.0,
+            "std": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "p75": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+        }
     arr = np.asarray(values, dtype=np.float64)
     return {
         "mean": float(arr.mean()),
@@ -45,7 +55,32 @@ def summarize_scalar(values: list[float]) -> dict[str, float]:
         "std": float(arr.std(ddof=0)),
         "min": float(arr.min()),
         "max": float(arr.max()),
+        "p75": float(np.percentile(arr, 75.0)),
+        "p90": float(np.percentile(arr, 90.0)),
+        "p95": float(np.percentile(arr, 95.0)),
     }
+
+
+def summarize_doa_error(values: list[float]) -> dict[str, float | int]:
+    summary: dict[str, float | int] = summarize_scalar(values)
+    arr = np.asarray(values, dtype=np.float64)
+    if arr.size == 0:
+        summary.update(
+            {
+                "count_ge_45_deg": 0,
+                "count_ge_60_deg": 0,
+                "count_ge_90_deg": 0,
+            }
+        )
+        return summary
+    summary.update(
+        {
+            "count_ge_45_deg": int(np.count_nonzero(arr >= 45.0)),
+            "count_ge_60_deg": int(np.count_nonzero(arr >= 60.0)),
+            "count_ge_90_deg": int(np.count_nonzero(arr >= 90.0)),
+        }
+    )
+    return summary
 
 
 def circular_diff_deg(pred: np.ndarray, target: np.ndarray) -> np.ndarray:
@@ -412,11 +447,40 @@ def build_folded_azimuth_sincos_tensor(
     clips: list[PreparedDcaseClip],
     *,
     device: torch.device,
+    channel_swap_mask: np.ndarray | None = None,
 ) -> torch.Tensor:
     folded_azimuth_deg = np.stack([fold_front_deg(clip.target_azimuth_deg) for clip in clips], axis=0)
+    if channel_swap_mask is not None:
+        swap_mask = np.asarray(channel_swap_mask, dtype=bool)
+        if swap_mask.shape != (len(clips),):
+            raise ValueError(f"Expected channel_swap_mask shape {(len(clips),)}, got {swap_mask.shape}")
+        folded_azimuth_deg = folded_azimuth_deg.copy()
+        folded_azimuth_deg[swap_mask] *= -1.0
     phi = dcase_azimuth_to_phi_rad(folded_azimuth_deg).astype(np.float32)
     target = np.stack((np.sin(phi), np.cos(phi)), axis=-1).astype(np.float32)
     return torch.from_numpy(target).to(device=device)
+
+
+def build_edge_weight_tensor(
+    clips: list[PreparedDcaseClip],
+    *,
+    device: torch.device,
+    edge_weight: float,
+    edge_threshold_deg: float,
+    channel_swap_mask: np.ndarray | None = None,
+) -> torch.Tensor | None:
+    if float(edge_weight) == 1.0:
+        return None
+    folded_azimuth_deg = np.stack([fold_front_deg(clip.target_azimuth_deg) for clip in clips], axis=0)
+    if channel_swap_mask is not None:
+        swap_mask = np.asarray(channel_swap_mask, dtype=bool)
+        if swap_mask.shape != (len(clips),):
+            raise ValueError(f"Expected channel_swap_mask shape {(len(clips),)}, got {swap_mask.shape}")
+        folded_azimuth_deg = folded_azimuth_deg.copy()
+        folded_azimuth_deg[swap_mask] *= -1.0
+    weights = np.ones_like(folded_azimuth_deg, dtype=np.float32)
+    weights[np.abs(folded_azimuth_deg) >= float(edge_threshold_deg)] = float(edge_weight)
+    return torch.from_numpy(weights.astype(np.float32)).to(device=device)
 
 
 def evaluate_prepared_batch(
@@ -465,6 +529,7 @@ def evaluate_prepared_batch(
                 "metadata_relpath": row["metadata_relpath"],
                 "evaluated_windows": int(np.count_nonzero(active_mask)),
                 "target_azimuth_mean_deg": float(np.mean(target_az[active_mask])),
+                "target_azimuth_folded_mean_deg": float(np.mean(target_az_folded[active_mask])),
                 "pred_azimuth_raw_mean_deg": float(np.mean(pred_az_raw[active_mask])),
                 "pred_azimuth_folded_mean_deg": float(np.mean(pred_az_folded[active_mask])),
                 "doa_error_deg": float(np.mean(np.abs(folded_diff))),
@@ -489,8 +554,51 @@ def aggregate_reports(reports: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     payload = {"count": len(reports), "evaluated_windows": int(sum(row["evaluated_windows"] for row in reports))}
     for field in fields:
-        payload[field] = summarize_scalar([float(row[field]) for row in reports])
+        values = [float(row[field]) for row in reports]
+        payload[field] = summarize_doa_error(values) if field == "doa_error_deg" else summarize_scalar(values)
     return payload
+
+
+ANGLE_BINS: tuple[tuple[float, float, str], ...] = (
+    (-90.0, -60.0, "[-90,-60)"),
+    (-60.0, -30.0, "[-60,-30)"),
+    (-30.0, 0.0, "[-30,0)"),
+    (0.0, 30.0, "[0,30)"),
+    (30.0, 60.0, "[30,60)"),
+    (60.0, 90.0, "[60,90]"),
+)
+
+
+def angle_bin_label(angle_deg: float) -> str:
+    angle = float(np.clip(angle_deg, -90.0, 90.0))
+    for low, high, label in ANGLE_BINS:
+        if low <= angle < high or (high == 90.0 and angle <= high):
+            return label
+    return "out_of_range"
+
+
+def aggregate_by_angle_bin(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    grouped: dict[str, list[dict[str, Any]]] = {label: [] for _, _, label in ANGLE_BINS}
+    for row in reports:
+        if "target_azimuth_folded_mean_deg" in row:
+            folded_target = float(row["target_azimuth_folded_mean_deg"])
+        else:
+            folded_target = float(fold_front_deg(np.asarray(float(row["target_azimuth_mean_deg"]))))
+        grouped.setdefault(angle_bin_label(folded_target), []).append(row)
+    return {label: aggregate_reports(grouped.get(label, [])) for _, _, label in ANGLE_BINS}
+
+
+def _clip_token(value: str, pattern: str, fallback: str) -> str:
+    match = re.search(pattern, value)
+    return match.group(0) if match is not None else fallback
+
+
+def aggregate_by_clip_token(reports: list[dict[str, Any]], *, pattern: str, fallback: str) -> dict[str, Any]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in reports:
+        token = _clip_token(str(row.get("clip_id", "")), pattern, fallback)
+        grouped.setdefault(token, []).append(row)
+    return {token: aggregate_reports(rows) for token, rows in sorted(grouped.items())}
 
 
 def build_report(
@@ -515,6 +623,9 @@ def build_report(
         split: aggregate_reports([row for row in reports if row["split"] == split])
         for split in sorted({row["split"] for row in reports})
     }
+    by_angle_bin = aggregate_by_angle_bin(reports)
+    by_room = aggregate_by_clip_token(reports, pattern=r"room\d+", fallback="unknown_room")
+    by_mix = aggregate_by_clip_token(reports, pattern=r"mix\d+", fallback="unknown_mix")
     return {
         "kind": "stage3_dcase2025_stereo_transfer_evaluation",
         "checkpoint": checkpoint,
@@ -533,6 +644,9 @@ def build_report(
         "overall": aggregate_reports(reports),
         "by_subset": by_subset,
         "by_split": by_split,
+        "by_angle_bin": by_angle_bin,
+        "by_room": by_room,
+        "by_mix": by_mix,
         "per_clip": reports,
     }
 
@@ -562,6 +676,31 @@ def build_markdown(report: dict[str, Any]) -> str:
     ]
     for subset in sorted(report["by_subset"]):
         lines.append(row(subset, report["by_subset"][subset]))
+    tail = report["overall"]["doa_error_deg"]
+    lines.extend(
+        [
+            "",
+            "## Tail Diagnostics",
+            "",
+            "| Scope | p75 | p90 | p95 | >=45 deg | >=60 deg | >=90 deg |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            (
+                f"| overall | {tail['p75']:.4f} | {tail['p90']:.4f} | {tail['p95']:.4f} | "
+                f"{tail['count_ge_45_deg']} | {tail['count_ge_60_deg']} | {tail['count_ge_90_deg']} |"
+            ),
+            "",
+            "## Angle Bins",
+            "",
+            "| Target folded azimuth bin | Clips | DOA error (deg) | p90 | p95 | >=90 deg |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for label, payload in report.get("by_angle_bin", {}).items():
+        metric = payload["doa_error_deg"]
+        lines.append(
+            f"| {label} | {payload['count']} | {metric['mean']:.4f} | "
+            f"{metric['p90']:.4f} | {metric['p95']:.4f} | {metric['count_ge_90_deg']} |"
+        )
     lines.extend(
         [
             "",
@@ -646,9 +785,16 @@ def masked_sincos_loss(
     pred_sincos: torch.Tensor,
     target_sincos: torch.Tensor,
     active_mask: torch.Tensor,
+    weights: torch.Tensor | None = None,
 ) -> torch.Tensor:
     valid_pred = pred_sincos[active_mask]
     valid_target = target_sincos[active_mask]
     if valid_pred.numel() == 0:
         return pred_sincos.sum() * 0.0
-    return torch.nn.functional.mse_loss(valid_pred, valid_target)
+    squared_error = torch.square(valid_pred - valid_target)
+    if weights is None:
+        return squared_error.mean()
+    valid_weights = weights[active_mask].to(device=squared_error.device, dtype=squared_error.dtype)
+    weighted_error = squared_error * valid_weights.unsqueeze(-1)
+    denom = valid_weights.sum() * squared_error.shape[-1]
+    return weighted_error.sum() / denom.clamp_min(1e-12)

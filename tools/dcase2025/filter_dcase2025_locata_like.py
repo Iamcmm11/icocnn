@@ -31,6 +31,19 @@ CLASS_NAMES = {
 SPEECH_CLASSES = {0, 1}
 
 
+def add_bool_argument(
+    parser: argparse.ArgumentParser,
+    name: str,
+    *,
+    default: bool,
+    help_text: str,
+) -> None:
+    dest = name.replace("-", "_")
+    parser.add_argument(f"--{name}", dest=dest, action="store_true", help=help_text)
+    parser.add_argument(f"--no-{name}", dest=dest, action="store_false")
+    parser.set_defaults(**{dest: default})
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -84,26 +97,26 @@ def parse_args() -> argparse.Namespace:
         default=50.0,
         help="Moving clips must have distance span at least this, unless azimuth qualifies.",
     )
-    parser.add_argument(
-        "--speech-only",
-        action=argparse.BooleanOptionalAction,
+    add_bool_argument(
+        parser,
+        "speech-only",
         default=True,
-        help="Keep only clips whose metadata classes are female/male speech.",
+        help_text="Keep only clips whose metadata classes are female/male speech.",
     )
-    parser.add_argument(
-        "--single-source-id",
-        action=argparse.BooleanOptionalAction,
+    add_bool_argument(
+        parser,
+        "single-source-id",
         default=False,
-        help=(
+        help_text=(
             "Require one source ID across the whole clip. This is stricter than "
             "single_position_per_frame and better matches LOCATA single-source tracks."
         ),
     )
-    parser.add_argument(
-        "--make-links",
-        action=argparse.BooleanOptionalAction,
+    add_bool_argument(
+        parser,
+        "make-links",
         default=True,
-        help="Create symlink trees for selected clips.",
+        help_text="Create symlink trees for selected clips.",
     )
     return parser.parse_args()
 
