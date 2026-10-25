@@ -309,6 +309,7 @@ int main(int argc, char** argv) {
         std::cout << "Max Error: " << max_err << std::endl;
         std::cout << "RMSE: " << rms_err << std::endl;
         std::cout << (max_err <= max_err_tol ? "PASS" : "FAIL") << std::endl;
+        if (!std::isfinite(max_err) || !std::isfinite(rms_err) || max_err > max_err_tol) return 1;
     } else {
         std::cout << "Reference output file not found or empty, skip compare." << std::endl;
     }

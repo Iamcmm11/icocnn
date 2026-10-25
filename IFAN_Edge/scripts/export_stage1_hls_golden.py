@@ -251,7 +251,14 @@ def collect_weights(model) -> dict[str, np.ndarray]:
     norm_gamma = np.ones((16, 8), dtype=np.float32)
     norm_beta = np.zeros((16, 8), dtype=np.float32)
 
+    # Keep the HLS norm table in the same order as the complete Stage-1
+    # graph.  The two frontend residual blocks also contain LNormIco; omitting
+    # them makes the exported weights incompatible with ifan_stage1_top and
+    # produces a large full-stage error even when the isolated fusion and
+    # temporal blocks pass.
     norm_slots = [
+        model.phat_branch.residual.norm,
+        model.aux_branch.residual.norm,
         model.shared_attention.norm,
         *[block.norm for block in model.fusion_blocks],
         model.final_block.norm,
@@ -992,6 +999,7 @@ def main() -> None:
             "load_notes": checkpoint.get("_stage1_export_load_notes", []),
         },
         "stage1_contract": {
+            "norm_slot_layout": ["phat_residual", "lms_residual", "shared_attention", "fusion0", "fusion1", "fusion2", "fusion3", "final"],
             "input_shape": list(STAGE1_INPUT_SHAPE),
             "golden_shape": list(STAGE1_GOLDEN_SHAPE),
             "input_layout": "[C=2, T=6, charts=5, H=4, W=8]",

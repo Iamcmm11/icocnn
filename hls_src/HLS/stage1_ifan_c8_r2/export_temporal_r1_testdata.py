@@ -134,6 +134,10 @@ def collect_temporal_datasets(
 ) -> tuple[dict[str, dict[str, np.ndarray]], dict[str, Any]]:
     weights = np.load(stage1_dir / "stage1_weights.npz")
     debug = np.load(stage1_dir / "stage1_debug_tensors.npz")
+    # Historical exports have six norm slots; versioned V14 exports have eight.
+    metadata = json.loads((stage1_dir / "manifest.json").read_text(encoding="utf-8"))
+    layout = metadata.get("stage1_contract", {}).get("norm_slot_layout")
+    norm_offset = 3 if layout and layout[:2] == ["phat_residual", "lms_residual"] else 1
 
     datasets: dict[str, dict[str, np.ndarray]] = {}
     manifest: dict[str, Any] = {}
@@ -145,14 +149,14 @@ def collect_temporal_datasets(
         if dataset_name == "final":
             temporal_weight = np.ascontiguousarray(weights["final_temporal_w"].astype(np.float32))
             temporal_bias = np.ascontiguousarray(weights["final_temporal_b"].astype(np.float32))
-            gamma = np.ascontiguousarray(weights["norm_gamma"][5].astype(np.float32))
-            beta = np.ascontiguousarray(weights["norm_beta"][5].astype(np.float32))
+            gamma = np.ascontiguousarray(weights["norm_gamma"][norm_offset + 4].astype(np.float32))
+            beta = np.ascontiguousarray(weights["norm_beta"][norm_offset + 4].astype(np.float32))
             expected_block_output = np.ascontiguousarray(debug["final_head_logits"].astype(np.float32))
         else:
             temporal_weight = np.ascontiguousarray(weights["fusion_temporal_w"][index].astype(np.float32))
             temporal_bias = np.ascontiguousarray(weights["fusion_temporal_b"][index].astype(np.float32))
-            gamma = np.ascontiguousarray(weights["norm_gamma"][1 + index].astype(np.float32))
-            beta = np.ascontiguousarray(weights["norm_beta"][1 + index].astype(np.float32))
+            gamma = np.ascontiguousarray(weights["norm_gamma"][norm_offset + index].astype(np.float32))
+            beta = np.ascontiguousarray(weights["norm_beta"][norm_offset + index].astype(np.float32))
             expected_block_output = np.ascontiguousarray(debug[f"fusion_head_blocks_{index}"].astype(np.float32))
 
         temporal_output = temporal_conv1d_r1(temporal_input, temporal_weight, temporal_bias)
