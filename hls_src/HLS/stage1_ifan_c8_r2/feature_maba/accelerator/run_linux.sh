@@ -26,5 +26,5 @@ exec "$PYTHON" "$SCRIPT_DIR/run.py" "$MODE" \
   --frames "${MABA_FRAMES:-6}" \
   --fifo "${MABA_FIFO:-8}" \
   --rtl-limit "${MABA_RTL_LIMIT:-3}" \
-  --timeout "${MABA_TIMEOUT:-14400}" \
+  --timeout "${MABA_TIMEOUT:-172800}" \
   --data "$DATA_DIR" "$@"

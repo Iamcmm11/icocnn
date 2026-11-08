@@ -90,6 +90,7 @@ prefix the command with `MABA_RTL_LIMIT=0` to run all cases; this can take subst
 Set `MABA_DATA_DIR` to use a different dataset,
 or set `MABA_VARIANTS`, `MABA_TILE`, and `MABA_PAR` to select another configuration. For example,
 `MABA_VARIANT=3 MABA_TILE=16 MABA_PAR=1 bash "$maba/run_linux.sh" cosim` selects the interleaved variant.
+The default per-job timeout is 48 hours to avoid cutting off a long RTL run; override it with `MABA_TIMEOUT`.
 
 The smoke inputs, expected outputs, packed weights, and SHA-256 manifest are in
 `testdata/rtl_smoke/`; they are independent of the source machine's absolute paths. The default
