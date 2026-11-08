@@ -1,0 +1,20 @@
+[
+  {
+    "repository": "https://github.com/PKU-SEC-Lab/LightMamba",
+    "commit": "a3de743bcfa2162c9ea6584c75e0f8690f02311b",
+    "commit_url": "https://github.com/PKU-SEC-Lab/LightMamba/commit/a3de743bcfa2162c9ea6584c75e0f8690f02311b",
+    "usage": "Design reference only; no third-party code copied."
+  },
+  {
+    "repository": "https://github.com/shengzhelyu65/ViM-Q-FCCM-2026",
+    "commit": "e894efaf190ef621eabd078f0364b72a4903eeb6",
+    "commit_url": "https://github.com/shengzhelyu65/ViM-Q-FCCM-2026/commit/e894efaf190ef621eabd078f0364b72a4903eeb6",
+    "usage": "Design reference only; no third-party code copied."
+  },
+  {
+    "repository": "https://github.com/todi-mih/mamba790m_hls",
+    "commit": "b551f329f3afadb2ddd9d1ed5453f95f31bfe876",
+    "commit_url": "https://github.com/todi-mih/mamba790m_hls/commit/b551f329f3afadb2ddd9d1ed5453f95f31bfe876",
+    "usage": "Design reference only; no third-party code copied."
+  }
+]

@@ -1,0 +1,201 @@
+{
+  "schema": 1,
+  "fixture": "MABA RTL smoke test",
+  "frames": 6,
+  "shape": [
+    6,
+    8,
+    6,
+    5,
+    2,
+    4
+  ],
+  "precision": "FP32",
+  "reset_per_call": true,
+  "source": "Self-contained fixtures exported from the frozen trained MABA checkpoint; case outputs are independent software references.",
+  "scope": "10 representative transactions, not the full 84-case native suite",
+  "cases": [
+    {
+      "name": "frozen_v14",
+      "valid_frames": 6,
+      "role": "frozen",
+      "input": "frozen_v14.input.bin",
+      "output": "frozen_v14.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "zeros",
+      "valid_frames": 6,
+      "role": "synthetic",
+      "input": "zeros.input.bin",
+      "output": "zeros.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "frozen_repeat",
+      "valid_frames": 6,
+      "role": "reset",
+      "input": "frozen_repeat.input.bin",
+      "output": "frozen_repeat.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "last_position",
+      "valid_frames": 6,
+      "role": "synthetic",
+      "input": "last_position.input.bin",
+      "output": "last_position.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "zero_variance",
+      "valid_frames": 6,
+      "role": "synthetic",
+      "input": "zero_variance.input.bin",
+      "output": "zero_variance.output.bin",
+      "weights": "zero_variance.weights.bin"
+    },
+    {
+      "name": "gate_positive",
+      "valid_frames": 6,
+      "role": "synthetic",
+      "input": "gate_positive.input.bin",
+      "output": "gate_positive.output.bin",
+      "weights": "gate_positive.weights.bin"
+    },
+    {
+      "name": "gate_negative",
+      "valid_frames": 6,
+      "role": "synthetic",
+      "input": "gate_negative.input.bin",
+      "output": "gate_negative.output.bin",
+      "weights": "gate_negative.weights.bin"
+    },
+    {
+      "name": "scene2_000",
+      "valid_frames": 6,
+      "role": "held_out",
+      "input": "scene2_000.input.bin",
+      "output": "scene2_000.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "scene3_000",
+      "valid_frames": 6,
+      "role": "held_out",
+      "input": "scene3_000.input.bin",
+      "output": "scene3_000.output.bin",
+      "weights": "weights.bin"
+    },
+    {
+      "name": "scene4_000",
+      "valid_frames": 6,
+      "role": "held_out",
+      "input": "scene4_000.input.bin",
+      "output": "scene4_000.output.bin",
+      "weights": "weights.bin"
+    }
+  ],
+  "files": {
+    "cases.txt": {
+      "bytes": 140,
+      "sha256": "19365ed38ec570733234028b0519bd1adc09ab3757845dd7f10bc07d3aa7f663"
+    },
+    "frozen_repeat.input.bin": {
+      "bytes": 46080,
+      "sha256": "a97d3e3a751841b58fb9b6f4fb918f0010c1d2e9b4cba9e1f387e723b99547f3"
+    },
+    "frozen_repeat.output.bin": {
+      "bytes": 46080,
+      "sha256": "b74c120e8e384828c34cf66d6dc22566ef72f10af61a71596ae49de7066d1479"
+    },
+    "frozen_v14.input.bin": {
+      "bytes": 46080,
+      "sha256": "a97d3e3a751841b58fb9b6f4fb918f0010c1d2e9b4cba9e1f387e723b99547f3"
+    },
+    "frozen_v14.output.bin": {
+      "bytes": 46080,
+      "sha256": "b74c120e8e384828c34cf66d6dc22566ef72f10af61a71596ae49de7066d1479"
+    },
+    "gate_negative.input.bin": {
+      "bytes": 46080,
+      "sha256": "b8cc68eac69d5f6bfba070c322921474633cf411c7a746b3186d56c255a872f3"
+    },
+    "gate_negative.output.bin": {
+      "bytes": 46080,
+      "sha256": "dd21614a3395f59c6d3f516c2562696f5cc37aaeb611095f2f53becab1439d18"
+    },
+    "gate_negative.weights.bin": {
+      "bytes": 3456,
+      "sha256": "54d9df1fb1914e0f16d80e0fad9e1865e30bfb1bc72ce3d78cf9c5a82c0dc1cd"
+    },
+    "gate_positive.input.bin": {
+      "bytes": 46080,
+      "sha256": "72b1b52a4d12ab684b37df9ee1b3eabed9fc1ba9bf9286eca030e647d08a5df7"
+    },
+    "gate_positive.output.bin": {
+      "bytes": 46080,
+      "sha256": "86431a47e9f4694d2ab5089c8d10362734ecad3c404e3be3666821cdef2075ce"
+    },
+    "gate_positive.weights.bin": {
+      "bytes": 3456,
+      "sha256": "dd703c531e3430cae64eb18cfdddd2cd672faf541c8ad3c35c206751be6fbb0f"
+    },
+    "last_position.input.bin": {
+      "bytes": 46080,
+      "sha256": "5858c807106dc99dfb59000f0b20ca87f645ccf9e67261e4cfd8443b70d9e587"
+    },
+    "last_position.output.bin": {
+      "bytes": 46080,
+      "sha256": "9dba29a41b86053b13f20e65aec2e0d455d4b562d36fa8b84f603a1e2be14f1c"
+    },
+    "scene2_000.input.bin": {
+      "bytes": 46080,
+      "sha256": "48da5017c460eb987c904cd637d3dd5b04fd6f633e1cb33463edb65ad0ce40f6"
+    },
+    "scene2_000.output.bin": {
+      "bytes": 46080,
+      "sha256": "41e38a916fd0d8505617c0141a1dd655d7f3bce83a9f455c08717a609d2197f8"
+    },
+    "scene3_000.input.bin": {
+      "bytes": 46080,
+      "sha256": "6a44e52eb02d4686a169bb1814ed1af5fa7e4692eea5123fbef21ca48df96689"
+    },
+    "scene3_000.output.bin": {
+      "bytes": 46080,
+      "sha256": "55a60a01c935f3e1104441ed742122076a2c6ceb7691c564467ba75f6e455ef2"
+    },
+    "scene4_000.input.bin": {
+      "bytes": 46080,
+      "sha256": "7bb1bf7097d6634ef7f4aba6ac9084fa6abf6c8cfe3ab53cf6fca8ec7a6b463c"
+    },
+    "scene4_000.output.bin": {
+      "bytes": 46080,
+      "sha256": "1c310aee82cf5de2760504be397552679750e8a6ad3d6f4cc6879f5a7c2cf652"
+    },
+    "weights.bin": {
+      "bytes": 3456,
+      "sha256": "6d9452be8d1e394206d89faad6de5c2b52e7a3bc0936fdd2ac76952c63c08c84"
+    },
+    "zero_variance.input.bin": {
+      "bytes": 46080,
+      "sha256": "7e36bec0af80ff78cd2cba3643b862a6c0e3ec56e52acabe92b246dcd6ad4816"
+    },
+    "zero_variance.output.bin": {
+      "bytes": 46080,
+      "sha256": "e15f6e799fe71d5513fb6fa61aa4422ebdcd4ed2e9c4c3eda4c193e1800013a4"
+    },
+    "zero_variance.weights.bin": {
+      "bytes": 3456,
+      "sha256": "a70ad3b0f6444e4f03f5e8ebe8379687ef497333bc40b6c80b3d3de640e40d0f"
+    },
+    "zeros.input.bin": {
+      "bytes": 46080,
+      "sha256": "7e36bec0af80ff78cd2cba3643b862a6c0e3ec56e52acabe92b246dcd6ad4816"
+    },
+    "zeros.output.bin": {
+      "bytes": 46080,
+      "sha256": "b0cd63d1e92c7fd2d2636cfe22c5cd598ebcc31bf4e8dcad0d2d6437fb6b26ed"
+    }
+  }
+}

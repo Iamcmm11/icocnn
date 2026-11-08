@@ -4,6 +4,7 @@ hls_src/HLS/layer1/layer1_hls_prj/
 hls_src/HLS/layer2-5/layer2_5_hls_prj/
 datasets
 *.pyc
+.maba_env/
 __pycache__
 .qoder
 hls_src/HLS/stage1_ifan_c8_r2/stage1_ifan_c8_r2_hls_prj/

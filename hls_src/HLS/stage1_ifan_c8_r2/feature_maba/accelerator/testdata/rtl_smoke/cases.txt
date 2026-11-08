@@ -1,0 +1,10 @@
+frozen_v14 6
+zeros 6
+frozen_repeat 6
+last_position 6
+zero_variance 6
+gate_positive 6
+gate_negative 6
+scene2_000 6
+scene3_000 6
+scene4_000 6

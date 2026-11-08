@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#if defined(__has_include)
+#if !defined(IFAN_FORCE_FP32) && defined(__has_include)
 #if __has_include(<ap_fixed.h>)
 #include <ap_fixed.h>
 #define IFAN_STAGE1_HAS_AP_FIXED 1
